@@ -53,19 +53,35 @@ export default function JobsPage() {
 
   return (
     <MainLayout>
-      <PageHeader title="Jobs" description="Manage all jobs linked to project tasks">
-        <Link href="/jobs/create"
-          className="px-4 py-2 rounded-lg bg-accent text-accent-foreground font-semibold hover:bg-accent/90 transition-colors flex items-center gap-2 shadow-sm">
-          <Plus size={18} /> Create Job
-        </Link>
-        <Link
-      href="/resources"
+    <PageHeader title="Jobs" description="Manage all jobs linked to project tasks">
+  <div className="flex gap-2 mb-4">
+    {/* Bouton Create Job */}
+    <Link
+      href="/jobs/create"
+      className="px-4 py-2 rounded-lg bg-accent text-accent-foreground font-semibold hover:bg-accent/90 transition-colors flex items-center gap-2 shadow-sm"
+    >
+      <Plus size={18} />
+      Create Job
+    </Link>
+
+    {/* Bouton View Resources */}
+    <Link
+      href="/humans"
       className="px-4 py-2 rounded-lg bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-colors flex items-center gap-2 shadow-sm"
     >
       <Plus size={18} />
-      View Resources
+      View humans Resources
     </Link>
+    <Link
+      href="/equipment"
+      className="px-4 py-2 rounded-lg bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-colors flex items-center gap-2 shadow-sm"
+    >
+      <Plus size={18} />
+      View equipment Resources
+    </Link>
+  </div>
       </PageHeader>
+
 
       {/* Search & Filter */}
       <div className="flex flex-col md:flex-row items-start md:items-center gap-4 mb-6">

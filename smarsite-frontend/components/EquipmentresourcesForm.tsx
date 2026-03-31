@@ -3,229 +3,437 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { mutate } from "swr";
-import type {
-  Resource,
-  CreateResourcePayload,
-} from "@/lib/types";
-import {
-  createResource,
-  updateResource,
-  getResourcesKey,
-} from "@/lib/api";
 import Link from "next/link";
+import {
+  createEquipment,
+  updateEquipment,
+  getEquipmentsKey,
+} from "@/lib/api";
+import { 
+  Loader2, 
+  ArrowLeft, 
+  Save, 
+  X, 
+  Calendar, 
+  Tag, 
+  Hash, 
+  Package, 
+  Building, 
+  MapPin, 
+  CheckCircle2, 
+  AlertCircle 
+} from "lucide-react";
 
-interface ResourceFormProps {
+interface Equipment {
+  _id?: string;
+  name: string;
+  category: string;
+  serialNumber: string;
+  model: string;
+  brand: string;
+  purchaseDate: string;
+  lastMaintenanceDate: string;
+  location: string;
+  availability: boolean;
+}
+
+interface EquipmentFormProps {
   mode: "create" | "edit";
-  initialData?: Resource;
+  initialData?: Equipment;
 }
 
 interface FormErrors {
   name?: string;
-  role?: string;
-  type?: string;
+  category?: string;
+  serialNumber?: string;
+  model?: string;
+  brand?: string;
+  purchaseDate?: string;
+  lastMaintenanceDate?: string;
+  location?: string;
   general?: string;
 }
 
-export default function ResourceForm({
+export default function EquipmentForm({
   mode,
   initialData,
-}: ResourceFormProps) {
+}: EquipmentFormProps) {
   const router = useRouter();
 
-  const [type, setType] =
-    useState<"Human" | "Equipment">("Human");
-  const [name, setName] = useState("");
-  const [role, setRole] = useState("");
-  const [availability, setAvailability] = useState(true);
+  const [formData, setFormData] = useState<Equipment>({
+    name: "",
+    category: "",
+    serialNumber: "",
+    model: "",
+    brand: "",
+    purchaseDate: "",
+    lastMaintenanceDate: "",
+    location: "",
+    availability: true,
+  });
 
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
 
-  /* ========================
-     Prefill en mode EDIT
-  ======================== */
   useEffect(() => {
     if (initialData) {
-      setType(initialData.type);
-      setName(initialData.name);
-      setRole(initialData.role);
-      setAvailability(initialData.availability);
+      setFormData({
+        name: initialData.name || "",
+        category: initialData.category || "",
+        serialNumber: initialData.serialNumber || "",
+        model: initialData.model || "",
+        brand: initialData.brand || "",
+        purchaseDate: initialData.purchaseDate?.slice(0, 10) || "",
+        lastMaintenanceDate: initialData.lastMaintenanceDate?.slice(0, 10) || "",
+        location: initialData.location || "",
+        availability: initialData.availability ?? true,
+      });
     }
   }, [initialData]);
 
-  /* ========================
-        Validation
-  ======================== */
-  function validate(): boolean {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value, type, checked } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
+    if (touched[name]) validateField(name, value);
+  };
+
+  const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setTouched(prev => ({ ...prev, [name]: true }));
+    validateField(name, value);
+  };
+
+  const validateField = (name: string, value: string | boolean) => {
+    let error = "";
+    switch (name) {
+      case "name":
+      case "category":
+      case "serialNumber":
+      case "model":
+      case "brand":
+      case "location":
+        if (!String(value).trim()) error = `${name.charAt(0).toUpperCase() + name.slice(1)} is required`;
+        break;
+      case "purchaseDate":
+      case "lastMaintenanceDate":
+        if (!value) error = "Date is required";
+        break;
+      default:
+        break;
+    }
+    setErrors(prev => ({ ...prev, [name]: error }));
+  };
+
+  const validate = (): boolean => {
     const newErrors: FormErrors = {};
+    let isValid = true;
 
-    if (!name.trim())
-      newErrors.name = "Resource name is required";
+    ["name", "category", "serialNumber", "model", "brand", "location"].forEach(field => {
+      if (!formData[field as keyof Equipment]?.toString().trim()) {
+        newErrors[field as keyof FormErrors] = `${field.charAt(0).toUpperCase() + field.slice(1)} is required`;
+        isValid = false;
+      }
+    });
 
-    if (!role.trim())
-      newErrors.role = "Role is required";
-
-    if (!type)
-      newErrors.type = "Type is required";
+    if (!formData.purchaseDate) {
+      newErrors.purchaseDate = "Purchase date is required";
+      isValid = false;
+    }
+    if (!formData.lastMaintenanceDate) {
+      newErrors.lastMaintenanceDate = "Last maintenance date is required";
+      isValid = false;
+    }
 
     setErrors(newErrors);
+    return isValid;
+  };
 
-    return Object.keys(newErrors).length === 0;
-  }
-
-  /* ========================
-        Submit
-  ======================== */
-  async function handleSubmit(e: React.FormEvent) {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!validate()) return;
+    if (!validate()) {
+      // Scroll to first error
+      const firstError = document.querySelector(".text-red-600");
+      firstError?.scrollIntoView({ behavior: "smooth", block: "center" });
+      return;
+    }
 
     setIsSubmitting(true);
 
-    const payload: CreateResourcePayload = {
-      type,
-      name,
-      role,
-      availability,
-    };
-
     try {
       if (mode === "create") {
-        await createResource(payload);
+        await createEquipment(formData);
       } else {
-        await updateResource(initialData!._id, payload);
+        await updateEquipment(initialData!._id!, formData);
       }
-
-      mutate(getResourcesKey());
-      router.push("/resources");
+      mutate(getEquipmentsKey());
+      router.push("/equipment");
     } catch (err) {
-      const message =
-        err instanceof Error
-          ? err.message
-          : "Something went wrong";
-
-      setErrors({ general: message });
+      setErrors({
+        general: err instanceof Error ? err.message : "Failed to save equipment",
+      });
     } finally {
       setIsSubmitting(false);
     }
-  }
+  };
 
-  /* ========================
-          UI
-  ======================== */
   return (
-    <div className="max-w-2xl mx-auto p-6 bg-card rounded-xl shadow border">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">
-          {mode === "create"
-            ? "Create Resource"
-            : "Edit Resource"}
-        </h1>
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white py-12 px-4 sm:px-6 lg:px-8 xl:px-12">
+      <div className="max-w-6xl mx-auto">
+        {/* Header Premium */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-12 gap-6">
+          <div>
+            <h1 className="text-4xl lg:text-5xl font-extrabold text-[#0b4f6c] tracking-tight">
+              {mode === "create" ? "Register New Equipment" : "Update Equipment Details"}
+            </h1>
+            <p className="mt-4 text-xl text-gray-600 max-w-2xl">
+              {mode === "create"
+                ? "Add a new asset to your inventory with complete specifications and status."
+                : "Modify existing equipment information — all fields are pre-filled."}
+            </p>
+          </div>
 
-        <Link
-          href="/resources"
-          className="text-sm text-muted-foreground"
+          <div className="flex gap-4">
+            <Link
+              href="/equipment"
+              className="inline-flex items-center gap-3 px-7 py-4 bg-white border border-gray-300 text-gray-700 rounded-2xl font-medium hover:bg-gray-50 hover:border-gray-400 transition shadow-sm"
+            >
+              <ArrowLeft size={20} />
+              Cancel
+            </Link>
+          </div>
+        </div>
+
+        {/* Global Error */}
+        {errors.general && (
+          <div className="mb-10 p-6 bg-red-50 border border-red-200 rounded-2xl flex items-start gap-4 text-red-800">
+            <AlertCircle size={28} className="mt-1 flex-shrink-0" />
+            <div>
+              <p className="font-semibold text-lg">Error during save</p>
+              <p className="mt-1">{errors.general}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Form Card - Très spacieux & élégant */}
+        <form
+          onSubmit={handleSubmit}
+          className="bg-white border border-gray-200/80 rounded-3xl shadow-2xl overflow-hidden"
         >
-          ← Back
-        </Link>
+        
+
+          <div className="p-8 lg:p-12 xl:p-16 space-y-14">
+            {/* Section 1: Identification */}
+            <div>
+              <div className="flex items-center gap-4 mb-8">
+                <div className="h-14 w-14 rounded-2xl bg-[#0b4f6c]/10 flex items-center justify-center">
+                  <Package size={28} className="text-[#0b4f6c]" />
+                </div>
+                <h2 className="text-3xl font-bold text-[#0b4f6c]">Equipment Identification</h2>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-10">
+                {[
+                  { name: "name", label: "Equipment Name", icon: <Tag size={20} />, required: true },
+                  { name: "category", label: "Category", icon: <Tag size={20} />, required: true },
+                  { name: "serialNumber", label: "Serial Number", icon: <Hash size={20} />, required: true },
+                  { name: "model", label: "Model", icon: <Package size={20} />, required: true },
+                  { name: "brand", label: "Brand / Manufacturer", icon: <Building size={20} />, required: true },
+                ].map(field => (
+                  <div key={field.name} className="space-y-2 relative">
+                    <label
+                      htmlFor={field.name}
+                      className="block text-lg font-semibold text-gray-700"
+                    >
+                      {field.label} {field.required && <span className="text-red-500">*</span>}
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-500">
+                        {field.icon}
+                      </div>
+                      <input
+                        id={field.name}
+                        name={field.name}
+                        type="text"
+                        value={formData[field.name as keyof Equipment] as string}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                        className={`w-full pl-12 pr-5 py-5 border-2 rounded-2xl text-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#f28c28]/40 focus:border-[#0b4f6c] transition-all duration-200 shadow-sm ${
+                          errors[field.name as keyof FormErrors] && touched[field.name]
+                            ? "border-red-500"
+                            : "border-gray-300"
+                        }`}
+                        placeholder={`Enter ${field.label.toLowerCase()}`}
+                      />
+                    </div>
+                    {errors[field.name as keyof FormErrors] && touched[field.name] && (
+                      <p className="text-red-600 text-base mt-2 flex items-center gap-2">
+                        <AlertCircle size={18} />
+                        {errors[field.name as keyof FormErrors]}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Section 2: Dates & Location */}
+            <div className="pt-10 border-t border-gray-100">
+              <div className="flex items-center gap-4 mb-8">
+                <div className="h-14 w-14 rounded-2xl bg-[#f28c28]/10 flex items-center justify-center">
+                  <Calendar size={28} className="text-[#f28c28]" />
+                </div>
+                <h2 className="text-3xl font-bold text-[#0b4f6c]">Timeline & Location</h2>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-10">
+                <div className="space-y-2">
+                  <label htmlFor="purchaseDate" className="block text-lg font-semibold text-gray-700">
+                    Purchase Date <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    id="purchaseDate"
+                    name="purchaseDate"
+                    type="date"
+                    value={formData.purchaseDate}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    className={`w-full px-5 py-5 border-2 rounded-2xl text-lg focus:outline-none focus:ring-2 focus:ring-[#f28c28]/40 focus:border-[#0b4f6c] transition-all duration-200 shadow-sm ${
+                      errors.purchaseDate && touched.purchaseDate ? "border-red-500" : "border-gray-300"
+                    }`}
+                  />
+                  {errors.purchaseDate && touched.purchaseDate && (
+                    <p className="text-red-600 text-base mt-2 flex items-center gap-2">
+                      <AlertCircle size={18} />
+                      {errors.purchaseDate}
+                    </p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <label htmlFor="lastMaintenanceDate" className="block text-lg font-semibold text-gray-700">
+                    Last Maintenance <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    id="lastMaintenanceDate"
+                    name="lastMaintenanceDate"
+                    type="date"
+                    value={formData.lastMaintenanceDate}
+                    onChange={handleChange}
+                    onBlur={handleBlur}
+                    className={`w-full px-5 py-5 border-2 rounded-2xl text-lg focus:outline-none focus:ring-2 focus:ring-[#f28c28]/40 focus:border-[#0b4f6c] transition-all duration-200 shadow-sm ${
+                      errors.lastMaintenanceDate && touched.lastMaintenanceDate ? "border-red-500" : "border-gray-300"
+                    }`}
+                  />
+                  {errors.lastMaintenanceDate && touched.lastMaintenanceDate && (
+                    <p className="text-red-600 text-base mt-2 flex items-center gap-2">
+                      <AlertCircle size={18} />
+                      {errors.lastMaintenanceDate}
+                    </p>
+                  )}
+                </div>
+
+                <div className="space-y-2 md:col-span-2 lg:col-span-1">
+                  <label htmlFor="location" className="block text-lg font-semibold text-gray-700">
+                    Current Location <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-500">
+                      <MapPin size={20} />
+                    </div>
+                    <input
+                      id="location"
+                      name="location"
+                      type="text"
+                      value={formData.location}
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                      className={`w-full pl-12 pr-5 py-5 border-2 rounded-2xl text-lg focus:outline-none focus:ring-2 focus:ring-[#f28c28]/40 focus:border-[#0b4f6c] transition-all duration-200 shadow-sm ${
+                        errors.location && touched.location ? "border-red-500" : "border-gray-300"
+                      }`}
+                      placeholder="Building A - Floor 3 - Room 312"
+                    />
+                  </div>
+                  {errors.location && touched.location && (
+                    <p className="text-red-600 text-base mt-2 flex items-center gap-2">
+                      <AlertCircle size={18} />
+                      {errors.location}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Availability Toggle - Hero style */}
+            <div className="pt-10 border-t border-gray-100">
+              <div className="flex items-center justify-between bg-gray-50/70 p-8 rounded-2xl border border-gray-200">
+                <div className="flex items-center gap-5">
+                  <div className={`h-16 w-16 rounded-2xl flex items-center justify-center ${formData.availability ? "bg-green-100" : "bg-red-100"}`}>
+                    {formData.availability ? (
+                      <CheckCircle2 size={32} className="text-green-600" />
+                    ) : (
+                      <X size={32} className="text-red-600" />
+                    )}
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-bold text-gray-800">
+                      Availability Status
+                    </h3>
+                    <p className="text-lg text-gray-600 mt-1">
+                      Mark whether this equipment is currently ready for use
+                    </p>
+                  </div>
+                </div>
+
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    name="availability"
+                    checked={formData.availability}
+                    onChange={handleChange}
+                    className="sr-only peer"
+                  />
+                  <div className="w-20 h-10 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#f28c28]/30 rounded-full peer peer-checked:after:translate-x-10 peer-checked:after:border-white after:content-[''] after:absolute after:top-1 after:left-1 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-8 after:w-8 after:transition-all peer-checked:bg-[#0b4f6c]"></div>
+                </label>
+              </div>
+            </div>
+
+            {/* Actions Footer */}
+            <div className="pt-12 flex flex-col sm:flex-row gap-6 justify-end border-t border-gray-100">
+              <Link
+                href="/equipment"
+                className="px-10 py-5 bg-white border-2 border-gray-300 text-gray-700 text-xl font-semibold rounded-2xl hover:bg-gray-50 transition flex items-center justify-center gap-3 shadow-sm"
+              >
+                <X size={22} />
+                Cancel
+              </Link>
+
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className={`px-12 py-5 bg-[#0b4f6c] text-white text-xl font-bold rounded-2xl shadow-xl hover:bg-[#0b4f6c]/95 hover:shadow-2xl focus:outline-none focus:ring-4 focus:ring-[#f28c28]/50 transition-all duration-300 flex items-center justify-center gap-4 min-w-[280px] ${
+                  isSubmitting ? "opacity-80 cursor-not-allowed" : ""
+                }`}
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 size={26} className="animate-spin" />
+                    Saving Equipment...
+                  </>
+                ) : (
+                  <>
+                    <Save size={26} />
+                    {mode === "create" ? "Create Equipment" : "Update Equipment"}
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </form>
       </div>
-
-      {errors.general && (
-        <div className="mb-4 text-red-500 text-sm">
-          {errors.general}
-        </div>
-      )}
-
-      <form
-        onSubmit={handleSubmit}
-        className="space-y-5"
-      >
-        {/* Type */}
-        <div>
-          <label className="block font-medium mb-1">
-            Type *
-          </label>
-          <select
-            className="w-full border rounded px-3 py-2"
-            value={type}
-            onChange={(e) =>
-              setType(
-                e.target.value as "Human" | "Equipment"
-              )
-            }
-          >
-            <option value="Human">Human</option>
-            <option value="Equipment">
-              Equipment
-            </option>
-          </select>
-
-          {errors.type && (
-            <p className="text-red-500 text-sm mt-1">
-              {errors.type}
-            </p>
-          )}
-        </div>
-
-        {/* Name */}
-        <div>
-          <label className="block font-medium mb-1">
-            Name *
-          </label>
-          <input
-            className="w-full border rounded px-3 py-2"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-          {errors.name && (
-            <p className="text-red-500 text-sm mt-1">
-              {errors.name}
-            </p>
-          )}
-        </div>
-
-        {/* Role */}
-        <div>
-          <label className="block font-medium mb-1">
-            Role *
-          </label>
-          <input
-            className="w-full border rounded px-3 py-2"
-            value={role}
-            onChange={(e) => setRole(e.target.value)}
-          />
-          {errors.role && (
-            <p className="text-red-500 text-sm mt-1">
-              {errors.role}
-            </p>
-          )}
-        </div>
-
-        {/* Availability */}
-        <div className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={availability}
-            onChange={(e) =>
-              setAvailability(e.target.checked)
-            }
-          />
-          <label>Available</label>
-        </div>
-
-        {/* Submit */}
-        <button
-          disabled={isSubmitting}
-          className="w-full bg-accent text-white py-3 rounded font-semibold"
-        >
-          {isSubmitting
-            ? "Saving..."
-            : mode === "create"
-            ? "Create Resource"
-            : "Update Resource"}
-        </button>
-      </form>
     </div>
   );
 }

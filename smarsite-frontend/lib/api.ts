@@ -9,6 +9,7 @@ import type {
   BackendTask,
   BackendUser,
 } from "./types";
+
 import { ApiError } from "./types";
 
 /** Messages NestJS / class-validator : string | string[] */
@@ -212,3 +213,89 @@ export async function deleteProject(id: string): Promise<void> {
     method: "DELETE",
   });
 }
+/* ======================
+        EQUIPMENT CRUD
+====================== */
+
+export function getEquipmentsKey() {
+  return `/equipment`;
+}
+
+export function getEquipmentKey(id: string) {
+  return `/equipment/${id}`;
+}
+
+export function createEquipment(payload: any) {
+  return apiFetch(`/equipment`, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function updateEquipment(id: string, payload: any) {
+  return apiFetch(`/equipment/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function deleteEquipment(id: string) {
+  return apiFetch(`/equipment/${id}`, {
+    method: "DELETE",
+  });
+}
+/* ======================
+        HUMAN CRUD
+====================== */
+
+export function getHumansKey() {
+  return `/humans`;
+}
+
+export function getHumanKey(id: string) {
+  return `/humans/${id}`;
+}
+
+export function createHuman(payload: any) {
+  return apiFetch(`/humans`, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function updateHuman(id: string, payload: any) {
+  return apiFetch(`/humans/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function deleteHuman(id: string) {
+  return apiFetch(`/humans/${id}`, {
+    method: "DELETE",
+  });
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

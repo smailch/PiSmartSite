@@ -7,7 +7,6 @@ import HumanResourcesForm from "@/components/HumanresourcesForm";
 export default function HumanResourcesPage() {
   return (
     <MainLayout>
-      <PageHeader title="Add Human Resource" description="Create or edit human resources" />
       <HumanResourcesForm mode="create" />
     </MainLayout>
   );

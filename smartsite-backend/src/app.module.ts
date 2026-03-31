@@ -5,7 +5,8 @@ import { ResourcesModule } from './resources/resources.module';
 import { ProjectsModule } from './projects/projects.module';
 import { TasksModule } from './tasks/tasks.module';
 import { UsersModule } from './users/users.module';
-
+import { HumanResourcesModule } from './human-resources/human-resources.module';
+import { EquipmentResourcesModule } from './equipment-resources/equipment-resources.module';
 @Module({
   imports: [
     // Connexion MongoDB Atlas
@@ -17,6 +18,8 @@ import { UsersModule } from './users/users.module';
     ProjectsModule, // Ajout du module Projects
     TasksModule, // Ajout du module Tasks
     UsersModule,
+    HumanResourcesModule,
+    EquipmentResourcesModule,
   ],
   controllers: [],
   providers: [],

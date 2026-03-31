@@ -7,7 +7,6 @@ import EquipmentResourcesForm from "@/components/EquipmentresourcesForm";
 export default function EquipmentResourcesPage() {
   return (
     <MainLayout>
-      <PageHeader title="Add Equipment Resource" description="Create or edit equipment resources" />
       <EquipmentResourcesForm mode="create" />
     </MainLayout>
   );
