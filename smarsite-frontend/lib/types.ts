@@ -1,0 +1,113 @@
+// ---------- MongoDB-backed types (matching NestJS schema) ----------
+
+export interface AssignedResource {
+  resourceId: string;
+  type: "Human" | "Equipment";
+}
+
+export interface Job {
+  _id: string;
+  taskId: string;
+  title: string;
+  description: string;
+  startTime: string;
+  endTime: string;
+  status: "Planifié" | "En cours" | "Terminé";
+  assignedResources: AssignedResource[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type CreateJobPayload = Omit<Job, "_id" | "createdAt" | "updatedAt">;
+export type UpdateJobPayload = Partial<CreateJobPayload>;
+
+// ---------- Auxiliary types (kept for resources/tasks pages) ----------
+
+
+export interface Resource {
+  _id: string;
+  type: "Human" | "Equipment";
+  name: string;
+  role: string;
+  availability: boolean;
+  createdAt: string;
+}
+
+export interface CreateResourcePayload {
+  type: "Human" | "Equipment";
+  name: string;
+  role: string;
+  availability: boolean;
+}
+
+export interface UpdateResourcePayload {
+  type?: "Human" | "Equipment";
+  name?: string;
+  role?: string;
+  availability?: boolean;
+}
+
+export type TaskPriority = "HIGH" | "MEDIUM" | "LOW";
+
+export type TaskStatus = "À faire" | "En cours" | "Terminé";
+
+/** Représentation frontend d'un ObjectId MongoDB. */
+export type ObjectId = string;
+
+export interface BackendTask {
+  _id: ObjectId;
+  title: string;
+  description?: string;
+  projectId: ObjectId;
+  duration: number;
+  priority: TaskPriority;
+  status: TaskStatus;
+  progress: number;
+  /** Peut être peuplé par l’API (`name`) ou seulement l’id */
+  assignedTo?: ObjectId | { _id: ObjectId; name: string; email?: string } | null;
+  /** Identifiants des tâches dont celle-ci dépend. */
+  dependsOn?: ObjectId[];
+  /** Dates optionnelles (peuvent être calculées côté frontend pour le Gantt). */
+  startDate?: string;
+  endDate?: string;
+  createdAt: string;
+}
+
+export interface BackendUser {
+  _id: string;
+  name: string;
+  email?: string;
+  createdAt?: string;
+}
+
+export type ProjectType =
+  | "Construction"
+  | "Rénovation"
+  | "Maintenance"
+  | "Autre";
+
+export interface Project {
+  _id: string; // MongoDB ObjectId
+  name: string;
+  description: string;
+  startDate: string;
+  endDate?: string;
+  status: "En cours" | "Terminé" | "En retard";
+  type: ProjectType;
+  budget?: number;
+  location?: string;
+  createdBy: string;
+}
+
+// ---------- API error type ----------
+
+export class ApiError extends Error {
+  status: number;
+  info: unknown;
+
+  constructor(message: string, status: number, info?: unknown) {
+    super(message);
+    this.status = status;
+    this.info = info;
+  }
+}
