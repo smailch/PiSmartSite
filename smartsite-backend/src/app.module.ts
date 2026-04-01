@@ -5,6 +5,8 @@ import { ResourcesModule } from './resources/resources.module';
 import { ProjectsModule } from './projects/projects.module';
 import { TasksModule } from './tasks/tasks.module';
 import { UsersModule } from './users/users.module';
+import { DocumentsModule } from './documents/documents.module';
+import { ProgressPhotosModule } from './progress-photos/progress-photos.module';
 import { HumanResourcesModule } from './human-resources/human-resources.module';
 import { EquipmentResourcesModule } from './equipment-resources/equipment-resources.module';
 @Module({
@@ -20,6 +22,8 @@ import { EquipmentResourcesModule } from './equipment-resources/equipment-resour
     UsersModule,
     HumanResourcesModule,
     EquipmentResourcesModule,
+    DocumentsModule,
+    ProgressPhotosModule,
   ],
   controllers: [],
   providers: [],

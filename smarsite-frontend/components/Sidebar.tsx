@@ -7,6 +7,7 @@ import {
   Building2,
   BarChart3,
   Users,
+  Camera,
   Wallet,
   AlertCircle,
   FileText,
@@ -18,7 +19,7 @@ import {
 } from 'lucide-react';
 
 const navigationItems = [
-  { id: 'dashboard', label: 'Daaashboard', icon: Home, href: '/' },
+  { id: 'dashboard', label: 'Dashboard', icon: Home, href: '/' },
   { id: 'projects', label: 'Projects', icon: Building2, href: '/projects' },
   { id: 'jobs', label: 'Jobs', icon: Briefcase, href: '/jobs' },
   { id: 'tasks', label: 'Tasks', icon: Clipboard, href: '/tasks' },
@@ -27,7 +28,9 @@ const navigationItems = [
   { id: 'budget', label: 'Budget', icon: Wallet, href: '/budget' },
   { id: 'alerts', label: 'Alerts', icon: AlertCircle, href: '/alerts' },
   { id: 'documents', label: 'Documents', icon: FileText, href: '/documents' },
+ { id: 'progress-photos', label: 'Progress Photos', icon: Camera, href: '/progress-photos' },
 ];
+
 
 export default function Sidebar() {
   const [open, setOpen] = useState(true);

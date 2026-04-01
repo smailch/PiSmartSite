@@ -3,7 +3,7 @@ import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   // ✅ Active CORS
   app.enableCors({
@@ -18,6 +18,10 @@ async function bootstrap() {
       forbidNonWhitelisted: true,
     }),
   );
+// Servir les fichiers uploadés
+  app.useStaticAssets(join(__dirname, '..', 'uploads'), {
+    prefix: '/uploads/',
+  });
 
   await app.listen(3200);
 }
