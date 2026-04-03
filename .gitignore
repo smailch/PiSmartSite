@@ -1,0 +1,37 @@
+# Node / Next.js / NestJS
+node_modules/
+.next/
+out/
+dist/
+build/
+coverage/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+logs/
+*.log
+
+# Env files : secrets locaux (ne pas versionner). Les gabarits .env.example restent suivis.
+.env*
+!.env.example
+!**/.env.example
+
+# TypeScript
+*.tsbuildinfo
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Python (venv that exists in repo)
+.venv/
+__pycache__/
+*.py[cod]
+
+# Misc
+*.local

@@ -1,0 +1,162 @@
+"use client";
+
+import { useState, useMemo } from "react";
+import Link from "next/link";
+import useSWR, { mutate } from "swr";
+import MainLayout from "@/components/MainLayout";
+import PageHeader from "@/components/PageHeader";
+import EquipmentResourcesTable from "@/components/EquipmentresourcesTable";
+import type { Equipment } from "@/lib/types";
+import { fetcher, getEquipmentsKey, deleteEquipment } from "@/lib/api";
+import { Plus, Search, Filter } from "lucide-react";
+
+export default function EquipmentResourcesPage() {
+  const {
+    data: equipments = [],
+    isLoading,
+    error,
+  } = useSWR<Equipment[]>(getEquipmentsKey(), fetcher);
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState<Equipment | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  /* ================================
+        SEARCH & FILTER
+  ================================== */
+  const filteredEquipments = useMemo(() => {
+    if (!searchQuery.trim()) return equipments;
+
+    const q = searchQuery.toLowerCase();
+    return equipments.filter(
+      (eq) =>
+        eq.name.toLowerCase().includes(q) ||
+        eq.category.toLowerCase().includes(q) ||
+        eq.model.toLowerCase().includes(q)
+    );
+  }, [equipments, searchQuery]);
+
+  /* ================================
+            DELETE
+  ================================== */
+  async function handleDelete() {
+    if (!deleteTarget) return;
+
+    setIsDeleting(true);
+    try {
+      await deleteEquipment(deleteTarget._id!);
+      mutate(getEquipmentsKey());
+    } catch (err) {
+      console.error("Failed to delete equipment:", err);
+    } finally {
+      setIsDeleting(false);
+      setDeleteTarget(null);
+    }
+  }
+
+  return (
+    <MainLayout>
+      <PageHeader
+        title="Equipment Resources"
+        description="Manage all your equipment resources"
+      >
+        <div className="flex gap-2 mb-4">
+          <Link
+            href="/equipment/create"
+            className="px-4 py-2 rounded-lg bg-accent text-accent-foreground font-semibold hover:bg-accent/90 transition-colors flex items-center gap-2 shadow-sm"
+          >
+            <Plus size={18} />
+            Add Equipment
+          </Link>
+        </div>
+      </PageHeader>
+
+      {/* SEARCH */}
+      <div className="relative flex-1 w-full md:max-w-sm mb-6">
+        <Search
+          size={18}
+          className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+        />
+        <input
+          type="text"
+          placeholder="Search equipments..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-border bg-input text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-shadow"
+        />
+      </div>
+
+      {/* COUNT */}
+      <div className="mb-4">
+        <p className="text-sm text-muted-foreground">
+          Showing{" "}
+          <span className="font-semibold text-foreground">
+            {filteredEquipments.length}
+          </span>{" "}
+          of{" "}
+          <span className="font-semibold text-foreground">
+            {equipments.length}
+          </span>{" "}
+          equipments
+        </p>
+      </div>
+
+      {/* ERROR */}
+      {error && (
+        <div className="bg-destructive/10 border border-destructive/30 rounded-xl p-6 mb-6">
+          <p className="text-destructive font-medium">
+            Failed to load equipments.
+          </p>
+          <p className="text-sm text-destructive/80 mt-1">
+            {error instanceof Error ? error.message : "Unknown error"}
+          </p>
+        </div>
+      )}
+
+      {/* LOADING */}
+      {isLoading ? (
+        <div className="bg-card rounded-xl border border-border shadow-sm p-12 flex items-center justify-center">
+          <div className="flex flex-col items-center gap-3">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+            <p className="text-muted-foreground">Loading equipments...</p>
+          </div>
+        </div>
+      ) : (
+        <EquipmentResourcesTable
+          equipments={filteredEquipments}
+          onDelete={(equipment: Equipment) => setDeleteTarget(equipment)}
+        />
+      )}
+
+      {/* DELETE CONFIRM */}
+      {deleteTarget && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+          <div className="bg-card rounded-xl p-6 w-full max-w-md shadow-lg">
+            <h3 className="text-lg font-semibold mb-2">
+              Delete Equipment
+            </h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              Are you sure you want to delete{" "}
+              <span className="font-semibold">{deleteTarget.name}</span>?
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setDeleteTarget(null)}
+                className="px-4 py-2 rounded-lg bg-secondary"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={isDeleting}
+                className="px-4 py-2 rounded-lg bg-destructive text-white"
+              >
+                {isDeleting ? "Deleting..." : "Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </MainLayout>
+  );
+}
