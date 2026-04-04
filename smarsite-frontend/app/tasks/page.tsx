@@ -46,6 +46,7 @@ import type {
   TaskPriority,
   TaskStatus,
 } from '@/lib/types';
+import { isTaskLate } from '@/lib/taskLate';
 
 type StatusFilter = 'All' | TaskStatus;
 type PriorityFilter = 'All' | TaskPriority;
@@ -63,6 +64,8 @@ interface UiTask {
   status: TaskStatus;
   priority: TaskPriority;
   jobCount: number;
+  /** Indicateur calculé (date de fin dépassée, statut ≠ Done). */
+  isLate: boolean;
 }
 
 interface UiJob {
@@ -174,6 +177,8 @@ function TasksPageContent() {
   const [formInitialValues, setFormInitialValues] = useState<TaskFormValues>(defaultFormValues(''));
   const [viewMode, setViewMode] = useState<'table' | 'board'>('table');
   const [savingBoardTaskId, setSavingBoardTaskId] = useState<string | null>(null);
+  /** Filtre board par projet (ignoré si URL ?project= définit un périmètre). */
+  const [boardProjectFilterId, setBoardProjectFilterId] = useState<'all' | string>('all');
 
   const {
     data: tasks = [],
@@ -186,8 +191,16 @@ function TasksPageContent() {
   const { data: users = [], isLoading: isUsersLoading } = useSWR<BackendUser[]>(getUsersKey(), fetcher);
 
   const projectsById = useMemo(() => new Map(projects.map((p) => [p._id, p])), [projects]);
+  const projectsSortedByName = useMemo(
+    () =>
+      [...projects].sort((a, b) =>
+        (a.name || '').localeCompare(b.name || '', 'fr', { sensitivity: 'base' }),
+      ),
+    [projects],
+  );
   const usersById = useMemo(() => new Map(users.map((u) => [u._id, u])), [users]);
   const resourcesById = useMemo(() => new Map(resources.map((r) => [r._id, r])), [resources]);
+  const lateCheckNow = useMemo(() => new Date(), []);
 
   const scopedProjectId = useMemo(
     () => scopedProjectIdFromSearchKey(searchKey),
@@ -206,6 +219,10 @@ function TasksPageContent() {
     if (v === 'board') setViewMode('board');
   }, [searchKey]);
 
+  useEffect(() => {
+    if (scopedProjectId) setBoardProjectFilterId('all');
+  }, [scopedProjectId]);
+
   const uiTasks: UiTask[] = useMemo(
     () =>
       tasks.map((task) => {
@@ -222,9 +239,10 @@ function TasksPageContent() {
           status: task.status,
           priority: task.priority,
           jobCount: taskJobs.length,
+          isLate: isTaskLate(task, lateCheckNow),
         };
       }),
-    [tasks, jobs, projectsById, usersById],
+    [tasks, jobs, projectsById, usersById, lateCheckNow],
   );
 
   const uiTasksForScope = useMemo(() => {
@@ -248,19 +266,45 @@ function TasksPageContent() {
     return list;
   }, [uiTasksForScope, statusFilter, priorityFilter, progressSort]);
 
-  /** Tasks for Kanban: same filters as table except status (always show all columns). */
+  /** Tasks for Kanban: filtre projet (hors scope URL), priorité, tri progression puis projet / titre. */
   const boardTasks = useMemo(() => {
     let list = uiTasksForScope;
+    if (!scopedProjectId && boardProjectFilterId !== 'all') {
+      list = list.filter((t) => t.projectId === boardProjectFilterId);
+    }
     if (priorityFilter !== 'All') {
       list = list.filter((t) => t.priority === priorityFilter);
     }
+
+    const cmpProjectThenTitle = (a: UiTask, b: UiTask) => {
+      const byProj = a.project.localeCompare(b.project, 'fr', { sensitivity: 'base' });
+      if (byProj !== 0) return byProj;
+      return a.title.localeCompare(b.title, 'fr', { sensitivity: 'base' });
+    };
+
     if (progressSort === 'asc') {
-      list = [...list].sort((a, b) => a.progress - b.progress);
+      list = [...list].sort((a, b) => {
+        const d = a.progress - b.progress;
+        if (d !== 0) return d;
+        return cmpProjectThenTitle(a, b);
+      });
     } else if (progressSort === 'desc') {
-      list = [...list].sort((a, b) => b.progress - a.progress);
+      list = [...list].sort((a, b) => {
+        const d = b.progress - a.progress;
+        if (d !== 0) return d;
+        return cmpProjectThenTitle(a, b);
+      });
+    } else {
+      list = [...list].sort(cmpProjectThenTitle);
     }
     return list;
-  }, [uiTasksForScope, priorityFilter, progressSort]);
+  }, [
+    uiTasksForScope,
+    scopedProjectId,
+    boardProjectFilterId,
+    priorityFilter,
+    progressSort,
+  ]);
 
   useEffect(() => {
     lastFocusedTaskRef.current = null;
@@ -290,7 +334,10 @@ function TasksPageContent() {
     if (!task || task.status === newStatus) return;
     setSavingBoardTaskId(taskId);
     try {
-      await updateTask(taskId, { status: newStatus });
+      await updateTask(taskId, {
+        status: newStatus,
+        ...(newStatus === 'Terminé' ? { progress: 100 } : {}),
+      });
       await mutate(getTasksKey());
       await mutate('/projects');
       toast({
@@ -608,6 +655,32 @@ function TasksPageContent() {
             <option value="desc">Descending</option>
           </select>
         </div>
+        {viewMode === 'board' && !scopedProjectId ? (
+          <div className="flex items-center gap-2 flex-wrap">
+            <Briefcase size={18} className="text-muted-foreground shrink-0" aria-hidden />
+            <label htmlFor="board-project-filter" className="text-sm font-medium text-muted-foreground">
+              Board: filter by project
+            </label>
+            <select
+              id="board-project-filter"
+              value={boardProjectFilterId}
+              onChange={(e) =>
+                setBoardProjectFilterId(e.target.value === 'all' ? 'all' : e.target.value)
+              }
+              className="rounded-lg border border-border bg-input px-3 py-1.5 text-sm text-foreground min-w-[12rem]"
+            >
+              <option value="all">All projects</option>
+              {projectsSortedByName.map((p) => (
+                <option key={p._id} value={p._id}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+            <span className="text-xs text-muted-foreground">
+              Cards are sorted by project name, then task title (then by progress if selected above).
+            </span>
+          </div>
+        ) : null}
       </div>
 
       {viewMode === 'board' && isLoading && (
@@ -629,48 +702,49 @@ function TasksPageContent() {
             savingTaskId={savingBoardTaskId}
             getPriorityStyle={getPriorityStyle}
             priorityCellLabel={priorityCellLabel}
+            showLateBadge
           />
         </div>
       )}
 
       <div
-        className={`overflow-hidden rounded-xl border border-border/80 bg-card shadow-sm ring-1 ring-black/[0.04] dark:ring-white/[0.06] ${
+        className={`rounded-xl border border-border/80 bg-card shadow-sm ring-1 ring-black/[0.04] dark:ring-white/[0.06] ${
           viewMode === 'board' ? 'hidden' : ''
         }`}
       >
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[1024px] border-collapse text-sm">
+        <div className="w-full">
+          <table className="w-full min-w-0 table-auto border-collapse text-sm">
             <thead>
               <tr className="border-b border-border bg-muted/40">
-                <th className="w-10 px-2 py-3.5 sm:px-3" aria-hidden />
-                <th className="px-4 py-3.5 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground first:pl-5 sm:px-5">
+                <th className="w-8 px-1 py-3 sm:px-2" aria-hidden />
+                <th className="px-2 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground first:pl-3 sm:px-3 whitespace-normal break-words">
                   Task
                 </th>
-                <th className="px-4 py-3.5 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground sm:px-5">
+                <th className="px-2 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground sm:px-3 whitespace-normal break-words">
                   Project
                 </th>
-                <th className="px-4 py-3.5 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground sm:px-5">
+                <th className="px-2 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground sm:px-3 whitespace-normal break-words">
                   Dependencies
                 </th>
-                <th className="px-4 py-3.5 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground sm:px-5">
+                <th className="px-2 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground sm:px-3 whitespace-normal break-words">
                   Assigned to
                 </th>
-                <th className="px-4 py-3.5 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground sm:px-5">
+                <th className="px-2 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground sm:px-3 whitespace-normal break-words">
                   Progress
                 </th>
-                <th className="px-4 py-3.5 text-right text-[11px] font-semibold uppercase tracking-wider text-muted-foreground sm:px-5 tabular-nums">
+                <th className="px-2 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-muted-foreground sm:px-3 tabular-nums whitespace-normal break-words">
                   Spent budget
                 </th>
-                <th className="px-4 py-3.5 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground sm:px-5">
+                <th className="px-2 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground sm:px-3 whitespace-normal break-words">
                   Status
                 </th>
-                <th className="px-4 py-3.5 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground sm:px-5">
+                <th className="px-2 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground sm:px-3 whitespace-normal break-words">
                   Priority
                 </th>
-                <th className="px-4 py-3.5 text-center text-[11px] font-semibold uppercase tracking-wider text-muted-foreground sm:px-5">
+                <th className="px-2 py-3 text-center text-[11px] font-semibold uppercase tracking-wider text-muted-foreground sm:px-3 whitespace-normal break-words">
                   Jobs
                 </th>
-                <th className="px-4 py-3.5 text-center text-[11px] font-semibold uppercase tracking-wider text-muted-foreground last:pr-5 sm:px-5">
+                <th className="px-2 py-3 text-center text-[11px] font-semibold uppercase tracking-wider text-muted-foreground last:pr-3 sm:px-3 whitespace-normal break-words">
                   Actions
                 </th>
               </tr>
@@ -683,7 +757,7 @@ function TasksPageContent() {
                 return (
                   <React.Fragment key={task.id}>
                     <tr className="border-b border-border/60 transition-colors odd:bg-background even:bg-muted/[0.35] hover:bg-primary/[0.04]">
-                      <td className="px-2 py-3.5 text-center sm:px-3">
+                      <td className="px-1 py-3 text-center align-top sm:px-2">
                         <button
                           type="button"
                           onClick={() => toggleTaskExpansion(task.id)}
@@ -696,37 +770,37 @@ function TasksPageContent() {
                           />
                         </button>
                       </td>
-                      <td className="max-w-[16rem] px-4 py-3.5 align-middle first:pl-5 sm:px-5">
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          <Clipboard size={17} className="shrink-0 text-primary" aria-hidden />
-                          <span className="truncate font-semibold text-foreground">{task.title}</span>
+                      <td className="px-2 py-3 align-top break-words first:pl-3 sm:px-3">
+                        <div className="flex items-start gap-2.5 min-w-0">
+                          <Clipboard size={17} className="mt-0.5 shrink-0 text-primary" aria-hidden />
+                          <span className="font-semibold text-foreground">{task.title}</span>
                         </div>
                       </td>
-                      <td className="px-4 py-3.5 align-middle sm:px-5">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <Briefcase size={15} className="shrink-0 text-primary/70" aria-hidden />
-                          <span className="truncate text-sm font-medium text-foreground">{task.project}</span>
+                      <td className="px-2 py-3 align-top break-words sm:px-3">
+                        <div className="flex items-start gap-2 min-w-0">
+                          <Briefcase size={15} className="mt-0.5 shrink-0 text-primary/70" aria-hidden />
+                          <span className="text-sm font-medium text-foreground">{task.project}</span>
                         </div>
                       </td>
-                      <td className="px-4 py-3.5 align-middle sm:px-5">
+                      <td className="px-2 py-3 align-top break-words sm:px-3">
                         {task.dependencyCount > 0 ? (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                          <span className="inline-flex max-w-full items-center justify-center whitespace-normal rounded-full bg-blue-100 px-2 py-0.5 text-center text-xs font-medium leading-snug text-blue-800">
                             Depends on {task.dependencyCount} task(s)
                           </span>
                         ) : (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+                          <span className="inline-flex max-w-full items-center justify-center whitespace-normal rounded-full bg-gray-100 px-2 py-0.5 text-center text-xs font-medium leading-snug text-gray-600">
                             No dependencies
                           </span>
                         )}
                       </td>
-                      <td className="px-4 py-3.5 align-middle sm:px-5">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <Users size={15} className="shrink-0 text-primary/80" aria-hidden />
-                          <span className="truncate text-sm font-medium text-foreground">{task.assignedToLabel}</span>
+                      <td className="px-2 py-3 align-top break-words sm:px-3">
+                        <div className="flex items-start gap-2 min-w-0">
+                          <Users size={15} className="mt-0.5 shrink-0 text-primary/80" aria-hidden />
+                          <span className="text-sm font-medium text-foreground">{task.assignedToLabel}</span>
                         </div>
                       </td>
-                      <td className="px-4 py-3.5 align-middle sm:px-5">
-                        <div className="w-32 sm:w-36">
+                      <td className="px-2 py-3 align-top sm:px-3">
+                        <div className="w-full max-w-[5.5rem]">
                           <div className="mb-1 flex items-center justify-between gap-2">
                             <span className="text-xs font-semibold tabular-nums text-foreground">{task.progress}%</span>
                           </div>
@@ -738,22 +812,31 @@ function TasksPageContent() {
                           </div>
                         </div>
                       </td>
-                      <td className="px-4 py-3.5 text-right align-middle sm:px-5">
+                      <td className="px-2 py-3 text-right align-top sm:px-3">
                         <span className="tabular-nums text-sm font-semibold text-foreground">{formatDh(task.spentBudget)}</span>
                       </td>
-                      <td className="px-4 py-3.5 align-middle sm:px-5">
-                        <span className={getTaskStatusStyle(task.status)}>{taskStatusLabel(task.status)}</span>
+                      <td className="px-2 py-3 align-top sm:px-3">
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <span className={getTaskStatusStyle(task.status)}>
+                            {taskStatusLabel(task.status)}
+                          </span>
+                          {task.isLate ? (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-900 dark:bg-amber-500/20 dark:text-amber-100">
+                              Late
+                            </span>
+                          ) : null}
+                        </div>
                       </td>
-                      <td className="px-4 py-3.5 align-middle sm:px-5">
+                      <td className="px-2 py-3 align-top sm:px-3">
                         <span className={getPriorityStyle(task.priority)}>{priorityCellLabel(task.priority)}</span>
                       </td>
-                      <td className="px-4 py-3.5 text-center align-middle sm:px-5">
+                      <td className="px-2 py-3 text-center align-top sm:px-3">
                         <span className="inline-block rounded-full bg-accent px-2.5 py-1 text-xs font-semibold text-accent-foreground shadow-sm tabular-nums">
                           {task.jobCount}
                         </span>
                       </td>
-                      <td className="px-4 py-3.5 align-middle last:pr-5 sm:px-5">
-                        <div className="flex items-center justify-center gap-1.5">
+                      <td className="px-2 py-3 align-top break-words last:pr-3 sm:px-3">
+                        <div className="flex flex-wrap items-center justify-center gap-1.5">
                           <button
                             type="button"
                             onClick={() => openEditModal(task.id)}

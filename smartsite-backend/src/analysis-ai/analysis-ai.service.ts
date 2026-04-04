@@ -35,15 +35,22 @@ Règles strictes :
 - Tu t’appuies UNIQUEMENT sur le JSON « Données projet » fourni dans ce message système. Ne pas inventer de montants, dates ou tâches absents du JSON.
 - Les champs chiffrés de pilotage (backendMetrics, budget, spentBudget, etc.) font foi ; ne les recalcule pas.
 - Si une information manque dans le JSON, dis-le et propose une démarche générique sans supposer des faits.
-- Pas de JSON dans ta réponse : texte naturel ou markdown léger (listes) uniquement.` as const;
+- Pas de JSON dans ta réponse : texte naturel ou markdown léger (listes) uniquement.
+Thèmes à couvrir selon la question de l’utilisateur :
+- Vérification des risques : croiser les faits (topRisks implicites dans les tâches, planningSignals, backendMetrics) sans inventer de risque absent des données.
+- Planning : jalons, séquence, dépendances (champ dependsOn / planningSignals.blockedTasks), complétion des dates manquantes (planningSignals.tasksMissingDates).
+- Retards : estimatedDelayDays, tâches overdueTasks, tâches bloquées ; rester factuel.
+- Automatisation / tâches répétitives : s’appuyer sur planningSignals.repetitiveClusters et proposer check-lists, modèles de tâches, rituals de suivi — sans promettre d’intégration outil inexistante.` as const;
 
 /** Rapport affiché en premier dans l’assistant ; pas de question à l’utilisateur. */
 const INITIAL_REPORT_SYSTEM_PROMPT = `Tu es un chef de projet senior (BTP / rénovation / maintenance). Tu rédiges UN rapport de synthèse en français, destiné à être lu tel quel par un utilisateur.
 
 Structure obligatoire (titres en gras markdown ## ou ###) :
 1. **Projet** — nom, type, lieu, statut, dates début/fin si présentes, budget alloué / dépenses enregistrées si présents, et en une phrase les métriques \`backendMetrics\` (estimatedBudgetDeltaPercent, estimatedDelayDays) en les interprétant comme dans l’analyse (écart budget signé, retard en jours).
-2. **Tâches du projet** — liste ou puces : pour chaque tâche du tableau \`tasks\`, au minimum titre, statut, % avancement, priorité ; dates si présentes. Si aucune tâche, le signaler clairement et renvoyer brièvement à la description du projet.
+2. **Tâches du projet** — liste ou puces : pour chaque tâche du tableau \`tasks\`, au minimum titre, statut, % avancement, priorité ; dates si présentes ; mentionner les dépendances si \`dependsOn\` est non vide. Si aucune tâche, le signaler clairement et renvoyer brièvement à la description du projet.
 3. **Points de vigilance** — 2 à 4 puces courtes, uniquement à partir des faits du JSON.
+4. **Retards et blocages** — tâches en retard (planningSignals.overdueTasks), tâches bloquées par prédécesseurs (planningSignals.blockedTasks), tâches sans dates complètes (planningSignals.tasksMissingDates) ; si rien à signaler, l’indiquer en une phrase.
+5. **Planning et automatisation** — 3 à 5 puces : suggestions de jalons ou de séquence, et idées pour réduire la charge répétitive (lots similaires dans planningSignals.repetitiveClusters, check-lists, mises à jour groupées) sans inventer d’outil.
 
 Règles :
 - Uniquement des faits tirés du JSON fourni ; ne rien inventer.
@@ -62,7 +69,13 @@ Tu dois répondre UNIQUEMENT par un objet JSON valide (sans markdown, sans texte
     "estimatedBudgetDeltaPercent": number | null,
     "rationale": string
   },
-  "confidence": number entre 0 et 1
+  "confidence": number entre 0 et 1,
+  "delayAnalysis": {
+    "summary": string (2-4 phrases sur retards projet/tâches, factuel, en s'appuyant sur backendMetrics.estimatedDelayDays et planningSignals),
+    "contributingFactors": string[] (2 à 6 facteurs courts, factuels ; ex. tâches en retard, blocages, échéance projet)
+  },
+  "planningSuggestions": string[] (4 à 8 suggestions concrètes : jalons, séquence, buffers, dates manquantes, déblocage des dépendances),
+  "repetitiveWorkAndAutomation": string[] (2 à 6 idées : modèles de tâches, checklists, regroupement des lots répétitifs d'après repetitiveClusters, rituals de suivi)
 }
 IMPORTANT — métriques chiffrées : le message utilisateur contient un bloc "backendMetrics" avec estimatedBudgetDeltaPercent et estimatedDelayDays calculés par le serveur.
 Tu DOIS recopier ces deux valeurs EXACTEMENT (même nombre, même null) dans budgetDelayTradeoff. Ne les recalcule pas, ne les arrondis pas différemment, ne les invente pas.
@@ -82,9 +95,19 @@ Qualité et ancrage (obligatoire) :
 - budgetDelayTradeoff.rationale : 1 à 3 phrases en français, qui interprètent le couple (estimatedBudgetDeltaPercent recopié, estimatedDelayDays recopié) et justifient recommendedMode — sans nouveau chiffre ni nouveau pourcentage.
 - recommendedMode : cohérent avec les métriques (ex. retard > 0 → "accelere" souvent pertinent ; dépenses > budget → privilégier "economique" pour contenir ; sous-dépense et pas de retard → "equilibre" ou "economique" selon marge).
 - confidence : abaisse-la (ex. 0.45–0.65) si peu de tâches ou description très courte, sinon 0.65–0.85 réaliste.
+- delayAnalysis : ancrée dans backendMetrics et planningSignals (overdueTasks, blockedTasks) ; ne pas contredire estimatedDelayDays.
+- planningSuggestions : au moins une suggestion si tasksMissingDates ou blockedTasks est non vide.
+- repetitiveWorkAndAutomation : si repetitiveClusters est vide, proposer tout de même une automatisation générique de pilotage (revue, templates) sans inventer de lots.
 
 Si startDate ou endDate sont null, raisonne sans supposer de dates manquantes comme retard avéré.
 ` as const;
+
+type PlanningSignals = {
+  overdueTasks: ReadonlyArray<{ id: string; title: string; endDate: string }>;
+  blockedTasks: ReadonlyArray<{ id: string; title: string; blockedByIds: string[] }>;
+  repetitiveClusters: ReadonlyArray<{ normalizedLabel: string; taskIds: string[] }>;
+  tasksMissingDates: ReadonlyArray<{ id: string; title: string }>;
+};
 
 type GroqChatCompletionResponse = {
   choices?: ReadonlyArray<{
@@ -136,21 +159,23 @@ export class AnalysisAiService {
       const analysis = parseAiAnalysisPayload(parsed);
       this.enforceBackendBudgetDelay(analysis, backendMetrics);
       const enriched = this.enrichAnalysisRisks(analysis, tasks);
+      const finalized = this.finalizeExtendedAnalysis(enriched, project, tasks, backendMetrics, now);
       return projectAiInsightsResponseSchema.parse({
         projectId,
         generatedAt,
         source: 'groq',
-        analysis: enriched,
+        analysis: finalized,
       });
     } catch {
       this.logger.warn(`Invalid or incomplete Groq JSON for project=${projectId}, using deterministic fallback`);
       const analysis = this.buildFallbackAnalysis(project, tasks, backendMetrics);
       const enriched = this.enrichAnalysisRisks(analysis, tasks);
+      const finalized = this.finalizeExtendedAnalysis(enriched, project, tasks, backendMetrics, now);
       return projectAiInsightsResponseSchema.parse({
         projectId,
         generatedAt,
         source: 'fallback',
-        analysis: enriched,
+        analysis: finalized,
       });
     }
   }
@@ -267,9 +292,232 @@ export class AnalysisAiService {
       };
     });
     return {
-      ...analysis,
+      summary: analysis.summary,
       topRisks,
+      nextActions: analysis.nextActions,
+      budgetDelayTradeoff: analysis.budgetDelayTradeoff,
+      confidence: analysis.confidence,
+      delayAnalysis: analysis.delayAnalysis ?? {
+        summary: '',
+        contributingFactors: [],
+      },
+      planningSuggestions: analysis.planningSuggestions ?? [],
+      repetitiveWorkAndAutomation: analysis.repetitiveWorkAndAutomation ?? [],
     };
+  }
+
+  /**
+   * Complète les champs étendus (retards, planning, automatisation) si le LLM les a omis ou partiellement remplis.
+   */
+  private finalizeExtendedAnalysis(
+    enriched: AiAnalysisResponsePayload,
+    project: Project,
+    tasks: TaskDocument[],
+    backendMetrics: { estimatedBudgetDeltaPercent: number | null; estimatedDelayDays: number },
+    now: Date,
+  ): AiAnalysisResponsePayload {
+    const signals = this.buildPlanningSignals(tasks, now);
+
+    const groqDelayOk =
+      enriched.delayAnalysis.summary.trim().length > 0 &&
+      enriched.delayAnalysis.contributingFactors.length > 0;
+    const delayAnalysis = groqDelayOk
+      ? {
+          summary: enriched.delayAnalysis.summary.trim(),
+          contributingFactors: enriched.delayAnalysis.contributingFactors.slice(0, 8),
+        }
+      : this.buildHeuristicDelayAnalysis(signals, backendMetrics, tasks);
+
+    const planningSuggestions =
+      enriched.planningSuggestions.length > 0
+        ? enriched.planningSuggestions.slice(0, 10)
+        : this.buildHeuristicPlanningSuggestions(signals, project, tasks);
+
+    const repetitiveWorkAndAutomation =
+      enriched.repetitiveWorkAndAutomation.length > 0
+        ? enriched.repetitiveWorkAndAutomation.slice(0, 8)
+        : this.buildHeuristicAutomation(signals, tasks);
+
+    return {
+      ...enriched,
+      delayAnalysis,
+      planningSuggestions,
+      repetitiveWorkAndAutomation,
+    };
+  }
+
+  private buildPlanningSignals(tasks: TaskDocument[], now: Date): PlanningSignals {
+    const byId = new Map(tasks.map((t) => [String(t._id), t]));
+
+    const overdueTasks = tasks
+      .filter((t) => {
+        if (t.status === 'Terminé' || !t.endDate) return false;
+        const e = new Date(t.endDate);
+        return !Number.isNaN(e.getTime()) && e.getTime() < now.getTime();
+      })
+      .slice(0, 12)
+      .map((t) => ({
+        id: String(t._id),
+        title: t.title,
+        endDate: new Date(t.endDate!).toISOString(),
+      }));
+
+    const blockedTasks = tasks
+      .filter((t) => {
+        if (t.status === 'Terminé') return false;
+        const deps = t.dependsOn ?? [];
+        if (deps.length === 0) return false;
+        return deps.some((depId) => {
+          const d = byId.get(String(depId));
+          return d != null && d.status !== 'Terminé';
+        });
+      })
+      .slice(0, 12)
+      .map((t) => {
+        const blockedByIds = (t.dependsOn ?? []).filter((id) => {
+          const d = byId.get(String(id));
+          return d != null && d.status !== 'Terminé';
+        });
+        return {
+          id: String(t._id),
+          title: t.title,
+          blockedByIds: blockedByIds.map(String),
+        };
+      });
+
+    const normTitle = (s: string) =>
+      s
+        .toLowerCase()
+        .replace(/\s+/g, ' ')
+        .trim()
+        .slice(0, 48);
+
+    const buckets = new Map<string, string[]>();
+    for (const t of tasks) {
+      const k = normTitle(t.title);
+      if (!k) continue;
+      if (!buckets.has(k)) buckets.set(k, []);
+      buckets.get(k)!.push(String(t._id));
+    }
+    const repetitiveClusters = [...buckets.entries()]
+      .filter(([, ids]) => ids.length >= 2)
+      .map(([label, ids]) => ({ normalizedLabel: label, taskIds: ids.slice(0, 8) }))
+      .slice(0, 6);
+
+    const tasksMissingDates = tasks
+      .filter((t) => !t.startDate || !t.endDate)
+      .slice(0, 15)
+      .map((t) => ({ id: String(t._id), title: t.title }));
+
+    return {
+      overdueTasks,
+      blockedTasks,
+      repetitiveClusters,
+      tasksMissingDates,
+    };
+  }
+
+  private buildHeuristicDelayAnalysis(
+    signals: PlanningSignals,
+    backendMetrics: { estimatedBudgetDeltaPercent: number | null; estimatedDelayDays: number },
+    tasks: TaskDocument[],
+  ): { summary: string; contributingFactors: string[] } {
+    const factors: string[] = [];
+    if (backendMetrics.estimatedDelayDays > 0) {
+      factors.push(
+        `Retard projet (fin prévue dépassée, projet non terminé) : environ ${backendMetrics.estimatedDelayDays} jour(s).`,
+      );
+    }
+    for (const t of signals.overdueTasks.slice(0, 4)) {
+      factors.push(`Tâche dont la date de fin est dépassée : « ${t.title} ».`);
+    }
+    if (signals.blockedTasks.length > 0) {
+      factors.push(
+        `${signals.blockedTasks.length} tâche(s) encore en attente de prédécesseurs non terminés (risque de chaîne).`,
+      );
+    }
+    if (
+      factors.length === 0 &&
+      typeof backendMetrics.estimatedBudgetDeltaPercent === 'number' &&
+      backendMetrics.estimatedBudgetDeltaPercent > 0
+    ) {
+      factors.push("Dépassement budgétaire enregistré : risque de tension sur le calendrier si non traité.");
+    }
+    if (factors.length === 0) {
+      factors.push(
+        tasks.length === 0
+          ? "Pas de tâches instrumentées : impossible de analyser des retards au niveau tâche."
+          : "Aucun retard de tâche ni retard global sur la fin de projet à la date de référence.",
+      );
+    }
+
+    let summary: string;
+    if (backendMetrics.estimatedDelayDays > 0) {
+      summary = `Le projet présente un retard calendaire d’environ ${backendMetrics.estimatedDelayDays} jour(s) par rapport à la date de fin prévue.`;
+      if (signals.overdueTasks.length > 0) {
+        summary += ` En parallèle, ${signals.overdueTasks.length} tâche(s) au moins ont une échéance dépassée.`;
+      }
+    } else if (signals.overdueTasks.length > 0) {
+      summary = `${signals.overdueTasks.length} tâche(s) ont une date de fin dépassée ; la fin de projet n’est pas forcément marquée en retard selon les règles métier actuelles.`;
+    } else {
+      summary =
+        "Aucun signal de retard significatif sur la fin de projet ou les échéances de tâches à la date de référence.";
+    }
+
+    return { summary: summary.trim(), contributingFactors: factors.slice(0, 8) };
+  }
+
+  private buildHeuristicPlanningSuggestions(
+    signals: PlanningSignals,
+    project: Project,
+    tasks: TaskDocument[],
+  ): string[] {
+    const out: string[] = [];
+    if (signals.tasksMissingDates.length > 0) {
+      out.push(
+        `Compléter les dates manquantes pour ${signals.tasksMissingDates.length} tâche(s) afin de sécuriser le Gantt et les alertes.`,
+      );
+    }
+    if (signals.blockedTasks.length > 0) {
+      out.push(
+        "Accélérer ou terminer les prédécesseurs des tâches bloquées listées dans planningSignals pour déverrouiller la suite.",
+      );
+    }
+    if (tasks.length >= 5) {
+      out.push(
+        "Poser 2 à 3 jalons intermédiaires (lots livrés ou réceptions) avec revues de calendrier formalisées.",
+      );
+    }
+    if (project.description && project.description.trim().length > 80 && tasks.length < 4) {
+      out.push(
+        "Découper la description du projet en tâches ordonnées (lots) pour permettre un suivi séquentiel réaliste.",
+      );
+    }
+    out.push("Réserver un créneau hebdomadaire de pilotage (priorités, risques, décisions documentées).");
+    if (out.length < 3) {
+      out.push("Réaligner l’ordre d’exécution sur les dépendances réelles après chaque mise à jour de statut.");
+    }
+    return out.slice(0, 10);
+  }
+
+  private buildHeuristicAutomation(signals: PlanningSignals, tasks: TaskDocument[]): string[] {
+    const out: string[] = [];
+    for (const c of signals.repetitiveClusters.slice(0, 3)) {
+      out.push(
+        `Tâches au libellé identique ou quasi identique (${c.taskIds.length} occurrence(s)) : créer un modèle ou une checklist type pour « ${c.normalizedLabel} ».`,
+      );
+    }
+    if (tasks.length >= 4) {
+      out.push(
+        "Standardiser les mises à jour (ex. même jour chaque semaine) pour les tâches récurrentes de contrôle ou de propreté.",
+      );
+    }
+    if (out.length === 0) {
+      out.push(
+        "Documenter une procédure courte de mise à jour des pourcentages et des dates pour réduire la charge de saisie ponctuelle.",
+      );
+    }
+    return out.slice(0, 8);
   }
 
   private buildProjectContext(
@@ -277,6 +525,10 @@ export class AnalysisAiService {
     tasks: TaskDocument[],
     backendMetrics: { estimatedBudgetDeltaPercent: number | null; estimatedDelayDays: number },
   ): string {
+    const now = new Date();
+    const planningSignals = this.buildPlanningSignals(tasks, now);
+    const maxDeps = 12;
+
     const payload = {
       name: project.name,
       description: project.description ?? '',
@@ -289,6 +541,7 @@ export class AnalysisAiService {
       location: project.location ?? '',
       createdBy: String(project.createdBy),
       backendMetrics,
+      planningSignals,
       tasks: tasks.map((t) => ({
         _id: String(t._id),
         title: t.title,
@@ -298,6 +551,7 @@ export class AnalysisAiService {
         duration: t.duration,
         startDate: t.startDate ? new Date(t.startDate).toISOString() : null,
         endDate: t.endDate ? new Date(t.endDate).toISOString() : null,
+        dependsOn: (t.dependsOn ?? []).map(String).slice(0, maxDeps),
         dependsOnCount: Array.isArray(t.dependsOn) ? t.dependsOn.length : 0,
       })),
     };
@@ -410,6 +664,7 @@ export class AnalysisAiService {
       backendMetrics,
     );
     const summary = this.buildFallbackSummary(project, tasks);
+    const signals = this.buildPlanningSignals(tasks, now);
 
     return {
       summary,
@@ -422,6 +677,9 @@ export class AnalysisAiService {
         rationale,
       },
       confidence: this.fallbackConfidence(project, tasks),
+      delayAnalysis: this.buildHeuristicDelayAnalysis(signals, backendMetrics, tasks),
+      planningSuggestions: this.buildHeuristicPlanningSuggestions(signals, project, tasks),
+      repetitiveWorkAndAutomation: this.buildHeuristicAutomation(signals, tasks),
     };
   }
 
@@ -545,10 +803,13 @@ export class AnalysisAiService {
   }
 
   private async executeGroqRequest(body: Record<string, unknown>): Promise<Response> {
-    const apiKey = this.configService.getOrThrow<string>('GROQ_API_KEY');
+    const primary = this.configService.getOrThrow<string>('GROQ_API_KEY').trim();
+    const fallbackRaw = this.configService.get<string>('GROQ_API_KEY_FALLBACK')?.trim() ?? '';
+    const fallbackKey =
+      fallbackRaw.length > 0 && fallbackRaw !== primary ? fallbackRaw : null;
     const timeoutMs = this.configService.get<number>('GROQ_TIMEOUT_MS', 10_000);
 
-    const attempt = async (): Promise<Response> => {
+    const doFetch = async (apiKey: string): Promise<Response> => {
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), timeoutMs);
       try {
@@ -566,25 +827,34 @@ export class AnalysisAiService {
       }
     };
 
-    try {
-      const first = await attempt();
-      if (RETRIABLE_STATUSES.has(first.status)) {
-        return attempt();
-      }
-      return first;
-    } catch (err) {
-      if (err instanceof Error && err.name === 'AbortError') {
-        throw new BadGatewayException('Groq request timed out');
-      }
+    const withRetryOnServerError = async (apiKey: string): Promise<Response> => {
       try {
-        return await attempt();
-      } catch (err2) {
-        if (err2 instanceof Error && err2.name === 'AbortError') {
+        const first = await doFetch(apiKey);
+        if (RETRIABLE_STATUSES.has(first.status)) {
+          return doFetch(apiKey);
+        }
+        return first;
+      } catch (err) {
+        if (err instanceof Error && err.name === 'AbortError') {
           throw new BadGatewayException('Groq request timed out');
         }
-        throw new BadGatewayException('Groq network error');
+        try {
+          return await doFetch(apiKey);
+        } catch (err2) {
+          if (err2 instanceof Error && err2.name === 'AbortError') {
+            throw new BadGatewayException('Groq request timed out');
+          }
+          throw new BadGatewayException('Groq network error');
+        }
       }
+    };
+
+    const first = await withRetryOnServerError(primary);
+    if (first.status === 429 && fallbackKey) {
+      this.logger.warn('Groq rate limited on primary API key; retrying with GROQ_API_KEY_FALLBACK');
+      return withRetryOnServerError(fallbackKey);
     }
+    return first;
   }
 
   private extractJsonObject(raw: string): string {

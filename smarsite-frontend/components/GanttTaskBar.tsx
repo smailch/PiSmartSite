@@ -152,10 +152,10 @@ export function GanttTaskBar(props: GanttTaskBarProps) {
 
   const strokeWidth = isCritical || isHighlighted || hovered ? 2 : 1;
   const strokeColor = isCritical
-    ? "#7f1d1d"
+    ? "color-mix(in oklab, var(--destructive) 85%, black)"
     : hasDependencies
-      ? "rgba(15,23,42,0.7)"
-      : "rgba(15,23,42,0.5)";
+      ? "color-mix(in oklab, var(--foreground) 35%, transparent)"
+      : "color-mix(in oklab, var(--foreground) 22%, transparent)";
 
   const statusColor = statusToColor(status);
 
@@ -185,7 +185,7 @@ export function GanttTaskBar(props: GanttTaskBarProps) {
             dx="0"
             dy={hovered || isHighlighted ? "1.5" : "1"}
             stdDeviation={hovered || isHighlighted ? "2" : "1"}
-            floodColor="rgba(15,23,42,0.35)"
+            floodColor="color-mix(in oklab, var(--foreground) 28%, transparent)"
           />
         </filter>
       </defs>
@@ -196,12 +196,12 @@ export function GanttTaskBar(props: GanttTaskBarProps) {
         y={visualY}
         width={width}
         height={barHeight}
-        rx={4}
-        ry={4}
+        rx={6}
+        ry={6}
         fill={`url(#${gradientId})`}
         stroke={strokeColor}
         strokeWidth={strokeWidth}
-        cursor="grab"
+        cursor={dragging ? "grabbing" : "grab"}
         filter={`url(#${shadowId})`}
         style={{ transition: "all 150ms ease-in-out" }}
         onMouseDown={handleMouseDown}
@@ -217,8 +217,8 @@ export function GanttTaskBar(props: GanttTaskBarProps) {
           y={visualY + barHeight / 2 - (barHeight * 0.35) / 2}
           width={(Math.max(4, width - 2) * clampedProgress) / 100}
           height={barHeight * 0.35}
-          rx={3}
-          ry={3}
+          rx={4}
+          ry={4}
           fill={progressFill}
           opacity={0.95}
           style={{ transition: "all 150ms ease-in-out" }}
@@ -232,9 +232,9 @@ export function GanttTaskBar(props: GanttTaskBarProps) {
           y={visualY + barHeight / 2 + 1}
           textAnchor="middle"
           dominantBaseline="middle"
-          fill={clampedProgress > 50 ? "#f9fafb" : "#111827"}
-          fontSize={9}
-          fontWeight={500}
+          fill={clampedProgress > 52 ? "#fafafa" : "var(--foreground)"}
+          fontSize={10}
+          fontWeight={600}
           style={{ pointerEvents: "none" }}
         >
           {`${Math.round(clampedProgress)}%`}
@@ -259,8 +259,9 @@ export function GanttTaskBar(props: GanttTaskBarProps) {
             y={visualY + 1.5}
             textAnchor="middle"
             dominantBaseline="middle"
-            fill="#f9fafb"
-            fontSize={9}
+            fill="#fafafa"
+            fontSize={9.5}
+            fontWeight={600}
             style={{ pointerEvents: "none" }}
           >
             {status === "Terminé" ? "Done" : status === "En cours" ? "En cours" : "À faire"}

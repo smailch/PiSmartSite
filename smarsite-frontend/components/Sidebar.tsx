@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 
 const navigationItems = [
-  { id: 'dashboard', label: 'Daaashboard', icon: Home, href: '/' },
+  { id: 'dashboard', label: 'Dashboard', icon: Home, href: '/home' },
   { id: 'projects', label: 'Projects', icon: Building2, href: '/projects' },
   { id: 'jobs', label: 'Jobs', icon: Briefcase, href: '/jobs' },
   { id: 'tasks', label: 'Tasks', icon: Clipboard, href: '/tasks' },

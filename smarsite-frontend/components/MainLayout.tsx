@@ -12,13 +12,13 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       <Sidebar />
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col md:ml-0 overflow-hidden">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col md:ml-0 overflow-hidden">
         {/* Topbar */}
         <Topbar />
 
-        {/* Page Content */}
-        <main className="flex-1 overflow-y-auto">
-          <div className="p-4 md:p-8">{children}</div>
+        {/* Page Content — scroll page (pas de zone de scroll interne imposée par le layout) */}
+        <main className="min-h-0 min-w-0 flex-1 overflow-auto">
+          <div className="min-w-0 p-4 md:p-8">{children}</div>
         </main>
       </div>
     </div>

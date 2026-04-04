@@ -77,6 +77,14 @@ export function getTasksKey() {
   return `/tasks`;
 }
 
+export function getProjectsKey() {
+  return `/projects`;
+}
+
+export function getTasks(): Promise<BackendTask[]> {
+  return apiFetch<BackendTask[]>(`/tasks`);
+}
+
 export function getTaskKey(id: string) {
   return `/tasks/${id}`;
 }

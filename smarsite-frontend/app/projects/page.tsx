@@ -8,7 +8,7 @@ import PageHeader from '@/components/PageHeader';
 import DataTable from '@/components/DataTable';
 import type { Project, ProjectAiInsightsResponse } from '@/lib/types';
 import { ApiError } from '@/lib/types';
-import { Folder, Cake as Crane, Filter, Trash2, Pencil, Plus, Sparkles, BarChart3, Brain, MessageCircle } from 'lucide-react';
+import { Folder, Cake as Crane, Filter, Trash2, Pencil, Plus, Sparkles, BarChart3, Brain, MessageCircle, LayoutDashboard } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -368,6 +368,8 @@ export default function ProjectsPage() {
           status: t.status,
           progress: t.progress,
           dependsOn: [],
+          ...(t.startDate ? { startDate: t.startDate } : {}),
+          ...(t.endDate ? { endDate: t.endDate } : {}),
         });
         idByProposalIndex.set(i, created._id);
         n += 1;
@@ -444,7 +446,7 @@ export default function ProjectsPage() {
             <p className="font-semibold text-foreground">
               {isValidObjectId(row._id) ? (
                 <Link
-                  href={`/tasks?project=${row._id}&view=board`}
+                  href={`/projects/${row._id}/overview`}
                   className="hover:text-primary hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-sm"
                 >
                   {value != null ? String(value) : ''}
@@ -584,6 +586,20 @@ export default function ProjectsPage() {
             disabled={!isValidObjectId(row._id)}
           >
             <Trash2 size={18} className="shrink-0" aria-hidden />
+          </button>
+          <button
+            type="button"
+            title="Project overview (KPI, budget, critical path)"
+            aria-label="Open project overview"
+            onClick={() => {
+              if (!isValidObjectId(row._id)) return;
+              router.push(`/projects/${row._id}/overview`);
+            }}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-secondary px-2.5 py-2 text-xs font-semibold text-foreground shadow-sm transition-colors hover:bg-muted sm:px-3"
+            disabled={!isValidObjectId(row._id)}
+          >
+            <LayoutDashboard size={16} className="shrink-0 text-primary" aria-hidden />
+            <span className="hidden sm:inline">Synthèse</span>
           </button>
           <button
             type="button"
@@ -729,7 +745,12 @@ export default function ProjectsPage() {
         ))}
       </div>
 
-      <DataTable columns={tableColumns} data={filteredProjects} title="All projects" />
+      <DataTable
+        columns={tableColumns}
+        data={filteredProjects}
+        title="All projects"
+        pageLevelScroll
+      />
 
       <Dialog
         open={aiOpen}
@@ -801,6 +822,11 @@ export default function ProjectsPage() {
                         ) : null}
                         <p className="mt-2 text-xs text-muted-foreground">
                           {t.duration} d · {t.priority} · {t.status}
+                          {t.startDate && t.endDate ? (
+                            <span className="ml-1 block sm:inline">
+                              · {t.startDate} → {t.endDate}
+                            </span>
+                          ) : null}
                         </p>
                         {Array.isArray(t.dependsOnIndices) && t.dependsOnIndices.length > 0 ? (
                           <p className="mt-2 text-xs leading-snug">
@@ -1020,6 +1046,40 @@ export default function ProjectsPage() {
                         <li key={i}>{a}</li>
                       ))}
                     </ol>
+                  </section>
+
+                  <section className="rounded-2xl border border-border/70 bg-muted/15 p-4 shadow-sm dark:bg-muted/10">
+                    <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                      Analyse des retards
+                    </h3>
+                    <p className="mb-3 whitespace-pre-wrap leading-relaxed text-foreground">
+                      {insightsData.analysis.delayAnalysis.summary}
+                    </p>
+                    <ul className="list-disc space-y-1.5 pl-5 text-sm text-muted-foreground">
+                      {insightsData.analysis.delayAnalysis.contributingFactors.map((f, i) => (
+                        <li key={i}>{f}</li>
+                      ))}
+                    </ul>
+                  </section>
+
+                  <section>
+                    <h3 className="mb-2 font-semibold text-foreground">Suggestions de planning</h3>
+                    <ul className="list-disc space-y-1.5 pl-5 text-muted-foreground">
+                      {insightsData.analysis.planningSuggestions.map((s, i) => (
+                        <li key={i}>{s}</li>
+                      ))}
+                    </ul>
+                  </section>
+
+                  <section>
+                    <h3 className="mb-2 font-semibold text-foreground">
+                      Travail répétitif &amp; automatisation
+                    </h3>
+                    <ul className="list-disc space-y-1.5 pl-5 text-muted-foreground">
+                      {insightsData.analysis.repetitiveWorkAndAutomation.map((s, i) => (
+                        <li key={i}>{s}</li>
+                      ))}
+                    </ul>
                   </section>
                 </div>
               )}

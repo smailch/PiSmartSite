@@ -8,6 +8,7 @@ import { useTooltip, TooltipWithBounds } from "@visx/tooltip";
 import { localPoint } from "@visx/event";
 
 import type { BackendTask, Project, TaskPriority, TaskStatus } from "@/lib/types";
+import { cn } from "@/lib/utils";
 import {
   calculateGridLayout,
   formatDate,
@@ -19,11 +20,11 @@ import {
   mapBackendTasksToCritical,
   MS_PER_DAY,
   priorityToColor,
-  progressToColor,
-  statusToColor,
   getTaskIcon,
   toDate,
+  truncateGanttTitle,
 } from "@/lib/ganttUtils";
+import { AlertTriangle } from "lucide-react";
 import {
   calculateTaskDates,
   detectCycle,
@@ -55,11 +56,13 @@ interface TooltipData {
   task: GanttTaskView;
 }
 
-const MARGIN_LEFT = 120;
-const MARGIN_RIGHT = 40;
-const MARGIN_TOP = 40;
-const MARGIN_BOTTOM = 40;
-const BAR_HEIGHT = 18;
+const MARGIN_LEFT = 248;
+const MARGIN_RIGHT = 48;
+const MARGIN_TOP = 56;
+const MARGIN_BOTTOM = 52;
+const BAR_HEIGHT = 24;
+/** Espace réservé au-dessus des lignes pour l’axe temps (évite chevauchement titre ↔ dates). */
+const TIMELINE_AXIS_TOP = 40;
 
 function resolveAssignedToLabel(task: BackendTask): string {
   const a = task.assignedTo;
@@ -133,7 +136,7 @@ function computeScheduledTasks(project: Project, tasks: BackendTask[]): GanttTas
 }
 
 export function GanttChart({ project, tasks, onTaskDatesChange }: GanttChartProps) {
-  const [zoomLevel, setZoomLevel] = React.useState<GanttZoomLevel>("week");
+  const [zoomLevel, setZoomLevel] = React.useState<GanttZoomLevel>("day");
   const [priorityFilter, setPriorityFilter] = React.useState<"ALL" | TaskPriority>("ALL");
   const [statusFilter, setStatusFilter] = React.useState<"ALL" | TaskStatus>("ALL");
   const [showCriticalOnly, setShowCriticalOnly] = React.useState(false);
@@ -284,60 +287,109 @@ export function GanttChart({ project, tasks, onTaskDatesChange }: GanttChartProp
     return map;
   }, [scheduledTasks, allStart]);
 
+  const rowsPixelHeight = Math.max(
+    1,
+    rowIndexedTasks.length * (GANTT_ROW_HEIGHT + GANTT_ROW_GAP),
+  );
+
+  const mad = (n: number) =>
+    new Intl.NumberFormat("fr-FR", {
+      style: "currency",
+      currency: "MAD",
+      maximumFractionDigits: 0,
+    }).format(n);
+
+  const budgetDelta =
+    typeof project.budget === "number" && !Number.isNaN(project.budget)
+      ? (project.spentBudget ?? 0) - project.budget
+      : null;
+
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-4">
       {/* Project summary header */}
-      <div className="flex flex-col gap-2 rounded-xl border border-border bg-card p-4">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div className="flex flex-col gap-1 min-w-0">
-            <h2 className="text-sm font-semibold text-foreground truncate">{project.name}</h2>
+      <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-5 shadow-sm ring-1 ring-black/[0.04] dark:ring-white/[0.06]">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="flex min-w-0 flex-col gap-1.5">
+            <h2 className="truncate text-lg font-semibold tracking-tight text-foreground">
+              {project.name}
+            </h2>
             {project.description && (
-              <p className="text-xs text-muted-foreground line-clamp-2">{project.description}</p>
+              <p className="line-clamp-2 text-sm leading-relaxed text-muted-foreground">
+                {project.description}
+              </p>
             )}
-            <p className="text-[11px] text-muted-foreground mt-1 flex flex-wrap gap-2">
-              <span>{projectStats.totalSpanDays} j de planning</span>
-              <span>• {projectStats.avgProgressPercent}% complété</span>
+            <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+              <span className="rounded-md bg-secondary/80 px-2 py-0.5 font-medium text-secondary-foreground">
+                {projectStats.totalSpanDays} j · planning
+              </span>
+              <span className="rounded-md bg-secondary/80 px-2 py-0.5 font-medium text-secondary-foreground">
+                {projectStats.avgProgressPercent}% av. tâches
+              </span>
               {typeof project.budget === "number" && !Number.isNaN(project.budget) && (
-                <span>
-                  • Budget :
-                  {" "}
-                  {new Intl.NumberFormat("fr-FR", {
-                    style: "currency",
-                    currency: "MAD",
-                    maximumFractionDigits: 0,
-                  }).format(project.budget)}
+                <span className="rounded-md bg-secondary/80 px-2 py-0.5 font-medium text-secondary-foreground">
+                  Budget {mad(project.budget)}
                 </span>
               )}
-            </p>
+              {typeof project.spentBudget === "number" && (
+                <span className="rounded-md bg-secondary/80 px-2 py-0.5 font-medium text-secondary-foreground">
+                  Dépensé {mad(project.spentBudget)}
+                </span>
+              )}
+              {budgetDelta !== null && (
+                <span
+                  className={cn(
+                    "rounded-md px-2 py-0.5 font-medium",
+                    budgetDelta > 0
+                      ? "bg-destructive/10 text-destructive"
+                      : "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
+                  )}
+                >
+                  Écart {budgetDelta > 0 ? "+" : ""}
+                  {mad(budgetDelta)}
+                </span>
+              )}
+            </div>
           </div>
-          <div className="flex flex-col items-end gap-1 text-[11px] text-muted-foreground">
+          <div className="flex flex-col items-end gap-1.5 text-xs text-muted-foreground">
             <span>
               Début :{" "}
               {project.startDate
-                ? new Date(project.startDate).toLocaleDateString("fr-FR")
+                ? new Date(project.startDate).toLocaleDateString("fr-FR", {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                  })
                 : "Non défini"}
             </span>
             <span>
-              Fin prévue :{" "}
+              Fin :{" "}
               {project.endDate
-                ? new Date(project.endDate).toLocaleDateString("fr-FR")
+                ? new Date(project.endDate).toLocaleDateString("fr-FR", {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                  })
                 : "Non définie"}
             </span>
-            <span>Statut : {project.status}</span>
+            <span className="rounded-full border border-border bg-background px-2.5 py-0.5 text-[11px] font-medium text-foreground">
+              {project.status}
+            </span>
           </div>
         </div>
-        <div className="mt-2 w-full h-2 rounded-full bg-muted overflow-hidden">
+        <div className="h-2.5 w-full overflow-hidden rounded-full bg-muted">
           <div
-            className="h-full rounded-full bg-emerald-500 transition-all duration-150 ease-in-out"
+            className="h-full rounded-full bg-[var(--chart-4)] transition-all duration-300 ease-out"
             style={{ width: `${projectStats.avgProgressPercent}%` }}
           />
         </div>
       </div>
 
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div className="flex flex-col">
-          <span className="text-sm font-medium text-muted-foreground">Zoom</span>
-          <div className="inline-flex rounded-md border border-border overflow-hidden">
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="flex flex-col gap-1.5">
+          <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            Échelle
+          </span>
+          <div className="inline-flex overflow-hidden rounded-lg border border-border bg-muted/30 p-0.5">
             {([
               ["day", "Jour"],
               ["week", "Semaine"],
@@ -347,17 +399,21 @@ export function GanttChart({ project, tasks, onTaskDatesChange }: GanttChartProp
                 key={value}
                 type="button"
                 onClick={() => setZoomLevel(value)}
-                className={`px-3 py-1.5 text-xs font-medium transition-colors ${zoomLevel === value ? "bg-primary text-white" : "bg-card text-foreground hover:bg-muted"}`}
+                className={cn(
+                  "rounded-md px-3 py-2 text-xs font-semibold transition-colors",
+                  zoomLevel === value
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:bg-background hover:text-foreground",
+                )}
               >
                 {label}
               </button>
             ))}
           </div>
         </div>
-        <div className="flex items-center gap-4 text-[11px] text-muted-foreground flex-wrap">
-          {/* Priority legend + filter */}
-          <div className="flex items-center gap-1">
-            <span className="mr-1 font-semibold">Priorité :</span>
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="mr-0.5 text-xs font-medium text-muted-foreground">Priorité</span>
             {(["HIGH", "MEDIUM", "LOW"] as const).map((p) => (
               <button
                 key={p}
@@ -365,25 +421,27 @@ export function GanttChart({ project, tasks, onTaskDatesChange }: GanttChartProp
                 onClick={() =>
                   setPriorityFilter((prev) => (prev === p ? "ALL" : p))
                 }
-                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md border text-[11px] transition-colors ${
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-medium transition-colors",
                   priorityFilter === p
-                    ? "bg-primary text-white border-primary"
-                    : "bg-card text-foreground border-border hover:bg-muted"
-                }`}
+                    ? "border-primary bg-primary text-primary-foreground shadow-sm"
+                    : "border-border bg-card text-foreground hover:bg-muted/80",
+                )}
               >
                 <span
-                  className="inline-block w-2.5 h-2.5 rounded-sm"
+                  className="size-2 rounded-sm ring-1 ring-black/10 dark:ring-white/20"
                   style={{ backgroundColor: priorityToColor(p) }}
                   aria-hidden
                 />
-                <span>{p}</span>
+                {p === "HIGH" ? "Haute" : p === "MEDIUM" ? "Moy." : "Basse"}
               </button>
             ))}
           </div>
 
-          {/* Status legend + filter */}
-          <div className="flex items-center gap-1">
-            <span className="mr-1 font-semibold">Statut :</span>
+          <div className="hidden h-6 w-px bg-border sm:block" aria-hidden />
+
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="mr-0.5 text-xs font-medium text-muted-foreground">Statut</span>
             {(["À faire", "En cours", "Terminé"] as const).map((s) => (
               <button
                 key={s}
@@ -391,52 +449,58 @@ export function GanttChart({ project, tasks, onTaskDatesChange }: GanttChartProp
                 onClick={() =>
                   setStatusFilter((prev) => (prev === s ? "ALL" : s))
                 }
-                className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md border text-[11px] transition-colors ${
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-medium transition-colors",
                   statusFilter === s
-                    ? "bg-primary text-white border-primary"
-                    : "bg-card text-foreground border-border hover:bg-muted"
-                }`}
+                    ? "border-primary bg-primary text-primary-foreground shadow-sm"
+                    : "border-border bg-card text-foreground hover:bg-muted/80",
+                )}
               >
                 <span
-                  className="inline-block w-2.5 h-2.5 rounded-sm"
-                  style={{ backgroundColor: statusToColor(s) }}
+                  className={cn(
+                    "size-2 rounded-full",
+                    s === "Terminé" && "bg-emerald-500",
+                    s === "En cours" && "bg-blue-500",
+                    s === "À faire" && "bg-zinc-400 dark:bg-zinc-500",
+                  )}
                   aria-hidden
                 />
-                <span>{s}</span>
+                {s}
               </button>
             ))}
           </div>
 
-          {/* Critical path toggle */}
           <button
             type="button"
             onClick={() => setShowCriticalOnly((prev) => !prev)}
-            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md border text-[11px] transition-colors ${
+            className={cn(
+              "inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-semibold transition-colors",
               showCriticalOnly
-                ? "bg-red-700 text-white border-red-700"
-                : "bg-card text-foreground border-border hover:bg-muted"
-            }`}
+                ? "border-destructive bg-destructive text-destructive-foreground shadow-sm"
+                : "border-border bg-card text-foreground hover:bg-muted/80",
+            )}
           >
-            <span aria-hidden>🔴</span>
-            <span>Critique</span>
+            <AlertTriangle className="size-3.5 shrink-0" aria-hidden />
+            Chemin critique
           </button>
         </div>
       </div>
 
-      <div className="w-full overflow-x-auto border border-border rounded-xl bg-card">
-        <svg width={svgWidth} height={svgHeight} role="img">
+      <div className="w-full overflow-x-auto rounded-xl border border-border bg-card shadow-sm ring-1 ring-black/[0.04] dark:ring-white/[0.06]">
+        <svg width={svgWidth} height={svgHeight} role="img" className="block min-w-0 touch-pan-x">
           <Group left={MARGIN_LEFT} top={MARGIN_TOP}>
             {/* Time grid axis */}
             <AxisBottom
-              top={0}
+              top={-TIMELINE_AXIS_TOP}
               scale={xScale}
               tickValues={layout.tickDates}
               tickFormat={(value) => formatDate(value as Date, zoomLevel)}
-              stroke="#e5e7eb"
-              tickStroke="#e5e7eb"
+              stroke="var(--border)"
+              tickStroke="var(--border)"
               tickLabelProps={() => ({
-                fill: "#6b7280",
-                fontSize: 10,
+                fill: "var(--muted-foreground)",
+                fontSize: 11,
+                fontFamily: "var(--font-sans), system-ui, sans-serif",
                 textAnchor: "middle",
               })}
             />
@@ -458,11 +522,11 @@ export function GanttChart({ project, tasks, onTaskDatesChange }: GanttChartProp
                     <rect
                       key={`weekend-${cursor.toISOString()}`}
                       x={x1}
-                      y={8}
+                      y={0}
                       width={w}
-                      height={svgHeight - MARGIN_TOP - MARGIN_BOTTOM}
-                      fill="#f9fafb"
-                      opacity={0.7}
+                      height={rowsPixelHeight}
+                      fill="var(--muted)"
+                      opacity={0.28}
                     />,
                   );
                 }
@@ -479,10 +543,11 @@ export function GanttChart({ project, tasks, onTaskDatesChange }: GanttChartProp
                   key={`grid-${index}`}
                   x1={x}
                   x2={x}
-                  y1={8}
-                  y2={svgHeight - MARGIN_TOP - MARGIN_BOTTOM}
-                  stroke="#f3f4f6"
-                  strokeWidth={index === 0 ? 2 : 1}
+                  y1={0}
+                  y2={rowsPixelHeight}
+                  stroke="var(--border)"
+                  strokeWidth={index === 0 ? 1.5 : 1}
+                  opacity={index === 0 ? 0.9 : 0.55}
                 />
               );
             })}
@@ -496,41 +561,51 @@ export function GanttChart({ project, tasks, onTaskDatesChange }: GanttChartProp
                 <line
                   x1={x}
                   x2={x}
-                  y1={8}
-                  y2={svgHeight - MARGIN_TOP - MARGIN_BOTTOM}
-                  stroke="#ef4444"
-                  strokeWidth={1}
-                  strokeDasharray="4 2"
+                  y1={0}
+                  y2={rowsPixelHeight}
+                  stroke="var(--primary)"
+                  strokeWidth={2}
+                  strokeDasharray="6 4"
+                  opacity={0.95}
                 />
               );
             })()}
 
             {/* Task labels on the left */}
             {rowIndexedTasks.map((task) => {
-              const y = task.rowIndex * (GANTT_ROW_HEIGHT + GANTT_ROW_GAP) + GANTT_ROW_HEIGHT / 2;
+              const rowTop = task.rowIndex * (GANTT_ROW_HEIGHT + GANTT_ROW_GAP);
+              const centerY = rowTop + GANTT_ROW_HEIGHT / 2;
+              const assignee =
+                task.assignedToLabel && task.assignedToLabel.length > 18
+                  ? `${task.assignedToLabel.slice(0, 17)}…`
+                  : task.assignedToLabel ?? "Non assigné";
               return (
-                <text
-                  key={`label-${task.id}`}
-                  x={-12}
-                  y={y}
-                  textAnchor="end"
-                  dominantBaseline="middle"
-                  fill="#111827"
-                  fontSize={11}
-                >
-                  <tspan>{getTaskIcon(task.title)} </tspan>
-                  <tspan>
-                    {task.title} • {task.durationDays}j
-                    {typeof project.budget === "number" && !Number.isNaN(project.budget)
-                      ? " • ≈ " +
-                        new Intl.NumberFormat("fr-FR", {
-                          style: "currency",
-                          currency: "MAD",
-                          maximumFractionDigits: 0,
-                        }).format(project.budget / Math.max(1, scheduledTasks.length))
-                      : ""}
-                  </tspan>
-                </text>
+                <g key={`label-${task.id}`}>
+                  <text
+                    x={-14}
+                    y={centerY - 6}
+                    textAnchor="end"
+                    dominantBaseline="middle"
+                    fill="var(--foreground)"
+                    fontSize={12}
+                    fontWeight={600}
+                    style={{ fontFamily: "var(--font-sans), system-ui, sans-serif" }}
+                  >
+                    <tspan style={{ opacity: 0.88 }}>{getTaskIcon(task.title)}</tspan>
+                    <tspan>{` ${truncateGanttTitle(task.title, 28)}`}</tspan>
+                  </text>
+                  <text
+                    x={-14}
+                    y={centerY + 10}
+                    textAnchor="end"
+                    dominantBaseline="middle"
+                    fill="var(--muted-foreground)"
+                    fontSize={10}
+                    style={{ fontFamily: "var(--font-sans), system-ui, sans-serif" }}
+                  >
+                    {`${task.durationDays} j · ${task.progress}% · ${assignee}`}
+                  </text>
+                </g>
               );
             })}
 
@@ -573,8 +648,11 @@ export function GanttChart({ project, tasks, onTaskDatesChange }: GanttChartProp
                 const isHovered =
                   hoveredLink?.fromId === depId && hoveredLink?.toId === task.id;
 
-                const strokeColor = isCriticalEdge ? "#b91c1c" : "#9ca3af";
-                const strokeWidth = isCriticalEdge || isHovered ? 2 : 1;
+                const strokeColor = isCriticalEdge
+                  ? "var(--destructive)"
+                  : "var(--muted-foreground)";
+                const strokeWidth = isCriticalEdge || isHovered ? 2.25 : 1.25;
+                const markerId = isCriticalEdge ? "arrowhead-critical" : "arrowhead";
 
                 return (
                   <path
@@ -583,7 +661,8 @@ export function GanttChart({ project, tasks, onTaskDatesChange }: GanttChartProp
                     fill="none"
                     stroke={strokeColor}
                     strokeWidth={strokeWidth}
-                    markerEnd={"url(#arrowhead)"}
+                    markerEnd={`url(#${markerId})`}
+                    opacity={isHovered ? 1 : 0.75}
                     strokeDasharray="4 4"
                     style={{ transition: "all 150ms ease-in-out" }}
                     onMouseEnter={() => setHoveredLink({ fromId: depId, toId: task.id })}
@@ -601,7 +680,7 @@ export function GanttChart({ project, tasks, onTaskDatesChange }: GanttChartProp
               });
             })}
 
-            {/* Arrowhead marker definition */}
+            {/* Arrowhead markers */}
             <defs>
               <marker
                 id="arrowhead"
@@ -611,7 +690,17 @@ export function GanttChart({ project, tasks, onTaskDatesChange }: GanttChartProp
                 refY={4}
                 orient="auto"
               >
-                <path d="M0,0 L8,4 L0,8 z" fill="#9ca3af" />
+                <path d="M0,0 L8,4 L0,8 z" fill="var(--muted-foreground)" />
+              </marker>
+              <marker
+                id="arrowhead-critical"
+                markerWidth={8}
+                markerHeight={8}
+                refX={8}
+                refY={4}
+                orient="auto"
+              >
+                <path d="M0,0 L8,4 L0,8 z" fill="var(--destructive)" />
               </marker>
             </defs>
 
@@ -668,40 +757,55 @@ export function GanttChart({ project, tasks, onTaskDatesChange }: GanttChartProp
           top={tooltipTop}
           left={tooltipLeft}
           offsetTop={8}
+          className="z-50 max-w-[min(20rem,calc(100vw-1.5rem))] rounded-xl border border-border bg-popover px-3.5 py-3 text-popover-foreground shadow-lg"
           style={{
-            backgroundColor: "white",
-            border: "1px solid #e5e7eb",
-            borderRadius: 8,
-            padding: "8px 12px",
-            boxShadow: "0 10px 15px -3px rgba(15,23,42,0.1)",
-            color: "#111827",
-            maxWidth: 260,
+            boxShadow:
+              "0 10px 40px -10px color-mix(in oklab, var(--foreground) 25%, transparent)",
           }}
         >
-          <div className="flex flex-col gap-1">
-            <span className="text-xs font-semibold">{tooltipData.task.title}</span>
-            <span className="text-[11px] text-muted-foreground">
+          <div className="flex flex-col gap-1.5">
+            <span className="text-sm font-semibold leading-snug text-foreground">
+              {tooltipData.task.title}
+            </span>
+            <span className="text-xs text-muted-foreground">
               {tooltipData.task.priority} · {tooltipData.task.status}
             </span>
-            <span className="text-[11px] text-muted-foreground">
-              Début : {tooltipData.task.startDate.toLocaleDateString("fr-FR")}
-            </span>
-            <span className="text-[11px] text-muted-foreground">
-              Durée : {tooltipData.task.durationDays} jour(s)
-            </span>
-            <span className="text-[11px] text-muted-foreground">
-              Progression : {tooltipData.task.progress}%
-            </span>
-            {tooltipData.task.assignedToLabel && (
-              <span className="text-[11px] text-muted-foreground">
-                Assigné à : {tooltipData.task.assignedToLabel}
-              </span>
-            )}
-            {tooltipData.task.dependsOn.length > 0 && (
-              <span className="text-[11px] text-muted-foreground">
-                Dépendances : {tooltipData.task.dependsOn.length}
-              </span>
-            )}
+            <div className="mt-1 space-y-1 border-t border-border pt-2 text-xs text-muted-foreground">
+              <p>
+                Début :{" "}
+                <span className="font-medium text-foreground">
+                  {tooltipData.task.startDate.toLocaleDateString("fr-FR")}
+                </span>
+              </p>
+              <p>
+                Durée :{" "}
+                <span className="font-medium text-foreground">
+                  {tooltipData.task.durationDays} jour(s)
+                </span>
+              </p>
+              <p>
+                Progression :{" "}
+                <span className="font-medium text-foreground">
+                  {tooltipData.task.progress}%
+                </span>
+              </p>
+              {tooltipData.task.assignedToLabel && (
+                <p>
+                  Assigné :{" "}
+                  <span className="font-medium text-foreground">
+                    {tooltipData.task.assignedToLabel}
+                  </span>
+                </p>
+              )}
+              {tooltipData.task.dependsOn.length > 0 && (
+                <p>
+                  Dépendances :{" "}
+                  <span className="font-medium text-foreground">
+                    {tooltipData.task.dependsOn.length}
+                  </span>
+                </p>
+              )}
+            </div>
           </div>
         </TooltipWithBounds>
       )}

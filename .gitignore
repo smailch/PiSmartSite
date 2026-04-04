@@ -35,3 +35,7 @@ __pycache__/
 
 # Misc
 *.local
+!smarsite-frontend/.env.local
+
+# Env avec clés partagées (dépôt privé uniquement)
+!smartsite-backend/.env

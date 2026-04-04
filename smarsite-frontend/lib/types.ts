@@ -130,6 +130,12 @@ export interface ProjectAiInsightsResponse {
       rationale: string;
     };
     confidence: number;
+    delayAnalysis: {
+      summary: string;
+      contributingFactors: string[];
+    };
+    planningSuggestions: string[];
+    repetitiveWorkAndAutomation: string[];
   };
 }
 

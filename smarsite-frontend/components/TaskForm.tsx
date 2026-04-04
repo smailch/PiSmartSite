@@ -469,7 +469,14 @@ export default function TaskForm({
           <select
             id="task-status"
             value={values.status}
-            onChange={(e) => setField("status", e.target.value as TaskStatus)}
+            onChange={(e) => {
+              const v = e.target.value as TaskStatus;
+              setValues((prev) => ({
+                ...prev,
+                status: v,
+                ...(v === "Terminé" ? { progress: 100 } : {}),
+              }));
+            }}
             className={controlClass(false, "h-11")}
           >
             <option value="À faire">To do</option>

@@ -65,6 +65,8 @@ export interface KanbanUiTask {
   spentBudget: number;
   status: TaskStatus;
   priority: TaskPriority;
+  /** Indicateur calculé (optionnel si non fourni). */
+  isLate?: boolean;
 }
 
 interface TaskKanbanBoardProps {
@@ -74,6 +76,8 @@ interface TaskKanbanBoardProps {
   savingTaskId: string | null;
   getPriorityStyle: (priority: TaskPriority) => string;
   priorityCellLabel: (p: TaskPriority) => string;
+  /** Affiche le badge « Late » quand `task.isLate` est true. */
+  showLateBadge?: boolean;
 }
 
 export default function TaskKanbanBoard({
@@ -83,6 +87,7 @@ export default function TaskKanbanBoard({
   savingTaskId,
   getPriorityStyle,
   priorityCellLabel,
+  showLateBadge = false,
 }: TaskKanbanBoardProps) {
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dropTargetStatus, setDropTargetStatus] = useState<TaskStatus | null>(null);
@@ -232,6 +237,11 @@ export default function TaskKanbanBoard({
                             <span className={`text-xs font-medium ${getPriorityStyle(task.priority)}`}>
                               {priorityCellLabel(task.priority)}
                             </span>
+                            {showLateBadge && task.isLate ? (
+                              <span className="rounded-md bg-amber-500/15 px-2 py-0.5 text-[11px] font-semibold text-amber-900 ring-1 ring-amber-500/25 dark:text-amber-100 dark:ring-amber-400/30">
+                                Late
+                              </span>
+                            ) : null}
                             <span className="rounded-md bg-muted/60 px-2 py-0.5 text-[11px] font-semibold tabular-nums text-muted-foreground dark:bg-muted/40">
                               {task.progress}%
                             </span>

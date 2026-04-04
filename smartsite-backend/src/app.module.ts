@@ -1,6 +1,10 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
+import { join } from 'node:path';
+
+/** Racine du package backend (parent de `dist/` à l’exécution — `.env` toujours chargé). */
+const backendEnvDir = join(__dirname, '..');
 import { validateGroqEnv } from './analysis-ai/groq-env.validation';
 import { JobsModule } from './jobs/jobs.module';
 import { ResourcesModule } from './resources/resources.module';
@@ -10,12 +14,16 @@ import { UsersModule } from './users/users.module';
 import { HumanResourcesModule } from './human-resources/human-resources.module';
 import { EquipmentResourcesModule } from './equipment-resources/equipment-resources.module';
 import { AnalysisAiModule } from './analysis-ai/analysis-ai.module';
+import { TelegramModule } from './telegram/telegram.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: '.env.example',
+      envFilePath: [
+        join(backendEnvDir, '.env'),
+        join(backendEnvDir, '.env.local'),
+      ],
       validate: validateGroqEnv,
     }),
     // Connexion MongoDB Atlas
@@ -30,6 +38,7 @@ import { AnalysisAiModule } from './analysis-ai/analysis-ai.module';
     HumanResourcesModule,
     EquipmentResourcesModule,
     AnalysisAiModule,
+    TelegramModule,
   ],
   controllers: [],
   providers: [],

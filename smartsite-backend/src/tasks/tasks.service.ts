@@ -11,6 +11,7 @@ import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { Task, TaskDocument } from './schemas/task.schema';
 import { Project, ProjectDocument } from '../projects/schemas/project.schema';
+import { isTaskLateAt } from './task-late.util';
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 
@@ -26,6 +27,7 @@ export class TasksService implements OnModuleInit {
   async onModuleInit(): Promise<void> {
     await this.migrateLegacyTasks();
     await this.migrateLegacyProjects();
+    await this.recomputeBehindScheduleForOpenProjects();
   }
 
   /** Anciens documents Task sans les nouveaux champs obligatoires */
@@ -78,6 +80,72 @@ export class TasksService implements OnModuleInit {
     for (const project of projects) {
       const projectId = String(project._id);
       await this.recalculateProjectSpentBudget(projectId);
+    }
+  }
+
+  /**
+   * Après démarrage : aligne le statut « En retard » des projets ouverts
+   * sur le nombre de tâches en retard (seuil : 3).
+   */
+  private async recomputeBehindScheduleForOpenProjects(): Promise<void> {
+    const open = await this.projectModel
+      .find({ status: { $ne: 'Terminé' } })
+      .select('_id')
+      .lean()
+      .exec();
+    for (const p of open) {
+      await this.syncProjectBehindScheduleFromTasks(String(p._id));
+    }
+  }
+
+  /**
+   * Si au moins 3 tâches du projet ont une endDate dépassée et ne sont pas « Terminé »,
+   * le projet passe en « En retard » (projets déjà « Terminé » non modifiés).
+   */
+  private async syncProjectBehindScheduleFromTasks(projectId: string): Promise<void> {
+    this.assertValidObjectId(projectId, 'projectId');
+
+    const projectObjectId = new Types.ObjectId(projectId);
+    const project = await this.projectModel
+      .findById(projectObjectId)
+      .select('status')
+      .lean()
+      .exec();
+
+    if (!project || project.status === 'Terminé') return;
+
+    const taskRows = await this.taskModel
+      .find({
+        $or: [
+          { projectId: projectObjectId },
+          { projectId: projectId },
+          { $expr: { $eq: [{ $toString: '$projectId' }, projectId] } },
+        ],
+      })
+      .select('_id endDate status')
+      .lean()
+      .exec();
+
+    const seen = new Set<string>();
+    const unique = taskRows.filter((row) => {
+      const id = String(row._id);
+      if (seen.has(id)) return false;
+      seen.add(id);
+      return true;
+    });
+
+    const now = new Date();
+    const lateCount = unique.filter((t) =>
+      isTaskLateAt(t.endDate, t.status != null ? String(t.status) : undefined, now),
+    ).length;
+
+    if (lateCount >= 3) {
+      await this.projectModel
+        .findByIdAndUpdate(projectObjectId, { $set: { status: 'En retard' } })
+        .exec();
+      this.logger.debug(
+        `[behindSchedule] projectId=${projectId} → En retard (${lateCount} late tasks)`,
+      );
     }
   }
 
@@ -318,18 +386,25 @@ export class TasksService implements OnModuleInit {
       durationDays: duration,
     });
 
+    const progress =
+      createTaskDto.status === 'Terminé'
+        ? 100
+        : Math.min(100, Math.max(0, Math.round(createTaskDto.progress ?? 0)));
+
     const doc = new this.taskModel({
       ...createTaskDto,
       duration,
       dependsOn,
       startDate,
       endDate,
+      progress,
       assignedTo: createTaskDto.assignedTo ?? undefined,
     });
 
     const created = await doc.save();
     await created.populate('assignedTo', 'name email');
     await this.recalculateProjectSpentBudget(createTaskDto.projectId);
+    await this.syncProjectBehindScheduleFromTasks(createTaskDto.projectId);
     return created;
   }
 
@@ -429,6 +504,14 @@ export class TasksService implements OnModuleInit {
       }
     }
 
+    const effectiveStatus =
+      updateTaskDto.status !== undefined
+        ? String(updateTaskDto.status)
+        : String(existingTask.status ?? '');
+    if (effectiveStatus === 'Terminé') {
+      updatePayload.progress = 100;
+    }
+
     const updatedTask = await this.taskModel
       .findByIdAndUpdate(id, { $set: updatePayload }, { new: true })
       .populate('assignedTo', 'name email')
@@ -443,6 +526,11 @@ export class TasksService implements OnModuleInit {
       await this.recalculateProjectSpentBudget(oldProjectId);
     }
 
+    await this.syncProjectBehindScheduleFromTasks(effectiveProjectId);
+    if (updateTaskDto.projectId && updateTaskDto.projectId !== oldProjectId) {
+      await this.syncProjectBehindScheduleFromTasks(oldProjectId);
+    }
+
     return updatedTask;
   }
 
@@ -452,7 +540,9 @@ export class TasksService implements OnModuleInit {
     if (!deletedTask) {
       throw new NotFoundException(`Task with ID ${id} not found`);
     }
-    await this.recalculateProjectSpentBudget(String(deletedTask.projectId));
+    const pid = String(deletedTask.projectId);
+    await this.recalculateProjectSpentBudget(pid);
+    await this.syncProjectBehindScheduleFromTasks(pid);
     return deletedTask;
   }
 
@@ -473,6 +563,7 @@ export class TasksService implements OnModuleInit {
         },
       )
       .exec();
+    await this.syncProjectBehindScheduleFromTasks(projectId);
     return result.modifiedCount ?? 0;
   }
 
