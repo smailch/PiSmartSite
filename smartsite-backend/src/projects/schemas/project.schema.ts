@@ -35,7 +35,8 @@ export class Project {
   @Prop()
   location?: string;
 
-  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true })
+  /** Site Engineer (collection `humans`), pas un compte applicatif User. */
+  @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Human', required: true })
   createdBy: mongoose.Schema.Types.ObjectId;
 
   @Prop({ default: Date.now })

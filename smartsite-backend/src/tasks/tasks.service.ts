@@ -402,7 +402,7 @@ export class TasksService implements OnModuleInit {
     });
 
     const created = await doc.save();
-    await created.populate('assignedTo', 'name email');
+    await created.populate('assignedTo', 'firstName lastName role availability');
     await this.recalculateProjectSpentBudget(createTaskDto.projectId);
     await this.syncProjectBehindScheduleFromTasks(createTaskDto.projectId);
     return created;
@@ -411,7 +411,7 @@ export class TasksService implements OnModuleInit {
   async findAll(): Promise<Task[]> {
     return this.taskModel
       .find()
-      .populate('assignedTo', 'name email')
+      .populate('assignedTo', 'firstName lastName role availability')
       .sort({ createdAt: -1 })
       .exec();
   }
@@ -420,7 +420,7 @@ export class TasksService implements OnModuleInit {
     this.assertValidObjectId(id, 'id');
     const task = await this.taskModel
       .findById(id)
-      .populate('assignedTo', 'name email')
+      .populate('assignedTo', 'firstName lastName role availability')
       .exec();
     if (!task) {
       throw new NotFoundException(`Task with ID ${id} not found`);
@@ -432,7 +432,7 @@ export class TasksService implements OnModuleInit {
     this.assertValidObjectId(projectId, 'projectId');
     return this.taskModel
       .find({ projectId })
-      .populate('assignedTo', 'name email')
+      .populate('assignedTo', 'firstName lastName role availability')
       .exec();
   }
 
@@ -514,7 +514,7 @@ export class TasksService implements OnModuleInit {
 
     const updatedTask = await this.taskModel
       .findByIdAndUpdate(id, { $set: updatePayload }, { new: true })
-      .populate('assignedTo', 'name email')
+      .populate('assignedTo', 'firstName lastName role availability')
       .exec();
 
     if (!updatedTask) {

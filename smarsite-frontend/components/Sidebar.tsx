@@ -37,10 +37,13 @@ export default function Sidebar() {
     <>
       {/* Mobile Toggle */}
       <button
+        type="button"
         onClick={() => setOpen(!open)}
-        className="fixed top-4 left-4 z-50 md:hidden p-2 rounded-lg bg-primary text-white"
+        aria-label={open ? 'Close navigation menu' : 'Open navigation menu'}
+        aria-expanded={open}
+        className="fixed left-4 top-4 z-50 rounded-lg bg-primary p-2 text-primary-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring focus-visible:ring-offset-2 md:hidden"
       >
-        {open ? <X size={24} /> : <Menu size={24} />}
+        {open ? <X size={24} aria-hidden /> : <Menu size={24} aria-hidden />}
       </button>
 
       {/* Sidebar */}
@@ -51,15 +54,15 @@ export default function Sidebar() {
       >
         {/* Logo */}
         <div className="p-6 border-b border-sidebar-border">
-          <h1 className="text-2xl font-bold text-accent flex items-center gap-2">
-            <Building2 size={28} />
+          <h1 className="flex items-center gap-2 text-2xl font-bold text-accent">
+            <Building2 size={28} className="shrink-0 text-accent" aria-hidden />
             SmartSite
           </h1>
-          <p className="text-xs text-sidebar-accent mt-1">Construction Management</p>
+          <p className="mt-1 text-xs text-sidebar-foreground/90">Construction Management</p>
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+        <nav className="flex-1 space-y-2 overflow-y-auto p-4" aria-label="Main">
           {navigationItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
@@ -68,13 +71,14 @@ export default function Sidebar() {
                 key={item.id}
                 href={item.href}
                 onClick={() => setOpen(false)}
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
+                aria-current={isActive ? 'page' : undefined}
+                className={`flex items-center gap-3 rounded-lg px-4 py-3 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring focus-visible:ring-offset-2 focus-visible:ring-offset-primary ${
                   isActive
-                    ? 'bg-sidebar-primary text-sidebar-primary-foreground font-semibold'
+                    ? 'bg-sidebar-primary font-semibold text-sidebar-primary-foreground'
                     : 'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
                 }`}
               >
-                <Icon size={20} />
+                <Icon size={20} className="shrink-0" aria-hidden />
                 <span className="text-sm">{item.label}</span>
               </Link>
             );
@@ -83,7 +87,7 @@ export default function Sidebar() {
 
         {/* Footer */}
         <div className="p-4 border-t border-sidebar-border">
-          <p className="text-xs text-sidebar-accent text-center">v0.1.0</p>
+          <p className="text-center text-xs text-sidebar-foreground/90">v0.1.0</p>
         </div>
       </aside>
     </>

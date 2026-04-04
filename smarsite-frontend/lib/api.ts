@@ -158,6 +158,20 @@ export function deleteResource(id: string): Promise<void> {
   });
 }
 
+/* ======================
+        Humans CRUD
+====================== */
+export function getHumansKey(role?: string) {
+  return role ? `/humans?role=${encodeURIComponent(role)}` : `/humans`;
+}
+
+export function getHumans(role?: string): Promise<import("./types").Human[]> {
+  const endpoint = role
+    ? `/humans?role=${encodeURIComponent(role)}`
+    : `/humans`;
+  return apiFetch<import("./types").Human[]>(endpoint);
+}
+
 // Fetch projects from the backend API
 export async function getProjects(): Promise<Project[]> {
   return apiFetch<Project[]>("/projects");

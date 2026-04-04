@@ -268,12 +268,19 @@ Règles pour "dependsOnIndices" (obligatoire pour chaque tâche, tableau d'entie
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      const readable = openRouterErrorMessage(errorData);
+      let readable = openRouterErrorMessage(errorData);
+      /** OpenRouter returns "User not found" (401) for bad/revoked keys — not an app user issue. */
+      if (response.status === 401) {
+        readable =
+          "OpenRouter rejected the API key (invalid, expired, or revoked). Set OPENROUTER_API_KEY in smarsite-frontend/.env.local to a valid key from https://openrouter.ai/keys — the raw message is often “User not found.”";
+      }
       console.error("OpenRouter API Error:", response.status, errorData);
+      const includeDetails =
+        response.status !== 401 && Object.keys(errorData as object).length > 0;
       return NextResponse.json(
         {
           error: readable || `OpenRouter HTTP ${response.status}`,
-          details: errorData,
+          ...(includeDetails ? { details: errorData } : {}),
         },
         { status: response.status >= 400 && response.status < 600 ? response.status : 502 },
       );

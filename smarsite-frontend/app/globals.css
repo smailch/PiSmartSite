@@ -32,7 +32,8 @@
   --sidebar: #0B4F6C;
   --sidebar-foreground: #ffffff;
   --sidebar-primary: #F28C28;
-  --sidebar-primary-foreground: #0B4F6C;
+  /* Texte sur bandeau actif orange — ratio ≥ 4.5:1 (WCAG AA) */
+  --sidebar-primary-foreground: #0f172a;
   --sidebar-accent: #36a2d6;
   --sidebar-accent-foreground: #ffffff;
   --sidebar-border: #0a3d54;
@@ -67,7 +68,8 @@
   --sidebar: #0a3d54;
   --sidebar-foreground: #ffffff;
   --sidebar-primary: #F28C28;
-  --sidebar-primary-foreground: #0B4F6C;
+  /* Texte sur bandeau actif orange — ratio ≥ 4.5:1 (WCAG AA) */
+  --sidebar-primary-foreground: #0f172a;
   --sidebar-accent: #36a2d6;
   --sidebar-accent-foreground: #ffffff;
   --sidebar-border: #0B4F6C;
@@ -117,9 +119,50 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
   }
   body {
     @apply bg-background text-foreground;
+  }
+  /**
+   * WCAG 2.4.7 Focus visible — anneau net ≥2px, offset pour le contraste sur fonds variés.
+   */
+  :where(
+      button,
+      [role='button'],
+      a,
+      input,
+      select,
+      textarea,
+      summary,
+      [tabindex]:not([tabindex='-1'])
+    ):focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+  :where(
+      button,
+      [role='button'],
+      a,
+      input,
+      select,
+      textarea,
+      summary
+    ):focus:not(:focus-visible) {
+    outline: none;
+  }
+}
+
+@layer utilities {
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
   }
 }

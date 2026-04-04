@@ -22,8 +22,10 @@ import {
   analyzeProjectInsights,
   projectAssistantChat,
   projectAssistantInitialReport,
+  getHumans,
   type ProjectCreatePayload,
 } from '@/lib/api';
+import type { Human } from '@/lib/types';
 import { generateTasksFromProject, type GeminiTaskProposal } from '@/lib/geminiTasks';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import ProjectForm from '@/components/ProjectForm';
@@ -123,6 +125,7 @@ type ProjectStatusFilter = 'All' | Project['status'];
 export default function ProjectsPage() {
   const router = useRouter();
   const [projects, setProjects] = useState<Project[]>([]);
+  const [siteEngineers, setSiteEngineers] = useState<Human[]>([]);
   const [initialLoading, setInitialLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -172,16 +175,38 @@ export default function ProjectsPage() {
     }
   };
 
+  const fetchSiteEngineers = async () => {
+    try {
+      const data = await getHumans('Site Engineer');
+      setSiteEngineers(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error('[fetchSiteEngineers]', err);
+    }
+  };
+
   useEffect(() => {
     fetchProjects();
+    fetchSiteEngineers();
   }, []);
 
   if (initialLoading) {
-    return <div>Loading…</div>;
+    return (
+      <MainLayout>
+        <div role="status" aria-live="polite" className="text-muted-foreground">
+          Loading projects…
+        </div>
+      </MainLayout>
+    );
   }
 
   if (error) {
-    return <div>{error}</div>;
+    return (
+      <MainLayout>
+        <div role="alert" className="text-destructive">
+          {error}
+        </div>
+      </MainLayout>
+    );
   }
 
   const filteredProjects = (filter === 'All'
@@ -200,21 +225,24 @@ export default function ProjectsPage() {
     switch (status) {
       case 'Completed':
       case 'Terminé':
-        return 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-800';
+        return 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-900 dark:bg-green-950/55 dark:text-green-100';
       case 'In Progress':
       case 'En cours':
-        return 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800';
+        return 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-900 dark:bg-blue-950/50 dark:text-blue-100';
+      case 'Behind schedule':
+      case 'En retard':
+        return 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-950 dark:bg-amber-950/45 dark:text-amber-100';
       case 'Planning':
-        return 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800';
+        return 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-950 dark:bg-yellow-950/40 dark:text-yellow-100';
       default:
-        return 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-800';
+        return 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-900 dark:bg-slate-800 dark:text-slate-100';
     }
   };
 
   const getProjectIcon = (index: number) => {
     const icons = [Folder, Crane, Folder, Crane, Folder];
     const Icon = icons[index % icons.length];
-    return <Icon size={18} className="text-primary" />;
+    return <Icon size={18} className="shrink-0 text-primary" aria-hidden />;
   };
 
   const handleEditClick = (project: Project) => {
@@ -447,7 +475,7 @@ export default function ProjectsPage() {
               {isValidObjectId(row._id) ? (
                 <Link
                   href={`/projects/${row._id}/overview`}
-                  className="hover:text-primary hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-sm"
+                  className="rounded-sm hover:text-primary hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 >
                   {value != null ? String(value) : ''}
                 </Link>
@@ -540,9 +568,9 @@ export default function ProjectsPage() {
           <button
             type="button"
             title="Project analysis (backend AI — budget & delay computed server-side)"
-            aria-label="Backend AI analysis"
+            aria-label={`Backend AI analysis for ${row.name}`}
             onClick={() => openInsightsForProject(row)}
-            className="inline-flex size-9 items-center justify-center rounded-lg bg-emerald-700 text-white shadow-sm transition-[filter] hover:brightness-110 disabled:pointer-events-none disabled:opacity-45"
+            className="inline-flex size-9 items-center justify-center rounded-lg bg-emerald-800 text-white shadow-sm transition-[filter] hover:brightness-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-45"
             disabled={!isValidObjectId(row._id)}
           >
             <Brain size={18} className="shrink-0" aria-hidden />
@@ -550,9 +578,9 @@ export default function ProjectsPage() {
           <button
             type="button"
             title="Project assistant (Groq — chat)"
-            aria-label="Open project assistant"
+            aria-label={`Open project assistant for ${row.name}`}
             onClick={() => openAssistantForProject(row)}
-            className="inline-flex size-9 items-center justify-center rounded-lg bg-teal-700 text-white shadow-sm transition-[filter] hover:brightness-110 disabled:pointer-events-none disabled:opacity-45"
+            className="inline-flex size-9 items-center justify-center rounded-lg bg-teal-800 text-white shadow-sm transition-[filter] hover:brightness-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-45"
             disabled={!isValidObjectId(row._id)}
           >
             <MessageCircle size={18} className="shrink-0" aria-hidden />
@@ -560,9 +588,9 @@ export default function ProjectsPage() {
           <button
             type="button"
             title="Generate tasks (Gemini AI)"
-            aria-label="Generate tasks with AI"
+            aria-label={`Generate tasks with AI for ${row.name}`}
             onClick={() => openAiForProject(row)}
-            className="inline-flex size-9 items-center justify-center rounded-lg bg-indigo-600 text-white shadow-sm transition-[filter] hover:brightness-110 disabled:pointer-events-none disabled:opacity-45"
+            className="inline-flex size-9 items-center justify-center rounded-lg bg-indigo-800 text-white shadow-sm transition-[filter] hover:brightness-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-45"
             disabled={!isValidObjectId(row._id)}
           >
             <Sparkles size={18} className="shrink-0" aria-hidden />
@@ -570,9 +598,9 @@ export default function ProjectsPage() {
           <button
             type="button"
             title="Edit"
-            aria-label="Edit"
+            aria-label={`Edit project: ${row.name}`}
             onClick={() => handleEditClick(row)}
-            className="inline-flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm transition-[filter] hover:brightness-110 disabled:pointer-events-none disabled:opacity-45"
+            className="inline-flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm transition-[filter] hover:brightness-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-45"
             disabled={!isValidObjectId(row._id)}
           >
             <Pencil size={18} className="shrink-0" aria-hidden />
@@ -580,9 +608,9 @@ export default function ProjectsPage() {
           <button
             type="button"
             title="Delete"
-            aria-label="Delete"
+            aria-label={`Delete project: ${row.name}`}
             onClick={() => handleDeleteProject(row._id)}
-            className="inline-flex size-9 items-center justify-center rounded-lg border border-destructive/30 bg-background text-destructive shadow-sm transition-colors hover:bg-destructive/10 disabled:pointer-events-none disabled:opacity-45"
+            className="inline-flex size-9 items-center justify-center rounded-lg border border-destructive/30 bg-background text-destructive shadow-sm transition-colors hover:bg-destructive/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-45"
             disabled={!isValidObjectId(row._id)}
           >
             <Trash2 size={18} className="shrink-0" aria-hidden />
@@ -590,12 +618,12 @@ export default function ProjectsPage() {
           <button
             type="button"
             title="Project overview (KPI, budget, critical path)"
-            aria-label="Open project overview"
+            aria-label={`Open project overview for ${row.name}`}
             onClick={() => {
               if (!isValidObjectId(row._id)) return;
               router.push(`/projects/${row._id}/overview`);
             }}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-secondary px-2.5 py-2 text-xs font-semibold text-foreground shadow-sm transition-colors hover:bg-muted sm:px-3"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-secondary px-2.5 py-2 text-xs font-semibold text-foreground shadow-sm transition-colors hover:bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:px-3"
             disabled={!isValidObjectId(row._id)}
           >
             <LayoutDashboard size={16} className="shrink-0 text-primary" aria-hidden />
@@ -604,12 +632,12 @@ export default function ProjectsPage() {
           <button
             type="button"
             title="Open Gantt chart"
-            aria-label="Open Gantt chart"
+            aria-label={`Open Gantt chart for ${row.name}`}
             onClick={() => {
               if (!isValidObjectId(row._id)) return;
               router.push(`/projects/${row._id}/gantt`);
             }}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-secondary px-2.5 py-2 text-xs font-semibold text-foreground shadow-sm transition-colors hover:bg-muted sm:px-3"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-secondary px-2.5 py-2 text-xs font-semibold text-foreground shadow-sm transition-colors hover:bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:px-3"
             disabled={!isValidObjectId(row._id)}
           >
             <BarChart3 size={16} className="shrink-0 text-primary" aria-hidden />
@@ -648,13 +676,13 @@ export default function ProjectsPage() {
   };
 
   const handleCreateProject = async (payload: Omit<Project, 'id' | '_id'>) => {
-    if (!USER_ID) {
-      toast({ title: 'Error', description: 'Cannot create project: missing user id.' });
+    if (!payload.createdBy || payload.createdBy.trim() === '') {
+      toast({ title: 'Error', description: 'Please select a Site Engineer.' });
       return;
     }
     const finalPayload: ProjectCreatePayload = {
       ...payload,
-      createdBy: USER_ID,
+      createdBy: payload.createdBy,
     };
     console.log('[CREATE] POST /projects', finalPayload);
     setSaving(true);
@@ -680,13 +708,18 @@ export default function ProjectsPage() {
       >
         <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) setEditProject(null); }}>
           <DialogTrigger asChild>
-            <button className="px-4 py-2 rounded-lg font-semibold flex items-center gap-2 shadow-sm"
-              style={{ background: '#f28c28', color: '#fff', border: 'none' }}>
-              <Plus size={18} />
+            <button
+              type="button"
+              className="flex items-center gap-2 rounded-lg bg-orange-800 px-4 py-2 text-sm font-semibold text-white shadow-sm transition-[filter] hover:brightness-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            >
+              <Plus size={18} aria-hidden className="shrink-0" />
               New Project
             </button>
           </DialogTrigger>
-          <DialogContent className="max-h-[min(92vh,920px)] w-full max-w-[calc(100%-1.25rem)] gap-0 overflow-hidden rounded-2xl border border-border/70 bg-card p-0 shadow-2xl shadow-black/12 ring-1 ring-black/5 sm:max-w-3xl dark:ring-white/10 dark:shadow-black/40">
+          <DialogContent
+            showCloseButton
+            className="max-h-[min(92vh,920px)] w-full max-w-[calc(100%-1.25rem)] gap-0 overflow-hidden rounded-2xl border border-border/70 bg-card p-0 shadow-2xl shadow-black/12 ring-1 ring-black/5 sm:max-w-3xl dark:ring-white/10 dark:shadow-black/40"
+          >
             <div
               className="h-1 w-full shrink-0 bg-gradient-to-r from-primary via-[#0d6285] to-accent"
               aria-hidden
@@ -708,6 +741,7 @@ export default function ProjectsPage() {
                   mode={editProject ? 'edit' : 'create'}
                   initialData={editProject || undefined}
                   isSubmitting={saving}
+                  siteEngineers={siteEngineers}
                   onSubmit={editProject ? handleUpdateProject : handleCreateProject}
                 />
               </div>
@@ -716,6 +750,7 @@ export default function ProjectsPage() {
                   <button
                     type="button"
                     disabled={saving}
+                    aria-label="Cancel and close project form"
                     className="inline-flex w-full items-center justify-center rounded-xl border border-border bg-background px-5 py-2.5 text-sm font-medium text-foreground shadow-sm transition-[color,box-shadow,background] hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring/40 disabled:pointer-events-none disabled:opacity-50 sm:w-auto"
                   >
                     Cancel
@@ -727,18 +762,30 @@ export default function ProjectsPage() {
         </Dialog>
       </PageHeader>
 
-      {/* Filter Buttons */}
-      <div className="flex items-center gap-2 mb-6 flex-wrap">
-        <Filter size={18} className="text-muted-foreground" />
+      <div
+        className="mb-6 flex flex-wrap items-center gap-2"
+        role="radiogroup"
+        aria-labelledby="projects-status-filter-label"
+      >
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <Filter size={18} className="shrink-0" aria-hidden />
+          <span id="projects-status-filter-label" className="text-sm font-semibold text-foreground">
+            Status
+          </span>
+        </div>
         {statusFilterButtons.map((btn) => (
           <button
             key={btn.label}
+            type="button"
+            role="radio"
+            aria-checked={filter === btn.value}
             onClick={() => setFilter(btn.value)}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+            className={cn(
+              'rounded-lg px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
               filter === btn.value
-                ? 'bg-primary text-white shadow-sm'
-                : 'bg-secondary text-foreground hover:bg-muted'
-            }`}
+                ? 'bg-primary text-primary-foreground shadow-sm'
+                : 'bg-secondary text-foreground hover:bg-muted',
+            )}
           >
             {btn.label}
           </button>
@@ -749,6 +796,7 @@ export default function ProjectsPage() {
         columns={tableColumns}
         data={filteredProjects}
         title="All projects"
+        tableCaption="Construction projects: name, description, type, budgets, location, dates, status, and row actions."
         pageLevelScroll
       />
 
@@ -765,6 +813,7 @@ export default function ProjectsPage() {
         }}
       >
         <DialogContent
+          showCloseButton
           className={cn(
             aiModalShell,
             'flex max-h-[min(90vh,680px)] w-full max-w-[calc(100%-1.5rem)] flex-col sm:max-w-lg',
@@ -786,23 +835,38 @@ export default function ProjectsPage() {
                       <span className="text-muted-foreground"> — generating with Gemini…</span>
                     ) : null}
                   </>
-                ) : null}
+                ) : (
+                  <span className="text-muted-foreground">Select a project to generate tasks.</span>
+                )}
               </DialogDescription>
             </DialogHeader>
 
             <div className={aiModalBody}>
               {aiLoading && (
-                <p className="py-8 text-center text-sm text-muted-foreground">Calling Google Gemini…</p>
+                <p
+                  role="status"
+                  aria-live="polite"
+                  aria-busy="true"
+                  className="py-8 text-center text-sm text-muted-foreground"
+                >
+                  Calling Google Gemini…
+                </p>
               )}
 
               {aiError && !aiLoading && (
-                <p className="rounded-xl border border-destructive/35 bg-destructive/5 px-3 py-2.5 text-sm text-destructive">
+                <p
+                  role="alert"
+                  className="rounded-xl border border-destructive/35 bg-destructive/5 px-3 py-2.5 text-sm text-destructive"
+                >
                   {aiError}
                 </p>
               )}
 
               {!aiLoading && aiTasks.length > 0 && (
-                <ul className="max-h-[min(48vh,420px)] space-y-3 overflow-y-auto pr-1 [scrollbar-width:thin]">
+                <ul
+                  className="max-h-[min(48vh,420px)] space-y-3 overflow-y-auto pr-1 [scrollbar-width:thin]"
+                  aria-label="AI-suggested tasks. Select tasks to create."
+                >
                   {aiTasks.map((t, i) => (
                     <li
                       key={i}
@@ -810,13 +874,13 @@ export default function ProjectsPage() {
                     >
                       <input
                         type="checkbox"
-                        className="mt-1 h-4 w-4 shrink-0 rounded border-border accent-indigo-600"
+                        className="mt-1 h-4 w-4 shrink-0 rounded border-border accent-indigo-700"
                         checked={aiSelected.has(i)}
                         onChange={() => toggleAiTask(i)}
-                        aria-label={`Select: ${t.title}`}
+                        aria-label={`Select suggested task: ${t.title}`}
                       />
                       <div className="min-w-0 flex-1">
-                        <p className="font-semibold text-foreground">{t.title}</p>
+                        <h4 className="text-base font-semibold leading-snug text-foreground">{t.title}</h4>
                         {t.description ? (
                           <p className="mt-1 text-sm text-muted-foreground">{t.description}</p>
                         ) : null}
@@ -867,7 +931,8 @@ export default function ProjectsPage() {
               <DialogClose asChild>
                 <button
                   type="button"
-                  className="w-full rounded-xl border border-border/80 bg-background px-4 py-2.5 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-muted sm:w-auto"
+                  aria-label="Close suggested tasks dialog"
+                  className="w-full rounded-xl border border-border/80 bg-background px-4 py-2.5 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:w-auto"
                   disabled={aiCreating}
                 >
                   Close
@@ -877,7 +942,8 @@ export default function ProjectsPage() {
                 type="button"
                 onClick={handleCreateAiTasks}
                 disabled={aiCreating || aiTasks.length === 0 || aiLoading}
-                className="w-full rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-600/25 transition-[filter,transform] hover:brightness-110 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 sm:w-auto"
+                aria-busy={aiCreating}
+                className="w-full rounded-xl bg-indigo-800 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-800/25 transition-[filter,transform] hover:brightness-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 sm:w-auto"
               >
                 {aiCreating ? 'Creating…' : 'Create selected tasks'}
               </button>
@@ -898,6 +964,7 @@ export default function ProjectsPage() {
         }}
       >
         <DialogContent
+          showCloseButton
           className={cn(
             aiModalShell,
             'flex max-h-[min(92vh,860px)] w-full max-w-[calc(100%-1.5rem)] flex-col sm:max-w-2xl',
@@ -919,19 +986,29 @@ export default function ProjectsPage() {
                       <span className="text-muted-foreground"> — analyzing…</span>
                     ) : null}
                   </>
-                ) : null}
+                ) : (
+                  <span className="text-muted-foreground">Server-side budget and schedule analysis.</span>
+                )}
               </DialogDescription>
             </DialogHeader>
 
             <div className={aiModalBody}>
               {insightsLoading && (
-                <p className="py-8 text-center text-sm text-muted-foreground">
+                <p
+                  role="status"
+                  aria-live="polite"
+                  aria-busy="true"
+                  className="py-8 text-center text-sm text-muted-foreground"
+                >
                   Connecting to server and generating analysis…
                 </p>
               )}
 
               {insightsError && !insightsLoading && (
-                <p className="rounded-xl border border-destructive/40 bg-destructive/5 px-3 py-2.5 text-sm text-destructive">
+                <p
+                  role="alert"
+                  className="rounded-xl border border-destructive/40 bg-destructive/5 px-3 py-2.5 text-sm text-destructive"
+                >
                   {insightsError}
                 </p>
               )}
@@ -943,7 +1020,7 @@ export default function ProjectsPage() {
                       className={`rounded-full px-2.5 py-0.5 font-semibold ${
                         insightsData.source === 'groq'
                           ? 'bg-emerald-100 text-emerald-900 dark:bg-emerald-950/60 dark:text-emerald-200'
-                          : 'bg-muted text-muted-foreground'
+                          : 'bg-muted text-foreground dark:bg-muted dark:text-foreground'
                       }`}
                     >
                       {insightsData.source === 'groq' ? 'AI (Groq)' : 'Fallback (no LLM)'}
@@ -1024,7 +1101,7 @@ export default function ProjectsPage() {
                                   <li key={t.id}>
                                     <Link
                                       href={`/tasks?project=${insightsProject._id}&view=board&focusTask=${t.id}`}
-                                      className="inline-flex max-w-[240px] truncate rounded-md bg-primary/10 px-2 py-1 text-xs font-medium text-primary hover:bg-primary/15 hover:underline"
+                                      className="inline-flex max-w-[240px] truncate rounded-md bg-primary/10 px-2 py-1 text-xs font-medium text-primary hover:bg-primary/15 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                                       title={t.title}
                                     >
                                       {t.title}
@@ -1089,7 +1166,8 @@ export default function ProjectsPage() {
               <DialogClose asChild>
                 <button
                   type="button"
-                  className="inline-flex w-full items-center justify-center rounded-xl border border-border/80 bg-background px-4 py-2.5 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-muted sm:w-auto"
+                  aria-label="Close project analysis dialog"
+                  className="inline-flex w-full items-center justify-center rounded-xl border border-border/80 bg-background px-4 py-2.5 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:w-auto"
                 >
                   Close
                 </button>
@@ -1115,6 +1193,7 @@ export default function ProjectsPage() {
         }}
       >
         <DialogContent
+          showCloseButton
           className={cn(
             aiModalShell,
             'flex max-h-[min(92vh,880px)] w-full max-w-[calc(100%-1.5rem)] flex-col sm:max-w-2xl',
@@ -1134,7 +1213,11 @@ export default function ProjectsPage() {
                     Groq · <span className="font-medium text-foreground">{assistantProject.name}</span> — report
                     first; optional questions below or close when done.
                   </>
-                ) : null}
+                ) : (
+                  <span className="text-muted-foreground">
+                    Chat assistant with an initial report, then optional follow-up questions.
+                  </span>
+                )}
               </DialogDescription>
             </DialogHeader>
 
@@ -1143,11 +1226,19 @@ export default function ProjectsPage() {
                 <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   Project & tasks report
                 </h3>
-                <div className="max-h-[min(34vh,320px)] overflow-y-auto rounded-2xl border border-border/60 bg-muted/20 p-4 text-sm text-foreground shadow-inner [scrollbar-width:thin] dark:bg-muted/10">
+                <div
+                  role="region"
+                  aria-label="Generated project and tasks report"
+                  className="max-h-[min(34vh,320px)] overflow-y-auto rounded-2xl border border-border/60 bg-muted/20 p-4 text-sm text-foreground shadow-inner [scrollbar-width:thin] dark:bg-muted/10"
+                >
                   {assistantReportLoading ? (
-                    <p className="text-muted-foreground">Generating report…</p>
+                    <p role="status" aria-live="polite" aria-busy="true" className="text-muted-foreground">
+                      Generating report…
+                    </p>
                   ) : assistantReportError ? (
-                    <p className="text-destructive">{assistantReportError}</p>
+                    <p role="alert" className="text-destructive">
+                      {assistantReportError}
+                    </p>
                   ) : assistantReport ? (
                     <div className="whitespace-pre-wrap leading-relaxed">{assistantReport}</div>
                   ) : (
@@ -1160,7 +1251,12 @@ export default function ProjectsPage() {
                 <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   Optional — follow-up questions
                 </h3>
-                <div className="max-h-[min(26vh,240px)] min-h-[100px] flex-1 space-y-3 overflow-y-auto rounded-2xl border border-border/60 bg-muted/15 p-3 text-sm [scrollbar-width:thin] dark:bg-muted/10">
+                <div
+                  role="log"
+                  aria-label="Assistant conversation"
+                  aria-live="polite"
+                  className="max-h-[min(26vh,240px)] min-h-[100px] flex-1 space-y-3 overflow-y-auto rounded-2xl border border-border/60 bg-muted/15 p-3 text-sm [scrollbar-width:thin] dark:bg-muted/10"
+                >
                   {assistantMessages.length === 0 && !assistantLoading ? (
                     <p className="text-xs text-muted-foreground">
                       You can skip this and close when the report is enough.
@@ -1179,16 +1275,21 @@ export default function ProjectsPage() {
                     </div>
                   ))}
                   {assistantLoading ? (
-                    <p className="text-xs text-muted-foreground">Thinking…</p>
+                    <p role="status" aria-live="polite" className="text-xs text-muted-foreground">
+                      Thinking…
+                    </p>
                   ) : null}
                   {assistantError ? (
-                    <p className="text-sm text-destructive">{assistantError}</p>
+                    <p role="alert" className="text-sm text-destructive">
+                      {assistantError}
+                    </p>
                   ) : null}
                 </div>
               </div>
 
               <div className="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-end">
                 <textarea
+                  id="project-assistant-followup"
                   value={assistantInput}
                   onChange={(e) => setAssistantInput(e.target.value)}
                   onKeyDown={(e) => {
@@ -1203,7 +1304,8 @@ export default function ProjectsPage() {
                       : 'Ask a question (optional)…'
                   }
                   rows={2}
-                  className="min-h-[72px] w-full flex-1 resize-y rounded-xl border border-border/80 bg-input px-3 py-2.5 text-sm text-foreground shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-500/30"
+                  aria-label="Optional follow-up question for the project assistant"
+                  className="min-h-[72px] w-full flex-1 resize-y rounded-xl border border-border/80 bg-input px-3 py-2.5 text-sm text-foreground shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                   disabled={assistantLoading || assistantReportLoading}
                 />
                 <button
@@ -1214,7 +1316,8 @@ export default function ProjectsPage() {
                     assistantReportLoading ||
                     !assistantInput.trim()
                   }
-                  className="shrink-0 rounded-xl bg-teal-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-teal-600/25 transition-[filter,transform] hover:brightness-110 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50"
+                  aria-busy={assistantLoading}
+                  className="shrink-0 rounded-xl bg-teal-900 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-teal-900/30 transition-[filter,transform] hover:brightness-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50"
                 >
                   Send
                 </button>
@@ -1225,7 +1328,8 @@ export default function ProjectsPage() {
               <DialogClose asChild>
                 <button
                   type="button"
-                  className="inline-flex w-full items-center justify-center rounded-xl border border-border/80 bg-background px-4 py-2.5 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-muted sm:w-auto"
+                  aria-label="Close project assistant dialog"
+                  className="inline-flex w-full items-center justify-center rounded-xl border border-border/80 bg-background px-4 py-2.5 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:w-auto"
                 >
                   Close
                 </button>

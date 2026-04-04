@@ -68,8 +68,11 @@ function resolveAssignedToLabel(task: BackendTask): string {
   const a = task.assignedTo;
   if (a == null) return "Non assigné";
   if (typeof a === "string") return a;
-  if (typeof a === "object" && "name" in a && a.name) {
-    return String(a.name);
+  if (typeof a === "object" && a) {
+    if ("firstName" in a && "lastName" in a) {
+      return `${a.firstName} ${a.lastName}`.trim();
+    }
+    if ("name" in a && a.name) return String(a.name);
   }
   return "Non assigné";
 }

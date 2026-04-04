@@ -11,6 +11,8 @@ interface DataTableProps<T> {
   columns: Column<T>[];
   data: T[];
   title?: string;
+  /** Texte lu par les lecteurs d’écran (caption masquée visuellement) — renforce le WCAG 1.3.1. */
+  tableCaption?: string;
   /** Si true : pas de conteneur overflow-x interne — le tableau s’étend et la page défile (ex. liste projets). */
   pageLevelScroll?: boolean;
 }
@@ -31,12 +33,16 @@ export default function DataTable<T extends Record<string, any>>({
   columns,
   data,
   title,
+  tableCaption,
   pageLevelScroll = false,
 }: DataTableProps<T>) {
   const table = (
     <table
       className={`w-full border-collapse text-sm ${pageLevelScroll ? "min-w-0 table-auto" : "min-w-[720px]"}`}
     >
+      {tableCaption ? (
+        <caption className="sr-only">{tableCaption}</caption>
+      ) : null}
       <thead>
         <tr className="border-b border-border bg-muted/40">
           {columns.map((col) => (
@@ -61,9 +67,14 @@ export default function DataTable<T extends Record<string, any>>({
             </td>
           </tr>
         ) : (
-          data.map((row, idx) => (
+          data.map((row, idx) => {
+            const rowKey =
+              row && typeof row === "object" && "_id" in row && row._id != null
+                ? String((row as { _id: unknown })._id)
+                : idx;
+            return (
             <tr
-              key={idx}
+              key={rowKey}
               className="border-b border-border/60 transition-colors odd:bg-background even:bg-muted/[0.35] hover:bg-primary/[0.04] last:border-b-0"
             >
               {columns.map((col) => (
@@ -75,14 +86,19 @@ export default function DataTable<T extends Record<string, any>>({
                 </td>
               ))}
             </tr>
-          ))
+            );
+          })
         )}
       </tbody>
     </table>
   );
 
   return (
-    <div className="rounded-xl border border-border/80 bg-card shadow-sm ring-1 ring-black/[0.04] dark:ring-white/[0.06]">
+    <div
+      className="rounded-xl border border-border/80 bg-card shadow-sm ring-1 ring-black/[0.04] dark:ring-white/[0.06]"
+      role={title ? "region" : undefined}
+      aria-label={title ?? undefined}
+    >
       {title ? (
         <div className="border-b border-border/80 bg-muted/30 px-5 py-3.5 sm:px-6">
           <h3 className="text-base font-semibold tracking-tight text-foreground">{title}</h3>

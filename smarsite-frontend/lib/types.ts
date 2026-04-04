@@ -42,8 +42,12 @@ export interface BackendTask {
   progress: number;
   /** Budget consommé par cette tâche (en DH). */
   spentBudget?: number;
-  /** Peut être peuplé par l’API (`name`) ou seulement l’id */
-  assignedTo?: ObjectId | { _id: ObjectId; name: string; email?: string } | null;
+  /** ObjectId seul, ou populate User (`name`) ou Human (`firstName` / `lastName`). */
+  assignedTo?:
+    | ObjectId
+    | { _id: ObjectId; name: string; email?: string }
+    | { _id: ObjectId; firstName: string; lastName: string; role?: string }
+    | null;
   /** Identifiants des tâches dont celle-ci dépend. */
   dependsOn?: ObjectId[];
   /** Dates optionnelles (peuvent être calculées côté frontend pour le Gantt). */
