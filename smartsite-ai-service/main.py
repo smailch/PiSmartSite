@@ -19,7 +19,7 @@ try:
 except ImportError:
     YOLO = None
 
-MODEL_PATH = os.getenv("YOLO_MODEL_PATH", "weights/best.pt     ")
+MODEL_PATH = os.getenv("YOLO_MODEL_PATH", "weights/best.pt").strip()
 CONF_THRESHOLD = 0.4
 
 _model = None

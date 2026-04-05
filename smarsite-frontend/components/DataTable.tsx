@@ -9,24 +9,60 @@ interface DataTableProps<T> {
   columns: Column<T>[];
   data: T[];
   title?: string;
+  /** Texte lu par les lecteurs d’écran (caption masquée visuellement) — renforce le WCAG 1.3.1. */
+  tableCaption?: string;
+  /** Si true : pas de conteneur overflow-x interne — le tableau s’étend et la page défile (ex. liste projets). */
+  pageLevelScroll?: boolean;
 }
 
 export default function DataTable<T extends Record<string, any>>({
   columns,
   data,
   title,
+  tableCaption,
+  pageLevelScroll = false,
 }: DataTableProps<T>) {
-  return (
-    <div className="bg-white rounded-xl border border-border shadow-sm overflow-hidden">
-      {title && (
-        <div className="px-6 py-4 border-b border-border">
-          <h3 className="text-lg font-semibold text-foreground">{title}</h3>
-        </div>
-      )}
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead>
-            <tr className="bg-secondary border-b border-border">
+  const table = (
+    <table
+      className={`w-full border-collapse text-sm ${pageLevelScroll ? "min-w-0 table-auto" : "min-w-[720px]"}`}
+    >
+      {tableCaption ? (
+        <caption className="sr-only">{tableCaption}</caption>
+      ) : null}
+      <thead>
+        <tr className="border-b border-border bg-muted/40">
+          {columns.map((col) => (
+            <th
+              key={String(col.key)}
+              scope="col"
+              className={`px-4 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground first:pl-5 last:pr-5 sm:px-5 ${pageLevelScroll ? "whitespace-normal break-words" : "whitespace-nowrap"} ${cellAlignClass(col.align ?? "left")}`}
+            >
+              {col.label}
+            </th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {data.length === 0 ? (
+          <tr>
+            <td
+              colSpan={columns.length}
+              className="px-5 py-10 text-center text-muted-foreground"
+            >
+              Aucune donnée
+            </td>
+          </tr>
+        ) : (
+          data.map((row, idx) => {
+            const rowKey =
+              row && typeof row === "object" && "_id" in row && row._id != null
+                ? String((row as { _id: unknown })._id)
+                : idx;
+            return (
+            <tr
+              key={rowKey}
+              className="border-b border-border/60 transition-colors odd:bg-background even:bg-muted/[0.35] hover:bg-primary/[0.04] last:border-b-0"
+            >
               {columns.map((col) => (
                 <th
                   key={String(col.key)}
@@ -36,28 +72,29 @@ export default function DataTable<T extends Record<string, any>>({
                 </th>
               ))}
             </tr>
-          </thead>
-          <tbody>
-            {data.length === 0 ? (
-              <tr>
-                <td colSpan={columns.length} className="px-6 py-8 text-center text-muted-foreground">
-                  No data available
-                </td>
-              </tr>
-            ) : (
-              data.map((row, idx) => (
-                <tr key={idx} className="border-b border-border hover:bg-secondary/50 transition-colors">
-                  {columns.map((col) => (
-                    <td key={String(col.key)} className="px-6 py-4 text-sm text-foreground">
-                      {col.render ? col.render(row[col.key], row) : String(row[col.key])}
-                    </td>
-                  ))}
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+            );
+          })
+        )}
+      </tbody>
+    </table>
+  );
+
+  return (
+    <div
+      className="rounded-xl border border-border/80 bg-card shadow-sm ring-1 ring-black/[0.04] dark:ring-white/[0.06]"
+      role={title ? "region" : undefined}
+      aria-label={title ?? undefined}
+    >
+      {title ? (
+        <div className="border-b border-border/80 bg-muted/30 px-5 py-3.5 sm:px-6">
+          <h3 className="text-base font-semibold tracking-tight text-foreground">{title}</h3>
+        </div>
+      ) : null}
+      {pageLevelScroll ? (
+        <div className="w-full">{table}</div>
+      ) : (
+        <div className="overflow-x-auto">{table}</div>
+      )}
     </div>
   );
 }

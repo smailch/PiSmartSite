@@ -13,25 +13,34 @@ export default function Topbar() {
         <div className="hidden md:block" />
 
         {/* Right: Actions */}
-        <div className="flex items-center gap-4 ml-auto">
-          {/* Notifications */}
-          <button className="relative p-2 rounded-lg hover:bg-secondary transition-colors">
-            <Bell size={20} className="text-foreground" />
-            <span className="absolute top-1 right-1 w-2 h-2 bg-accent rounded-full" />
+        <div className="ml-auto flex items-center gap-4">
+          <button
+            type="button"
+            aria-label="Notifications"
+            className="relative rounded-lg p-2 transition-colors hover:bg-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          >
+            <Bell size={20} className="text-foreground" aria-hidden />
+            <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-accent" aria-hidden />
           </button>
 
-          {/* Settings */}
-          <button className="p-2 rounded-lg hover:bg-secondary transition-colors">
-            <Settings size={20} className="text-foreground" />
+          <button
+            type="button"
+            aria-label="Settings"
+            className="rounded-lg p-2 transition-colors hover:bg-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          >
+            <Settings size={20} className="text-foreground" aria-hidden />
           </button>
 
-          {/* User Menu */}
           <div className="relative">
             <button
+              type="button"
               onClick={() => setShowUserMenu(!showUserMenu)}
-              className="flex items-center gap-2 p-2 rounded-lg hover:bg-secondary transition-colors"
+              aria-label="User menu"
+              aria-expanded={showUserMenu}
+              aria-haspopup="true"
+              className="flex items-center gap-2 rounded-lg p-2 transition-colors hover:bg-secondary focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             >
-              <div className="w-8 h-8 rounded-full bg-primary text-white flex items-center justify-center font-semibold">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary font-semibold text-primary-foreground">
                 JD
               </div>
             </button>
@@ -43,11 +52,17 @@ export default function Topbar() {
                   <p className="text-sm font-semibold text-foreground">John Doe</p>
                   <p className="text-xs text-muted-foreground">Project Manager</p>
                 </div>
-                <button className="w-full text-left px-4 py-2 hover:bg-secondary flex items-center gap-2 text-sm">
-                  <User size={16} /> My Profile
+                <button
+                  type="button"
+                  className="flex w-full items-center gap-2 px-4 py-2 text-left text-sm hover:bg-secondary focus:outline-none focus-visible:bg-secondary"
+                >
+                  <User size={16} aria-hidden /> My Profile
                 </button>
-                <button className="w-full text-left px-4 py-2 hover:bg-secondary flex items-center gap-2 text-sm border-t border-border text-destructive">
-                  <LogOut size={16} /> Logout
+                <button
+                  type="button"
+                  className="flex w-full items-center gap-2 border-t border-border px-4 py-2 text-left text-sm text-destructive hover:bg-secondary focus:outline-none focus-visible:bg-destructive/10"
+                >
+                  <LogOut size={16} aria-hidden /> Logout
                 </button>
               </div>
             )}

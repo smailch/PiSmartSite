@@ -67,7 +67,8 @@ export class Task {
   @Prop({ type: Date, required: false })
   endDate?: Date;
 
-  @Prop({ type: Types.ObjectId, ref: 'User', required: false })
+  /** Référence un document `Human` (ex. Site Engineer), pas un compte User. */
+  @Prop({ type: Types.ObjectId, ref: 'Human', required: false })
   assignedTo?: Types.ObjectId | null;
 
   @Prop({ default: Date.now })

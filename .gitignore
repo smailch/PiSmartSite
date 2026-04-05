@@ -63,7 +63,15 @@ logs/
 .DS_Store
 Thumbs.db
 
-# ==================== Misc ====================
+# Python (venv that exists in repo)
+.venv/
+__pycache__/
+*.py[cod]
+
+# Fichiers uploadés en local (photos avancement jobs, CV humains)
+smartsite-backend/uploads/
+
+# Misc
 *.local
 # Temporaire / cache
 .tmp/

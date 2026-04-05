@@ -80,22 +80,14 @@ export default function ResourcesPage() {
         description="Manage human resources and equipment"
       >
         <div className="flex gap-2 mb-4">
-  <Link
-    href="/resources/humans"
-          className="px-4 py-2 rounded-lg bg-accent text-accent-foreground font-semibold hover:bg-accent/90 transition-colors flex items-center gap-2 shadow-sm">
-  
-    <Plus size={18} />
-    Add Human
-  </Link>
-
-  <Link
-    href="/resources/equipment"
-          className="px-4 py-2 rounded-lg bg-accent text-accent-foreground font-semibold hover:bg-accent/90 transition-colors flex items-center gap-2 shadow-sm">
-  
-    <Plus size={18} />
-    Add Equipment
-  </Link>
-</div>
+          <Link
+            href="/resources/create"
+            className="px-4 py-2 rounded-lg bg-accent text-accent-foreground font-semibold hover:bg-accent/90 transition-colors flex items-center gap-2 shadow-sm"
+          >
+            <Plus size={18} />
+            Add resource
+          </Link>
+        </div>
 
       </PageHeader>
 

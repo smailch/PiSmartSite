@@ -1,4 +1,28 @@
-// ---------- MongoDB-backed types (matching NestJS schema) ----------
+// ---------- Types partagés frontend / NestJS ----------
+
+
+export interface Resource {
+  _id: string;
+  type: "Human" | "Equipment";
+  name: string;
+  role: string;
+  availability: boolean;
+  createdAt: string;
+}
+
+export interface CreateResourcePayload {
+  type: "Human" | "Equipment";
+  name: string;
+  role: string;
+  availability: boolean;
+}
+
+export interface UpdateResourcePayload {
+  type?: "Human" | "Equipment";
+  name?: string;
+  role?: string;
+  availability?: boolean;
+}
 
 /** Id seul (API normale) ou document peuplé / forme legacy. */
 export type AssignedResourceIdRef =
@@ -38,31 +62,6 @@ export interface Job {
 
 export type CreateJobPayload = Omit<Job, "_id" | "createdAt" | "updatedAt">;
 export type UpdateJobPayload = Partial<CreateJobPayload>;
-// ---------- Auxiliary types (kept for resources/tasks pages) ----------
-
-
-export interface Resource {
-  _id: string;
-  type: "Human" | "Equipment";
-  name: string;
-  role: string;
-  availability: boolean;
-  createdAt: string;
-}
-
-export interface CreateResourcePayload {
-  type: "Human" | "Equipment";
-  name: string;
-  role: string;
-  availability: boolean;
-}
-
-export interface UpdateResourcePayload {
-  type?: "Human" | "Equipment";
-  name?: string;
-  role?: string;
-  availability?: boolean;
-}
 
 export type TaskPriority = "HIGH" | "MEDIUM" | "LOW";
 
@@ -80,8 +79,14 @@ export interface BackendTask {
   priority: TaskPriority;
   status: TaskStatus;
   progress: number;
-  /** Peut être peuplé par l’API (`name`) ou seulement l’id */
-  assignedTo?: ObjectId | { _id: ObjectId; name: string; email?: string } | null;
+  /** Budget consommé par cette tâche (en DH). */
+  spentBudget?: number;
+  /** ObjectId seul, ou populate User (`name`) ou Human (`firstName` / `lastName`). */
+  assignedTo?:
+    | ObjectId
+    | { _id: ObjectId; name: string; email?: string }
+    | { _id: ObjectId; firstName: string; lastName: string; role?: string }
+    | null;
   /** Identifiants des tâches dont celle-ci dépend. */
   dependsOn?: ObjectId[];
   /** Dates optionnelles (peuvent être calculées côté frontend pour le Gantt). */
@@ -116,16 +121,69 @@ export interface Project {
   createdBy: string;
 }
 
+/** Réponse POST /projects/:id/analysis/ai-insights (NestJS). */
+export type ProjectAiInsightsSource = "groq" | "fallback";
+
+export type AiBudgetDelayMode = "economique" | "equilibre" | "accelere";
+
+export interface ProjectAiInsightsResponse {
+  projectId: string;
+  generatedAt: string;
+  source: ProjectAiInsightsSource;
+  analysis: {
+    summary: string;
+    topRisks: Array<{
+      title: string;
+      impact: "low" | "medium" | "high";
+      action: string;
+      relatedTaskIds: string[];
+      relatedTasks: Array<{ id: string; title: string }>;
+    }>;
+    nextActions: string[];
+    budgetDelayTradeoff: {
+      recommendedMode: AiBudgetDelayMode;
+      estimatedDelayDays: number;
+      /** Calcul serveur ; null si budget non défini ou nul. */
+      estimatedBudgetDeltaPercent: number | null;
+      rationale: string;
+    };
+    confidence: number;
+    delayAnalysis: {
+      summary: string;
+      contributingFactors: string[];
+    };
+    planningSuggestions: string[];
+    repetitiveWorkAndAutomation: string[];
+  };
+}
+
+/** Réponse POST /projects/:id/analysis/assistant/chat */
+export interface ProjectAssistantChatResponse {
+  reply: string;
+}
+
+/** Réponse POST /projects/:id/analysis/assistant/initial-report */
+export interface ProjectAssistantInitialReportResponse {
+  report: string;
+}
+
+
+
+
+
+
+
+/** Équipement (collection `/equipment`, aligné NestJS). */
 export interface Equipment {
-  _id?: string;
+  _id: string;
   name: string;
-  category: string;
-  serialNumber: string;
-  model: string;
-  brand: string;
-  purchaseDate: string;        // ISO date string
-  lastMaintenanceDate: string; // ISO date string
-  location: string;
+  category?: string;
+  serialNumber?: string;
+  model?: string;
+  brand?: string;
+  purchaseDate?: string;
+  lastMaintenanceDate?: string;
+  location?: string;
   availability: boolean;
   createdAt?: string;
   updatedAt?: string;
@@ -136,7 +194,7 @@ export interface Human {
   firstName: string;
   lastName: string;
   cin: string;
-  birthDate: string; // ISO date string
+  birthDate: string;
   phone: string;
   role: string;
   cvUrl?: string;

@@ -4,10 +4,21 @@ import * as React from "react";
 import type {
   BackendTask,
   BackendUser,
+  Human,
   Project,
   TaskPriority,
   TaskStatus,
 } from "@/lib/types";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { CheckIcon, ChevronsUpDown, UserCircle2 } from "lucide-react";
 
 export interface TaskFormValues {
   title: string;
@@ -28,6 +39,7 @@ interface TaskFormProps {
   initialValues: TaskFormValues;
   projects: Project[];
   users: BackendUser[];
+  siteEngineers?: Human[];
   tasks: BackendTask[];
   editingTaskId?: string | null;
   isSubmitting?: boolean;
@@ -57,6 +69,150 @@ function toDateInputValue(value?: string): string {
   const d = new Date(value);
   if (Number.isNaN(d.getTime())) return "";
   return d.toISOString().slice(0, 10);
+}
+
+function getInitials(firstName: string, lastName: string): string {
+  return `${(firstName?.[0] ?? "").toUpperCase()}${(lastName?.[0] ?? "").toUpperCase()}`;
+}
+
+const initialsColors = [
+  "bg-blue-500/15 text-blue-700 dark:text-blue-300 ring-blue-500/25",
+  "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 ring-emerald-500/25",
+  "bg-violet-500/15 text-violet-700 dark:text-violet-300 ring-violet-500/25",
+  "bg-amber-500/15 text-amber-700 dark:text-amber-300 ring-amber-500/25",
+  "bg-rose-500/15 text-rose-700 dark:text-rose-300 ring-rose-500/25",
+  "bg-cyan-500/15 text-cyan-700 dark:text-cyan-300 ring-cyan-500/25",
+  "bg-fuchsia-500/15 text-fuchsia-700 dark:text-fuchsia-300 ring-fuchsia-500/25",
+  "bg-teal-500/15 text-teal-700 dark:text-teal-300 ring-teal-500/25",
+];
+
+function colorForId(id: string): string {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) hash = (hash * 31 + id.charCodeAt(i)) | 0;
+  return initialsColors[Math.abs(hash) % initialsColors.length];
+}
+
+function AssigneeCombobox({
+  engineers,
+  value,
+  onChange,
+}: {
+  engineers: Human[];
+  value: string;
+  onChange: (id: string) => void;
+}) {
+  const [open, setOpen] = React.useState(false);
+
+  const selected = React.useMemo(
+    () => engineers.find((e) => e._id === value) ?? null,
+    [engineers, value],
+  );
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          id="task-assignedTo"
+          role="combobox"
+          aria-expanded={open}
+          aria-haspopup="listbox"
+          className="flex h-11 w-full min-w-0 items-center gap-2.5 rounded-xl border border-border/90 bg-input px-3 text-sm shadow-sm transition-all outline-none hover:bg-accent/40 focus-visible:ring-2 focus-visible:ring-primary/25 focus-visible:border-primary/35"
+        >
+          {selected ? (
+            <>
+              <span
+                className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ring-1 ${colorForId(selected._id)}`}
+                aria-hidden
+              >
+                {getInitials(selected.firstName, selected.lastName)}
+              </span>
+              <span className="flex-1 truncate text-left font-medium text-foreground">
+                {selected.firstName} {selected.lastName}
+              </span>
+            </>
+          ) : (
+            <>
+              <UserCircle2 className="h-5 w-5 shrink-0 text-muted-foreground/60" aria-hidden />
+              <span className="flex-1 truncate text-left text-muted-foreground">
+                Unassigned
+              </span>
+            </>
+          )}
+          <ChevronsUpDown className="ml-auto h-4 w-4 shrink-0 text-muted-foreground/50" aria-hidden />
+        </button>
+      </PopoverTrigger>
+
+      <PopoverContent
+        className="w-[--radix-popover-trigger-width] p-0 rounded-xl border border-border/80 shadow-xl"
+        align="start"
+        sideOffset={6}
+      >
+        <Command className="rounded-xl">
+          <CommandInput placeholder="Search by name..." className="h-10" />
+          <CommandList className="max-h-56">
+            <CommandEmpty className="py-6 text-center text-sm text-muted-foreground">
+              No engineer found.
+            </CommandEmpty>
+            <CommandGroup>
+              <CommandItem
+                value="__unassigned__"
+                onSelect={() => {
+                  onChange("");
+                  setOpen(false);
+                }}
+                className="flex items-center gap-3 rounded-lg px-2.5 py-2.5 cursor-pointer"
+              >
+                <UserCircle2 className="h-8 w-8 shrink-0 text-muted-foreground/40" />
+                <span className="text-sm text-muted-foreground italic">
+                  Unassigned
+                </span>
+                {!value && (
+                  <CheckIcon className="ml-auto h-4 w-4 shrink-0 text-primary" />
+                )}
+              </CommandItem>
+              {engineers.map((eng) => {
+                const isSelected = eng._id === value;
+                return (
+                  <CommandItem
+                    key={eng._id}
+                    value={`${eng.firstName} ${eng.lastName}`}
+                    onSelect={() => {
+                      onChange(isSelected ? "" : eng._id);
+                      setOpen(false);
+                    }}
+                    className="flex items-center gap-3 rounded-lg px-2.5 py-2.5 cursor-pointer"
+                  >
+                    <span
+                      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold ring-1 ${colorForId(eng._id)}`}
+                    >
+                      {getInitials(eng.firstName, eng.lastName)}
+                    </span>
+                    <div className="flex flex-1 flex-col min-w-0">
+                      <span className="truncate text-sm font-semibold text-foreground">
+                        {eng.firstName} {eng.lastName}
+                      </span>
+                      <span className="truncate text-xs text-muted-foreground">
+                        {eng.role}
+                      </span>
+                    </div>
+                    {eng.availability && (
+                      <span className="ml-auto shrink-0 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 ring-1 ring-emerald-500/25 dark:text-emerald-300">
+                        Available
+                      </span>
+                    )}
+                    {isSelected && (
+                      <CheckIcon className="ml-1 h-4 w-4 shrink-0 text-primary" />
+                    )}
+                  </CommandItem>
+                );
+              })}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
 }
 
 function hasDependencyCycle(
@@ -100,6 +256,7 @@ export default function TaskForm({
   initialValues,
   projects,
   users,
+  siteEngineers = [],
   tasks,
   editingTaskId,
   isSubmitting,
@@ -379,23 +536,54 @@ export default function TaskForm({
           />
         </div>
 
-        <div className="flex flex-col gap-1">
-          <label className="text-sm font-medium text-foreground" htmlFor="task-assignedTo">
-            Assigné à
+        <div className="flex flex-col gap-1.5">
+          <div className="flex items-center justify-between gap-2">
+            <label className={fieldLabelClass} htmlFor="task-spentBudget">
+              Spent budget (DH)
+            </label>
+            {values.spentBudget > 0 && (
+              <span className="text-xs text-muted-foreground">
+                {formatBudget(values.spentBudget)} DH
+              </span>
+            )}
+          </div>
+          <input
+            id="task-spentBudget"
+            type="number"
+            inputMode="decimal"
+            min={0}
+            step={1}
+            value={values.spentBudget === 0 ? "" : String(values.spentBudget)}
+            onChange={(e) => {
+              const raw = e.target.value.trim();
+              if (raw === "") {
+                setField("spentBudget", 0);
+              } else {
+                const n = Number(raw);
+                setField("spentBudget", Number.isFinite(n) && n >= 0 ? n : values.spentBudget);
+              }
+              setErrors((p) => ({ ...p, spentBudget: undefined }));
+            }}
+            placeholder="0"
+            className={controlClass(!!errors.spentBudget, "h-11")}
+            aria-invalid={!!errors.spentBudget}
+          />
+          {errors.spentBudget && (
+            <p className="text-xs font-medium text-destructive" role="alert">
+              {errors.spentBudget}
+            </p>
+          )}
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <label className={fieldLabelClass} htmlFor="task-assignedTo">
+            Assigned to (Site Engineer)
           </label>
-          <select
-            id="task-assignedTo"
+          <AssigneeCombobox
+            engineers={siteEngineers}
             value={values.assignedTo}
-            onChange={(e) => setField("assignedTo", e.target.value)}
-            className="h-10 rounded-md border border-border bg-input px-3 text-sm"
-          >
-            <option value="">Non assigné</option>
-            {users.map((user) => (
-              <option key={user._id} value={user._id}>
-                {user.name}
-              </option>
-            ))}
-          </select>
+            onChange={(id) => setField("assignedTo", id)}
+          />
         </div>
 
         <div className="md:col-span-2 flex flex-col gap-1">

@@ -15,13 +15,10 @@ import { Equipment, EquipmentSchema } from '../equipment-resources/schemas/equip
       { name: Job.name, schema: JobSchema },
       { name: JobProgress.name, schema: JobProgressSchema },
       { name: Resource.name, schema: ResourceSchema },
-      { name: Equipment.name, schema: EquipmentSchema },     // ← add this
-    { name: Human.name, schema: HumanSchema }, 
+      { name: Equipment.name, schema: EquipmentSchema },
+      { name: Human.name, schema: HumanSchema },
     ]),
   ],
-
-
-
   controllers: [JobsController],
   providers: [JobsService, AiAnalysisService],
 })

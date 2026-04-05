@@ -1,8 +1,17 @@
 "use client";
 
-
-import { useState, useEffect } from "react";
-import type { Project, ProjectType } from "@/lib/types";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import type { Project, ProjectType, Human } from "@/lib/types";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import { CheckIcon, ChevronsUpDown, UserCircle2 } from "lucide-react";
 
 const PROJECT_TYPES: ProjectType[] = [
   "Construction",
@@ -22,13 +31,175 @@ interface ProjectFormProps {
   mode: "create" | "edit";
   initialData?: Project;
   isSubmitting?: boolean;
+  siteEngineers?: Human[];
   onSubmit: (payload: Omit<Project, "id" | "_id">) => void | Promise<void>;
+}
+
+const TYPE_LABELS: Record<ProjectType, string> = {
+  Construction: "Construction",
+  Rénovation: "Renovation",
+  Maintenance: "Maintenance",
+  Autre: "Other",
+};
+
+const STATUS_LABELS: Record<Project["status"], string> = {
+  "En cours": "In progress",
+  Terminé: "Completed",
+  "En retard": "Behind schedule",
+};
+
+function parseBudget(trimmed: string): { value?: number; error?: string } {
+  if (trimmed === "") return { value: undefined };
+  const n = Number(trimmed.replace(",", "."));
+  if (!Number.isFinite(n) || n <= 0) {
+    return {
+      error: "Enter a strictly positive number or leave empty.",
+    };
+  }
+  return { value: n };
+}
+
+function getInitials(firstName: string, lastName: string): string {
+  return `${(firstName?.[0] ?? "").toUpperCase()}${(lastName?.[0] ?? "").toUpperCase()}`;
+}
+
+const initialsColors = [
+  "bg-blue-500/15 text-blue-700 dark:text-blue-300 ring-blue-500/25",
+  "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 ring-emerald-500/25",
+  "bg-violet-500/15 text-violet-700 dark:text-violet-300 ring-violet-500/25",
+  "bg-amber-500/15 text-amber-700 dark:text-amber-300 ring-amber-500/25",
+  "bg-rose-500/15 text-rose-700 dark:text-rose-300 ring-rose-500/25",
+  "bg-cyan-500/15 text-cyan-700 dark:text-cyan-300 ring-cyan-500/25",
+  "bg-fuchsia-500/15 text-fuchsia-700 dark:text-fuchsia-300 ring-fuchsia-500/25",
+  "bg-teal-500/15 text-teal-700 dark:text-teal-300 ring-teal-500/25",
+];
+
+function colorForId(id: string): string {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) hash = (hash * 31 + id.charCodeAt(i)) | 0;
+  return initialsColors[Math.abs(hash) % initialsColors.length];
+}
+
+function EngineerCombobox({
+  engineers,
+  value,
+  hasError,
+  onChange,
+}: {
+  engineers: Human[];
+  value: string;
+  hasError: boolean;
+  onChange: (id: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+
+  const selected = useMemo(
+    () => engineers.find((e) => e._id === value) ?? null,
+    [engineers, value],
+  );
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          role="combobox"
+          id="project-createdBy-combobox"
+          aria-expanded={open}
+          aria-haspopup="listbox"
+          className={[
+            "flex h-11 w-full min-w-0 items-center gap-2.5 rounded-xl border bg-input px-3 text-sm shadow-sm transition-all outline-none",
+            "hover:bg-accent/40 focus-visible:ring-2 focus-visible:ring-primary/25",
+            hasError
+              ? "border-destructive focus-visible:border-destructive focus-visible:ring-destructive/25"
+              : "border-border/90 focus-visible:border-primary/35",
+          ].join(" ")}
+        >
+          {selected ? (
+            <>
+              <span
+                className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold ring-1 ${colorForId(selected._id)}`}
+                aria-hidden
+              >
+                {getInitials(selected.firstName, selected.lastName)}
+              </span>
+              <span className="flex-1 truncate text-left font-medium text-foreground">
+                {selected.firstName} {selected.lastName}
+              </span>
+            </>
+          ) : (
+            <>
+              <UserCircle2 className="h-5 w-5 shrink-0 text-muted-foreground/60" aria-hidden />
+              <span className="flex-1 truncate text-left text-muted-foreground">
+                Select a Site Engineer...
+              </span>
+            </>
+          )}
+          <ChevronsUpDown className="ml-auto h-4 w-4 shrink-0 text-muted-foreground/50" aria-hidden />
+        </button>
+      </PopoverTrigger>
+
+      <PopoverContent
+        className="w-[--radix-popover-trigger-width] p-0 rounded-xl border border-border/80 shadow-xl"
+        align="start"
+        sideOffset={6}
+      >
+        <Command className="rounded-xl">
+          <CommandInput placeholder="Search by name..." className="h-10" />
+          <CommandList className="max-h-56">
+            <CommandEmpty className="py-6 text-center text-sm text-muted-foreground">
+              No engineer found.
+            </CommandEmpty>
+            <CommandGroup>
+              {engineers.map((eng) => {
+                const isSelected = eng._id === value;
+                return (
+                  <CommandItem
+                    key={eng._id}
+                    value={`${eng.firstName} ${eng.lastName}`}
+                    onSelect={() => {
+                      onChange(isSelected ? "" : eng._id);
+                      setOpen(false);
+                    }}
+                    className="flex items-center gap-3 rounded-lg px-2.5 py-2.5 cursor-pointer"
+                  >
+                    <span
+                      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold ring-1 ${colorForId(eng._id)}`}
+                    >
+                      {getInitials(eng.firstName, eng.lastName)}
+                    </span>
+                    <div className="flex flex-1 flex-col min-w-0">
+                      <span className="truncate text-sm font-semibold text-foreground">
+                        {eng.firstName} {eng.lastName}
+                      </span>
+                      <span className="truncate text-xs text-muted-foreground">
+                        {eng.role}
+                      </span>
+                    </div>
+                    {eng.availability && (
+                      <span className="ml-auto shrink-0 rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 ring-1 ring-emerald-500/25 dark:text-emerald-300">
+                        Available
+                      </span>
+                    )}
+                    {isSelected && (
+                      <CheckIcon className="ml-1 h-4 w-4 shrink-0 text-primary" />
+                    )}
+                  </CommandItem>
+                );
+              })}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
 }
 
 export default function ProjectForm({
   mode,
   initialData,
   isSubmitting = false,
+  siteEngineers = [],
   onSubmit,
 }: ProjectFormProps) {
 
@@ -42,13 +213,52 @@ export default function ProjectForm({
   const [location, setLocation] = useState("");
   const [createdBy, setCreatedBy] = useState("");
 
-  // Helper pour forcer le format yyyy-MM-dd
-  function toDateInputValue(dateStr?: string) {
-    if (!dateStr) return '';
-    const d = new Date(dateStr);
-    if (isNaN(d.getTime())) return '';
-    return d.toISOString().slice(0, 10);
-  }
+  const validate = useCallback((): ProjectFieldErrors => {
+    const next: ProjectFieldErrors = {};
+    const nameT = name.trim();
+    if (!nameT) {
+      next.name = "Project name is required.";
+    } else if (nameT.length < 2) {
+      next.name = "Name must be at least 2 characters.";
+    } else if (nameT.length > MAX_NAME) {
+      next.name = `Maximum ${MAX_NAME} characters.`;
+    }
+
+    if (description.length > MAX_DESCRIPTION) {
+      next.description = `Maximum ${MAX_DESCRIPTION} characters.`;
+    }
+
+    if (!startDate.trim()) {
+      next.startDate = "Start date is required.";
+    }
+
+    if (startDate && endDate.trim()) {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+        next.endDate = "Invalid date.";
+      } else if (end.getTime() <= start.getTime()) {
+        next.endDate = "End date must be after start date.";
+      }
+    }
+
+    const budgetResult = parseBudget(budget.trim());
+    if (budgetResult.error) next.budget = budgetResult.error;
+
+    const locT = location.trim();
+    if (locT.length > MAX_LOCATION) {
+      next.location = `Maximum ${MAX_LOCATION} characters.`;
+    }
+
+    const byT = createdBy.trim();
+    if (!byT) {
+      next.createdBy = "Please select a Site Engineer.";
+    } else if (byT.length > MAX_CREATED_BY) {
+      next.createdBy = `Maximum ${MAX_CREATED_BY} characters.`;
+    }
+
+    return next;
+  }, [name, description, startDate, endDate, budget, location, createdBy]);
 
   useEffect(() => {
     if (initialData) {
@@ -168,63 +378,110 @@ export default function ProjectForm({
                   {t}
                 </SelectItem>
               ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className={styles['popup-form-group']}>
-          <label htmlFor="budget" className={styles['popup-label']}>Budget (optionnel)</label>
-          <Input
-            id="budget"
-            type="number"
-            min="0"
-            step="any"
-            value={budget}
-            onChange={(e) => setBudget(e.target.value)}
-            placeholder="Montant positif"
-          />
-        </div>
-        <div className={styles['popup-form-group']}>
-          <label htmlFor="location" className={styles['popup-label']}>Lieu (optionnel)</label>
-          <Input
-            id="location"
-            type="text"
-            value={location}
-            onChange={(e) => setLocation(e.target.value)}
-            placeholder="Adresse ou ville"
-          />
-        </div>
-        <div className={styles['popup-form-group']}>
-          <label htmlFor="status" className={styles['popup-label']}>Status</label>
-          <Select value={status} onValueChange={v => setStatus(v as Project["status"])}>
-            <SelectTrigger id="status" className={styles['select-trigger']}>
-              <SelectValue placeholder="Select status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="En cours">En cours</SelectItem>
-              <SelectItem value="Terminé">Terminé</SelectItem>
-              <SelectItem value="En retard">En retard</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className={styles['popup-form-group']}>
-          <label htmlFor="createdBy" className={styles['popup-label']}>Created By</label>
-          <Input
-            id="createdBy"
-            type="text"
-            value={createdBy}
-            onChange={(e) => setCreatedBy(e.target.value)}
-          />
+            </select>
+          </div>
+
+          <div className={groupClass("budget")}>
+            <label htmlFor="project-budget" className={fieldLabelClass}>
+              Budget (optional)
+            </label>
+            <input
+              id="project-budget"
+              type="text"
+              inputMode="decimal"
+              value={budget}
+              onChange={(e) => {
+                setBudget(e.target.value);
+                setErrors((p) => ({ ...p, budget: undefined }));
+              }}
+              placeholder="Positive amount"
+              className={controlClass(!!errors.budget, "h-11")}
+              aria-invalid={!!errors.budget}
+            />
+            {errors.budget && (
+              <p className="text-xs font-medium text-destructive" role="alert">
+                {errors.budget}
+              </p>
+            )}
+          </div>
+
+          <div className={groupClass("location")}>
+            <label htmlFor="project-location" className={fieldLabelClass}>
+              Location (optional)
+            </label>
+            <input
+              id="project-location"
+              type="text"
+              value={location}
+              onChange={(e) => {
+                setLocation(e.target.value);
+                setErrors((p) => ({ ...p, location: undefined }));
+              }}
+              placeholder="Address or city"
+              className={controlClass(!!errors.location, "h-11")}
+              aria-invalid={!!errors.location}
+            />
+            {errors.location && (
+              <p className="text-xs font-medium text-destructive" role="alert">
+                {errors.location}
+              </p>
+            )}
+          </div>
+
+          <p className={sectionEyebrowClass}>Status &amp; tracking</p>
+
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="project-status" className={fieldLabelClass}>
+              Status
+            </label>
+            <select
+              id="project-status"
+              value={status}
+              onChange={(e) =>
+                setStatus(e.target.value as Project["status"])
+              }
+              className={controlClass(false, "h-11")}
+            >
+              {PROJECT_STATUSES.map((s) => (
+                <option key={s} value={s}>
+                  {STATUS_LABELS[s]}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className={groupClass("createdBy")}>
+            <label htmlFor="project-createdBy-combobox" className={fieldLabelClass}>
+              Created by (Site Engineer)
+            </label>
+            <EngineerCombobox
+              engineers={siteEngineers}
+              value={createdBy}
+              hasError={!!errors.createdBy}
+              onChange={(id) => {
+                setCreatedBy(id);
+                setErrors((p) => ({ ...p, createdBy: undefined }));
+              }}
+            />
+            {errors.createdBy && (
+              <p className="text-xs font-medium text-destructive" role="alert">
+                {errors.createdBy}
+              </p>
+            )}
+          </div>
         </div>
       </div>
-      <Button
-        type="submit"
-        disabled={isSubmitting}
-        className={styles["popup-submit"] + " w-full"}
-      >
-        {isSubmitting
-          ? "Enregistrement…"
-          : "Confirmer"}
-      </Button>
+
+      <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          aria-busy={isSubmitting}
+          className="inline-flex w-full items-center justify-center rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-md shadow-primary/20 transition-[filter] hover:brightness-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-60 sm:w-auto"
+        >
+          {isSubmitting ? "Saving…" : "Save"}
+        </button>
+      </div>
     </form>
   );
 }

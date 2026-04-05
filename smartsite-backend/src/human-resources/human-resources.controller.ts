@@ -4,6 +4,7 @@ import {
   Post,
   Patch,
   Param,
+  Query,
   Delete,
   Body,
   UseInterceptors,
@@ -84,8 +85,8 @@ export class HumanResourcesController {
   }
 
   @Get()
-  findAll() {
-    return this.humanService.findAll();
+  findAll(@Query('role') role?: string) {
+    return this.humanService.findAll(role);
   }
 
   @Get(':id')
