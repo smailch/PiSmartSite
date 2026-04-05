@@ -2,12 +2,17 @@ import type {
   Resource,
   CreateResourcePayload,
   UpdateResourcePayload,
+  Job,
+  CreateJobPayload,
+  UpdateJobPayload,
   Project,
   ProjectAiInsightsResponse,
   ProjectAssistantChatResponse,
   ProjectAssistantInitialReportResponse,
   BackendTask,
   BackendUser,
+  Human,
+  Equipment,
 } from "./types";
 
 import { ApiError } from "./types";
@@ -159,17 +164,130 @@ export function deleteResource(id: string): Promise<void> {
 }
 
 /* ======================
+        Jobs CRUD
+====================== */
+export function getJobsKey() {
+  return `/jobs`;
+}
+
+export function getJobKey(id: string) {
+  return `/jobs/${id}`;
+}
+
+export function getJobProgressKey(id: string) {
+  return `/jobs/${id}/progress`;
+}
+
+export function createJob(payload: CreateJobPayload): Promise<Job> {
+  return apiFetch<Job>(`/jobs`, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function updateJob(
+  id: string,
+  payload: UpdateJobPayload
+): Promise<Job> {
+  return apiFetch<Job>(`/jobs/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function deleteJob(id: string): Promise<void> {
+  return apiFetch<void>(`/jobs/${id}`, {
+    method: "DELETE",
+  });
+}
+
+/* ======================
         Humans CRUD
 ====================== */
 export function getHumansKey(role?: string) {
   return role ? `/humans?role=${encodeURIComponent(role)}` : `/humans`;
 }
 
-export function getHumans(role?: string): Promise<import("./types").Human[]> {
+export function getHumans(role?: string): Promise<Human[]> {
   const endpoint = role
     ? `/humans?role=${encodeURIComponent(role)}`
     : `/humans`;
-  return apiFetch<import("./types").Human[]>(endpoint);
+  return apiFetch<Human[]>(endpoint);
+}
+
+export function getHumanKey(id: string) {
+  return `/humans/${id}`;
+}
+
+/** Envoi multipart : champs texte + fichiers optionnels `cv`, `image`. */
+export async function createHuman(formData: FormData): Promise<Human> {
+  const res = await fetch(`${API_URL}/humans`, {
+    method: "POST",
+    body: formData,
+  });
+  if (!res.ok) {
+    const info = await res.json().catch(() => null);
+    throw new ApiError(formatBackendMessage(info, res.status), res.status, info);
+  }
+  return res.json() as Promise<Human>;
+}
+
+export async function updateHuman(
+  id: string,
+  formData: FormData
+): Promise<Human> {
+  const res = await fetch(`${API_URL}/humans/${id}`, {
+    method: "PATCH",
+    body: formData,
+  });
+  if (!res.ok) {
+    const info = await res.json().catch(() => null);
+    throw new ApiError(formatBackendMessage(info, res.status), res.status, info);
+  }
+  return res.json() as Promise<Human>;
+}
+
+export function deleteHuman(id: string): Promise<void> {
+  return apiFetch<void>(`/humans/${id}`, {
+    method: "DELETE",
+  });
+}
+
+/* ======================
+        Equipment CRUD
+====================== */
+
+export function getEquipmentsKey() {
+  return `/equipment`;
+}
+
+export function getEquipmentKey(id: string) {
+  return `/equipment/${id}`;
+}
+
+export function createEquipment(
+  payload: Partial<Equipment> & { name: string }
+): Promise<Equipment> {
+  return apiFetch<Equipment>(`/equipment`, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function updateEquipment(
+  id: string,
+  payload: Partial<Equipment>
+): Promise<Equipment> {
+  return apiFetch<Equipment>(`/equipment/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function deleteEquipment(id: string): Promise<void> {
+  return apiFetch<void>(`/equipment/${id}`, {
+    method: "DELETE",
+  });
 }
 
 // Fetch projects from the backend API

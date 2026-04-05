@@ -15,12 +15,18 @@ import {
   Home,
   Clipboard,
   Briefcase,
+  Package,
+  UserCircle,
+  Wrench,
 } from 'lucide-react';
 
 const navigationItems = [
   { id: 'dashboard', label: 'Dashboard', icon: Home, href: '/home' },
   { id: 'projects', label: 'Projects', icon: Building2, href: '/projects' },
   { id: 'jobs', label: 'Jobs', icon: Briefcase, href: '/jobs' },
+  { id: 'resources', label: 'Resources', icon: Package, href: '/resources' },
+  { id: 'humans', label: 'Humans', icon: UserCircle, href: '/humans' },
+  { id: 'equipment', label: 'Equipment', icon: Wrench, href: '/equipment' },
   { id: 'tasks', label: 'Tasks', icon: Clipboard, href: '/tasks' },
   { id: 'reports', label: 'Reports', icon: BarChart3, href: '/reports' },
   { id: 'team', label: 'Team', icon: Users, href: '/team' },

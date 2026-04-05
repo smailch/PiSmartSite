@@ -24,6 +24,45 @@ export interface UpdateResourcePayload {
   availability?: boolean;
 }
 
+/** Id seul (API normale) ou document peuplé / forme legacy. */
+export type AssignedResourceIdRef =
+  | string
+  | {
+      _id?: string;
+      name?: string;
+      firstName?: string;
+      lastName?: string;
+      role?: string;
+    }
+  | null
+  | undefined;
+
+export interface AssignedResource {
+  resourceId: AssignedResourceIdRef;
+  type: "Human" | "Equipment";
+  _id?: string;
+  /** Dénormalisé par le backend lors de la création / mise à jour du job */
+  name?: string;
+}
+
+export interface Job {
+  _id: string;
+  taskId: string;
+  title: string;
+  description: string;
+  startTime: string;
+  endTime: string;
+  status: "Planifié" | "En cours" | "Terminé";
+  assignedResources: AssignedResource[];
+  createdAt: string;
+  updatedAt: string;
+  /** Liste jobs : pourcentage de suivi renvoyé par l’API */
+  progressPercentage?: number;
+}
+
+export type CreateJobPayload = Omit<Job, "_id" | "createdAt" | "updatedAt">;
+export type UpdateJobPayload = Partial<CreateJobPayload>;
+
 export type TaskPriority = "HIGH" | "MEDIUM" | "LOW";
 
 export type TaskStatus = "À faire" | "En cours" | "Terminé";
@@ -136,16 +175,17 @@ export interface ProjectAssistantInitialReportResponse {
 
 
 
+/** Équipement (collection `/equipment`, aligné NestJS). */
 export interface Equipment {
-  _id?: string;
+  _id: string;
   name: string;
-  category: string;
-  serialNumber: string;
-  model: string;
-  brand: string;
-  purchaseDate: string;
-  lastMaintenanceDate: string;
-  location: string;
+  category?: string;
+  serialNumber?: string;
+  model?: string;
+  brand?: string;
+  purchaseDate?: string;
+  lastMaintenanceDate?: string;
+  location?: string;
   availability: boolean;
   createdAt?: string;
   updatedAt?: string;

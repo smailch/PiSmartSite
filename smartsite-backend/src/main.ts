@@ -1,11 +1,28 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { join } from 'path';
+import { existsSync, mkdirSync } from 'fs';
+import { PROGRESS_UPLOAD_DIR } from './jobs/multer-progress.config';
+import { HUMAN_UPLOAD_DIR } from './human-resources/multer-human.config';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const uploadsRoot = join(process.cwd(), 'uploads');
+  if (!existsSync(uploadsRoot)) {
+    mkdirSync(uploadsRoot, { recursive: true });
+  }
+  if (!existsSync(PROGRESS_UPLOAD_DIR)) {
+    mkdirSync(PROGRESS_UPLOAD_DIR, { recursive: true });
+  }
+  if (!existsSync(HUMAN_UPLOAD_DIR)) {
+    mkdirSync(HUMAN_UPLOAD_DIR, { recursive: true });
+  }
 
-  // Origines locales (Next.js : 3000 par défaut ; 3001 si port personnalisé)
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
+  app.useStaticAssets(uploadsRoot, { prefix: '/uploads/' });
+
   const devOrigins = [
     'http://localhost:3000',
     'http://localhost:3001',

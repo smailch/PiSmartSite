@@ -11,13 +11,13 @@ export class Human {
   @Prop({ required: true })
   lastName: string;
 
-  @Prop({ required: true })
+  @Prop({ required: true, unique: true })
   cin: string;
 
-  @Prop({ type: Date })
+  @Prop({ required: true })
   birthDate: Date;
 
-  @Prop()
+  @Prop({ required: true })
   phone: string;
 
   @Prop({ required: true })

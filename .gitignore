@@ -33,6 +33,9 @@ Thumbs.db
 __pycache__/
 *.py[cod]
 
+# Fichiers uploadés en local (photos avancement jobs, CV humains)
+smartsite-backend/uploads/
+
 # Misc
 *.local
 !smarsite-frontend/.env.local

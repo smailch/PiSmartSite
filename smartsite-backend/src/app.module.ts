@@ -7,12 +7,15 @@ import { join } from 'node:path';
 const backendEnvDir = join(__dirname, '..');
 import { validateGroqEnv } from './analysis-ai/groq-env.validation';
 import { ResourcesModule } from './resources/resources.module';
+import { JobsModule } from './jobs/jobs.module';
 import { ProjectsModule } from './projects/projects.module';
 import { TasksModule } from './tasks/tasks.module';
 import { UsersModule } from './users/users.module';
 import { AnalysisAiModule } from './analysis-ai/analysis-ai.module';
 import { TelegramModule } from './telegram/telegram.module';
-import { HumansModule } from './humans/humans.module';
+import { HumanResourcesModule } from './human-resources/human-resources.module';
+import { EquipmentResourcesModule } from './equipment-resources/equipment-resources.module';
+import { AttendanceModule } from './attendance/attendance.module';
 
 @Module({
   imports: [
@@ -29,12 +32,15 @@ import { HumansModule } from './humans/humans.module';
       'mongodb+srv://mourad:mourad@smartsite.poyscqk.mongodb.net/smartsite?retryWrites=true&w=majority'
     ),
     ResourcesModule,
+    JobsModule,
     ProjectsModule, // Ajout du module Projects
     TasksModule, // Ajout du module Tasks
     UsersModule,
     AnalysisAiModule,
     TelegramModule,
-    HumansModule,
+    HumanResourcesModule,
+    EquipmentResourcesModule,
+    AttendanceModule,
   ],
   controllers: [],
   providers: [],
