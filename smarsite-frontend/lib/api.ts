@@ -24,11 +24,19 @@ function formatBackendMessage(info: unknown, status: number): string {
   return `Request failed with status ${status}`;
 }
 
-// ✅ API dynamique
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
-
-if (!API_URL) {
-  throw new Error("NEXT_PUBLIC_API_URL is not defined");
+/**
+ * Résout l’URL du backend sans faire échouer l’import du module (SSR / build).
+ * En dev, fallback sur le port Nest habituel si `.env.local` est absent.
+ */
+export function getApiBaseUrl(): string {
+  const raw = process.env.NEXT_PUBLIC_API_URL?.trim().replace(/\/$/, "");
+  if (raw) return raw;
+  if (process.env.NODE_ENV !== "production") {
+    return "http://localhost:3200";
+  }
+  throw new Error(
+    "NEXT_PUBLIC_API_URL is required in production. Copy .env.example to .env.local.",
+  );
 }
 
 // Generic fetch helper
@@ -36,7 +44,7 @@ async function apiFetch<T>(
   endpoint: string,
   options?: RequestInit
 ): Promise<T> {
-  const res = await fetch(`${API_URL}${endpoint}`, {
+  const res = await fetch(`${getApiBaseUrl()}${endpoint}`, {
     headers: {
       "Content-Type": "application/json",
       ...(options?.headers || {}),
@@ -210,7 +218,7 @@ export function getHumanKey(id: string) {
 
 /** Envoi multipart : champs texte + fichiers optionnels `cv`, `image`. */
 export async function createHuman(formData: FormData): Promise<Human> {
-  const res = await fetch(`${API_URL}/humans`, {
+  const res = await fetch(`${getApiBaseUrl()}/humans`, {
     method: "POST",
     body: formData,
   });
@@ -225,7 +233,7 @@ export async function updateHuman(
   id: string,
   formData: FormData
 ): Promise<Human> {
-  const res = await fetch(`${API_URL}/humans/${id}`, {
+  const res = await fetch(`${getApiBaseUrl()}/humans/${id}`, {
     method: "PATCH",
     body: formData,
   });

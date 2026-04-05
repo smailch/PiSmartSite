@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { mutate } from "swr";
 import Link from "next/link";
@@ -95,31 +95,30 @@ export default function JobForm({ mode, initialData }: JobFormProps) {
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [selectedHuman, setSelectedHuman] = useState("");
   const [selectedEquipment, setSelectedEquipment] = useState("");
+  const hydratedJobIdRef = useRef<string | null>(null);
 
-  // Initialisation du formulaire avec les données existantes
+  // Une seule synchro par job (évite boucle si SWR renvoie un nouvel objet à chaque render)
   useEffect(() => {
-    if (initialData) {
-      setFormData({
-        _id: initialData._id,
-        title: initialData.title || "",
-        description: initialData.description || "",
-        taskId: initialData.taskId || "",
-        startTime: initialData.startTime ? initialData.startTime.slice(0, 16) : "",
-        endTime: initialData.endTime ? initialData.endTime.slice(0, 16) : "",
-        status: initialData.status || "Planifié",
-        assignedResources: (initialData.assignedResources || [])
-          .map((ar) => normalizeAssignedResourceForForm(ar as AssignedResource))
-          .filter((x): x is { resourceId: string; type: "Human" | "Equipment" } => Boolean(x)),
-      });
+    if (!initialData) {
+      hydratedJobIdRef.current = null;
+      return;
     }
+    if (hydratedJobIdRef.current === initialData._id) return;
+    hydratedJobIdRef.current = initialData._id;
+
+    setFormData({
+      _id: initialData._id,
+      title: initialData.title || "",
+      description: initialData.description || "",
+      taskId: initialData.taskId || "",
+      startTime: initialData.startTime ? initialData.startTime.slice(0, 16) : "",
+      endTime: initialData.endTime ? initialData.endTime.slice(0, 16) : "",
+      status: initialData.status || "Planifié",
+      assignedResources: (initialData.assignedResources || [])
+        .map((ar) => normalizeAssignedResourceForForm(ar as AssignedResource))
+        .filter((x): x is { resourceId: string; type: "Human" | "Equipment" } => Boolean(x)),
+    });
   }, [initialData]);
-
-  // Force re-render quand humans et equipments sont chargés
-  useEffect(() => {
-    if (humans.length > 0 || equipments.length > 0) {
-      setFormData((prev) => ({ ...prev }));
-    }
-  }, [humans, equipments]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;

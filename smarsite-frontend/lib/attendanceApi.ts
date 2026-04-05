@@ -1,12 +1,12 @@
 import axios, { type AxiosError } from "axios";
+import { getApiBaseUrl } from "./api";
 
-function getApiBase(): string {
-  const url = process.env.NEXT_PUBLIC_API_URL;
-  if (!url) throw new Error("NEXT_PUBLIC_API_URL is not defined");
-  return url.replace(/\/$/, "");
+function createClient() {
+  return axios.create({
+    baseURL: getApiBaseUrl(),
+    headers: { "Content-Type": "application/json" },
+  });
 }
-
-const client = axios.create({ baseURL: getApiBase() });
 
 export type AttendanceRecord = {
   _id: string;
@@ -43,7 +43,7 @@ function formatAxiosError(err: unknown): string {
 
 export async function createAttendance(payload: CreateAttendancePayload): Promise<AttendanceRecord> {
   try {
-    const { data } = await client.post<AttendanceRecord>("/attendance", payload);
+    const { data } = await createClient().post<AttendanceRecord>("/attendance", payload);
     return data;
   } catch (e) {
     throw new Error(formatAxiosError(e));
@@ -52,7 +52,9 @@ export async function createAttendance(payload: CreateAttendancePayload): Promis
 
 export async function fetchAttendanceByJob(jobId: string): Promise<AttendanceRecord[]> {
   try {
-    const { data } = await client.get<AttendanceRecord[]>(`/attendance/job/${jobId}`);
+    const { data } = await createClient().get<AttendanceRecord[]>(
+      `/attendance/job/${jobId}`
+    );
     return Array.isArray(data) ? data : [];
   } catch (e) {
     throw new Error(formatAxiosError(e));

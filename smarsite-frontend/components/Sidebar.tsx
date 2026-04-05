@@ -24,7 +24,6 @@ const navigationItems = [
   { id: 'dashboard', label: 'Daaashboard', icon: Home, href: '/' },
   { id: 'projects', label: 'Projects', icon: Building2, href: '/projects' },
   { id: 'jobs', label: 'Jobs', icon: Briefcase, href: '/jobs' },
-  { id: 'resources', label: 'Resources', icon: Package, href: '/resources' },
   { id: 'humans', label: 'Humans', icon: UserCircle, href: '/humans' },
   { id: 'equipment', label: 'Equipment', icon: Wrench, href: '/equipment' },
   { id: 'tasks', label: 'Tasks', icon: Clipboard, href: '/tasks' },
