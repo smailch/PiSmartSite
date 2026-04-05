@@ -13,6 +13,11 @@ const nextConfig = {
   },
   turbopack: {
     root: __dirname,
+    /** Évite la résolution depuis un package.json parent (ex. profil utilisateur) pour @import 'tailwindcss'. */
+    resolveAlias: {
+      tailwindcss: path.join(__dirname, "node_modules/tailwindcss"),
+      "tw-animate-css": path.join(__dirname, "node_modules/tw-animate-css"),
+    },
   },
 };
 
