@@ -79,7 +79,7 @@ export interface BackendTask {
   priority: TaskPriority;
   status: TaskStatus;
   progress: number;
-  /** Budget consommé par cette tâche (en DH). */
+  /** Budget consommé par cette tâche (en €). */
   spentBudget?: number;
   /** ObjectId seul, ou populate User (`name`) ou Human (`firstName` / `lastName`). */
   assignedTo?:
@@ -117,6 +117,8 @@ export interface Project {
   status: "En cours" | "Terminé" | "En retard";
   type: ProjectType;
   budget?: number;
+  /** Spend incurred (€ affiché côté UI); optional until backend sends it */
+  spentBudget?: number;
   location?: string;
   createdBy: string;
 }

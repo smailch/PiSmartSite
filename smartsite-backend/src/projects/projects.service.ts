@@ -30,6 +30,7 @@ export class ProjectsService {
       ...project.toObject(),
       startDate: project.startDate || null,
       endDate: project.endDate || null,
+      spentBudget: project.spentBudget ?? 0,
     }));
   }
 
@@ -39,16 +40,22 @@ export class ProjectsService {
     if (!project) {
       throw new NotFoundException(`Project with ID ${id} not found`);
     }
-    return project;
+    return {
+      ...project.toObject(),
+      spentBudget: project.spentBudget ?? 0,
+    } as unknown as Project;
   }
 
   async update(id: string, updateProjectDto: UpdateProjectDto): Promise<Project> {
     this.assertValidObjectId(id, 'id');
     const updatedProject = await this.projectModel
-      .findByIdAndUpdate(id, updateProjectDto, { new: true })
+      .findByIdAndUpdate(id, { $set: updateProjectDto }, { new: true })
       .exec();
     if (!updatedProject) {
       throw new NotFoundException(`Project with ID ${id} not found`);
+    }
+    if (updateProjectDto.status === 'Terminé') {
+      await this.tasksService.markAllTasksCompletedForProject(id);
     }
     return updatedProject;
   }

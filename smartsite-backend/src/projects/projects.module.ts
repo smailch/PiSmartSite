@@ -14,5 +14,6 @@ import { HumanResourcesModule } from '../human-resources/human-resources.module'
   ],
   controllers: [ProjectsController],
   providers: [ProjectsService],
+  exports: [ProjectsService],
 })
 export class ProjectsModule {}

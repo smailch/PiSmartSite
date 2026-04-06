@@ -18,6 +18,10 @@ async function bootstrap() {
   if (!existsSync(HUMAN_UPLOAD_DIR)) {
     mkdirSync(HUMAN_UPLOAD_DIR, { recursive: true });
   }
+  const progressPhotosDir = join(process.cwd(), 'uploads', 'progress-photos');
+  if (!existsSync(progressPhotosDir)) {
+    mkdirSync(progressPhotosDir, { recursive: true });
+  }
 
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 

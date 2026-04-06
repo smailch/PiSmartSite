@@ -280,9 +280,6 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
           if (task.description?.trim()) {
             lines.push('', truncate(task.description, 800));
           }
-          if (typeof task.spentBudget === 'number' && task.spentBudget > 0) {
-            lines.push('', `Budget tâche : ${task.spentBudget}`);
-          }
           const keyboard = new InlineKeyboard().text(
             '← Retour au projet',
             `${CB_BACK_PROJECT}${pid}`,

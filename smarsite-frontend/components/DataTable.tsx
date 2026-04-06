@@ -1,7 +1,13 @@
-import React from "react"
-interface Column<T> {
+import React from "react";
+
+export interface Column<T> {
   key: keyof T;
   label: string;
+  align?: "left" | "center" | "right";
+  /** Classes supplémentaires sur l’en-tête (ex. largeur min, pas de retour à la ligne). */
+  headerClassName?: string;
+  /** Classes supplémentaires sur les cellules du corps (ex. max-w, truncate). */
+  cellClassName?: string;
   render?: (value: T[keyof T], row: T) => React.ReactNode;
 }
 
@@ -15,6 +21,18 @@ interface DataTableProps<T> {
   pageLevelScroll?: boolean;
 }
 
+function cellAlignClass(align: "left" | "center" | "right" | undefined): string {
+  switch (align) {
+    case "right":
+      return "text-right tabular-nums";
+    case "center":
+      return "text-center";
+    default:
+      return "text-left";
+  }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- colonnes « virtuelles » (ex. actions) hors type métier
 export default function DataTable<T extends Record<string, any>>({
   columns,
   data,
@@ -23,9 +41,13 @@ export default function DataTable<T extends Record<string, any>>({
   pageLevelScroll = false,
 }: DataTableProps<T>) {
   const table = (
-    <table
-      className={`w-full border-collapse text-sm ${pageLevelScroll ? "min-w-0 table-auto" : "min-w-[720px]"}`}
-    >
+      <table
+        className={`border-collapse text-sm ${
+          pageLevelScroll
+            ? "w-full min-w-[1200px] table-fixed"
+            : "w-full min-w-[720px]"
+        }`}
+      >
       {tableCaption ? (
         <caption className="sr-only">{tableCaption}</caption>
       ) : null}
@@ -35,7 +57,7 @@ export default function DataTable<T extends Record<string, any>>({
             <th
               key={String(col.key)}
               scope="col"
-              className={`px-4 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground first:pl-5 last:pr-5 sm:px-5 ${pageLevelScroll ? "whitespace-normal break-words" : "whitespace-nowrap"} ${cellAlignClass(col.align ?? "left")}`}
+              className={`px-4 py-3.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground first:pl-5 last:pr-5 sm:px-5 ${pageLevelScroll ? "whitespace-normal break-words" : "whitespace-nowrap"} ${cellAlignClass(col.align ?? "left")} ${col.headerClassName ?? ""}`}
             >
               {col.label}
             </th>
@@ -56,7 +78,7 @@ export default function DataTable<T extends Record<string, any>>({
           data.map((row, idx) => {
             const rowKey =
               row && typeof row === "object" && "_id" in row && row._id != null
-                ? String((row as { _id: unknown })._id)
+                ? String((row as unknown as { _id: unknown })._id)
                 : idx;
             return (
             <tr
@@ -64,12 +86,12 @@ export default function DataTable<T extends Record<string, any>>({
               className="border-b border-border/60 transition-colors odd:bg-background even:bg-muted/[0.35] hover:bg-primary/[0.04] last:border-b-0"
             >
               {columns.map((col) => (
-                <th
+                <td
                   key={String(col.key)}
-                  className="px-6 py-3 text-left text-sm font-semibold text-foreground"
+                  className={`px-4 py-3.5 text-foreground first:pl-5 last:pr-5 sm:px-5 ${pageLevelScroll ? "align-top break-words" : "max-w-[min(28rem,50vw)] align-middle"} ${cellAlignClass(col.align)} ${col.cellClassName ?? ""}`}
                 >
-                  {col.label}
-                </th>
+                  {col.render ? col.render(row[col.key], row) : String(row[col.key] ?? "—")}
+                </td>
               ))}
             </tr>
             );
@@ -90,11 +112,15 @@ export default function DataTable<T extends Record<string, any>>({
           <h3 className="text-base font-semibold tracking-tight text-foreground">{title}</h3>
         </div>
       ) : null}
-      {pageLevelScroll ? (
-        <div className="w-full">{table}</div>
-      ) : (
-        <div className="overflow-x-auto">{table}</div>
-      )}
+      <div
+        className={
+          pageLevelScroll
+            ? "w-full overflow-x-auto overscroll-x-contain [scrollbar-gutter:stable]"
+            : "overflow-x-auto"
+        }
+      >
+        {table}
+      </div>
     </div>
   );
 }

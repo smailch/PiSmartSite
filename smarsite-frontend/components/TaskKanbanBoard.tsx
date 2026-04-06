@@ -5,6 +5,7 @@ import {
   Briefcase,
   CheckCircle2,
   CircleDashed,
+  ClipboardList,
   GripVertical,
   Loader2,
   Pencil,
@@ -72,6 +73,8 @@ export interface KanbanUiTask {
   spentBudget: number;
   status: TaskStatus;
   priority: TaskPriority;
+  /** Nombre de jobs liés à la tâche (API /jobs). */
+  jobCount?: number;
   /** Indicateur calculé (optionnel si non fourni). */
   isLate?: boolean;
 }
@@ -83,6 +86,8 @@ interface TaskKanbanBoardProps {
   savingTaskId: string | null;
   getPriorityStyle: (priority: TaskPriority) => string;
   priorityCellLabel: (p: TaskPriority) => string;
+  /** Ouvre le panneau listant les jobs de la tâche. */
+  onShowJobs?: (taskId: string) => void;
   /** Affiche le badge « Late » quand `task.isLate` est true. */
   showLateBadge?: boolean;
 }
@@ -94,6 +99,7 @@ export default function TaskKanbanBoard({
   savingTaskId,
   getPriorityStyle,
   priorityCellLabel,
+  onShowJobs,
   showLateBadge = false,
 }: TaskKanbanBoardProps) {
   const [draggingId, setDraggingId] = useState<string | null>(null);
@@ -217,9 +223,19 @@ export default function TaskKanbanBoard({
                         </div>
                         <div className="min-w-0 flex-1 space-y-3">
                           <div className="flex items-start justify-between gap-2">
-                            <h4 className="text-sm font-semibold leading-snug tracking-tight text-foreground line-clamp-4">
-                              {task.title}
-                            </h4>
+                            {onShowJobs ? (
+                              <button
+                                type="button"
+                                onClick={() => onShowJobs(task.id)}
+                                className="text-left text-sm font-semibold leading-snug tracking-tight text-foreground line-clamp-4 rounded-md ring-offset-background transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                              >
+                                {task.title}
+                              </button>
+                            ) : (
+                              <h4 className="text-sm font-semibold leading-snug tracking-tight text-foreground line-clamp-4">
+                                {task.title}
+                              </h4>
+                            )}
                             <button
                               type="button"
                               onClick={(ev) => {
@@ -256,6 +272,18 @@ export default function TaskKanbanBoard({
                               <span className="rounded-md bg-amber-500/15 px-2 py-0.5 text-[11px] font-semibold text-amber-900 ring-1 ring-amber-500/25 dark:text-amber-100 dark:ring-amber-400/30">
                                 Late
                               </span>
+                            ) : null}
+                            {onShowJobs ? (
+                              <button
+                                type="button"
+                                onClick={() => onShowJobs(task.id)}
+                                className="inline-flex items-center gap-1 rounded-lg border border-primary/25 bg-primary/8 px-2 py-0.5 text-[11px] font-bold tabular-nums text-primary shadow-sm ring-1 ring-primary/10 transition-colors hover:bg-primary/15 hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:bg-primary/12 dark:ring-primary/20"
+                                title="View jobs for this task"
+                              >
+                                <ClipboardList className="h-3 w-3 opacity-90" aria-hidden />
+                                {task.jobCount ?? 0}{' '}
+                                {(task.jobCount ?? 0) === 1 ? 'job' : 'jobs'}
+                              </button>
                             ) : null}
                             <span className="rounded-md bg-muted/60 px-2 py-0.5 text-[11px] font-semibold tabular-nums text-muted-foreground dark:bg-muted/40">
                               {task.progress}%

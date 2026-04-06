@@ -6,6 +6,7 @@ import {
   IsInt,
   IsMongoId,
   IsNotEmpty,
+  IsNumber,
   IsOptional,
   IsString,
   Max,
@@ -74,4 +75,10 @@ export class CreateTaskDto {
   @ValidateIf((_, v) => v !== null && v !== undefined && v !== '')
   @IsMongoId()
   assignedTo?: string | null;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  spentBudget?: number;
 }

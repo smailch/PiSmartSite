@@ -19,13 +19,102 @@ const PROJECT_TYPES: ProjectType[] = [
   "Maintenance",
   "Autre",
 ];
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Button } from '@/components/ui/button';
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
-import styles from './ProjectForm.module.css';
-import { toast } from '@/hooks/use-toast';
 
+const PROJECT_STATUSES: Project["status"][] = [
+  "En cours",
+  "Terminé",
+  "En retard",
+];
+
+const MAX_NAME = 200;
+const MAX_DESCRIPTION = 8000;
+const MAX_LOCATION = 300;
+const MAX_CREATED_BY = 120;
+
+function controlClass(hasError: boolean, extra?: string): string {
+  const base =
+    "w-full min-w-0 rounded-xl border bg-input px-3.5 text-sm shadow-sm transition-[border-color,box-shadow,background-color] outline-none focus-visible:ring-2 focus-visible:ring-primary/25";
+  return [
+    base,
+    hasError
+      ? "border-destructive focus-visible:border-destructive focus-visible:ring-destructive/25"
+      : "border-border/90 focus-visible:border-primary/35",
+    extra ?? "",
+  ]
+    .join(" ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+const fieldLabelClass =
+  "text-sm font-semibold tracking-tight text-foreground/90";
+
+const sectionEyebrowClass =
+  "col-span-full text-[0.6875rem] font-semibold uppercase tracking-[0.08em] text-muted-foreground border-b border-border/60 pb-2 pt-1 first:pt-0";
+
+function toDateInputValue(dateStr?: string): string {
+  if (!dateStr) return "";
+  const d = new Date(dateStr);
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toISOString().slice(0, 10);
+}
+
+/** Radix Select + dialog pouvait laisser type/statut vides si la chaîne API ne matchait pas exactement. */
+function normalizeStatus(raw: unknown): Project["status"] {
+  const s =
+    typeof raw === "string"
+      ? raw.normalize("NFC").replace(/\s+/g, " ").trim()
+      : "";
+  const aliases: Record<string, Project["status"]> = {
+    "En cours": "En cours",
+    Terminé: "Terminé",
+    "En retard": "En retard",
+    "In Progress": "En cours",
+    Completed: "Terminé",
+    Planning: "En cours",
+    Termine: "Terminé",
+  };
+  if (aliases[s]) return aliases[s];
+  if (PROJECT_STATUSES.includes(s as Project["status"]))
+    return s as Project["status"];
+  return "En cours";
+}
+
+function normalizeType(raw: unknown): ProjectType {
+  const t =
+    typeof raw === "string"
+      ? raw.normalize("NFC").replace(/\s+/g, " ").trim()
+      : "";
+  if (PROJECT_TYPES.includes(t as ProjectType)) return t as ProjectType;
+  return "Autre";
+}
+
+function createdByToString(createdBy: unknown): string {
+  if (createdBy == null) return "";
+  if (typeof createdBy === "string") return createdBy.trim();
+  if (
+    typeof createdBy === "object" &&
+    createdBy !== null &&
+    "_id" in createdBy
+  ) {
+    const id = (createdBy as { _id?: unknown })._id;
+    return id != null ? String(id) : "";
+  }
+  return String(createdBy);
+}
+
+type ProjectFieldErrors = Partial<
+  Record<
+    | "name"
+    | "description"
+    | "startDate"
+    | "endDate"
+    | "budget"
+    | "location"
+    | "createdBy",
+    string
+  >
+>;
 
 interface ProjectFormProps {
   mode: "create" | "edit";
@@ -196,13 +285,12 @@ function EngineerCombobox({
 }
 
 export default function ProjectForm({
-  mode,
+  mode: _mode,
   initialData,
   isSubmitting = false,
   siteEngineers = [],
   onSubmit,
 }: ProjectFormProps) {
-
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [startDate, setStartDate] = useState("");
@@ -212,6 +300,7 @@ export default function ProjectForm({
   const [budget, setBudget] = useState("");
   const [location, setLocation] = useState("");
   const [createdBy, setCreatedBy] = useState("");
+  const [errors, setErrors] = useState<ProjectFieldErrors>({});
 
   const validate = useCallback((): ProjectFieldErrors => {
     const next: ProjectFieldErrors = {};
@@ -262,19 +351,31 @@ export default function ProjectForm({
 
   useEffect(() => {
     if (initialData) {
-      setName(initialData.name);
-      setDescription(initialData.description);
+      setName(initialData.name ?? "");
+      setDescription(initialData.description ?? "");
       setStartDate(toDateInputValue(initialData.startDate));
       setEndDate(toDateInputValue(initialData.endDate));
-      setStatus(initialData.status);
-      setType(initialData.type ?? "Construction");
+      setStatus(normalizeStatus(initialData.status));
+      setType(normalizeType(initialData.type));
       setBudget(
         initialData.budget != null && !Number.isNaN(initialData.budget)
           ? String(initialData.budget)
-          : ""
+          : "",
       );
       setLocation(initialData.location ?? "");
-      setCreatedBy(initialData.createdBy);
+      setCreatedBy(createdByToString(initialData.createdBy));
+      setErrors({});
+    } else {
+      setName("");
+      setDescription("");
+      setStartDate("");
+      setEndDate("");
+      setStatus("En cours");
+      setType("Construction");
+      setBudget("");
+      setLocation("");
+      setCreatedBy("");
+      setErrors({});
     }
   }, [initialData]);
 
@@ -282,36 +383,25 @@ export default function ProjectForm({
     e.preventDefault();
     if (isSubmitting) return;
 
-    // Si startDate est vide, on met la date du jour au format YYYY-MM-DD
-    const today = new Date();
-    const pad = (n: number) => n.toString().padStart(2, "0");
-    const defaultStartDate = `${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}`;
-    const budgetTrim = budget.trim();
-    let budgetNum: number | undefined;
-    if (budgetTrim !== "") {
-      const n = Number(budgetTrim);
-      if (!Number.isFinite(n) || n <= 0) {
-        toast({
-          title: "Budget invalide",
-          description:
-            "Indiquez un nombre strictement positif ou laissez le champ vide.",
-        });
-        return;
-      }
-      budgetNum = n;
-    }
+    const nextErrors = validate();
+    setErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0) return;
+
+    const budgetResult = parseBudget(budget.trim());
+    const budgetNum = budgetResult.value;
 
     const payload: Omit<Project, "id" | "_id"> = {
-      name,
-      description,
-      startDate: startDate || defaultStartDate,
+      name: name.trim(),
+      description: description.trim(),
+      startDate: startDate.trim(),
       status,
       type,
-      createdBy: createdBy.trim() || "",
+      createdBy: createdBy.trim(),
     };
-    if (endDate.trim() !== "") payload.endDate = endDate;
+    if (endDate.trim() !== "") payload.endDate = endDate.trim();
     if (budgetNum !== undefined) payload.budget = budgetNum;
-    if (location.trim() !== "") payload.location = location.trim();
+    const locT = location.trim();
+    if (locT !== "") payload.location = locT;
 
     try {
       await Promise.resolve(onSubmit(payload));
@@ -320,63 +410,123 @@ export default function ProjectForm({
     }
   };
 
+  const groupClass = (key: keyof ProjectFieldErrors) =>
+    `flex flex-col gap-1.5 min-w-0 ${errors[key] ? "rounded-lg ring-2 ring-destructive/25" : ""}`;
+
   return (
-    <form onSubmit={handleSubmit} className={styles['popup-form']}>
-      <div className={styles['popup-header']}>
-        {mode === 'create' ? 'Nouveau projet' : 'Modifier le projet'}
-      </div>
-      <div className={styles['popup-form-grid']}>
-        <div className={styles['popup-form-group']}>
-          <label htmlFor="name" className={styles['popup-label']}>Project Name</label>
-          <Input
-            id="name"
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-          />
-        </div>
-        <div className={styles['popup-form-group']}>
-          <label htmlFor="startDate" className={styles['popup-label']}>Start Date</label>
-          <Input
-            id="startDate"
-            type="date"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-            required
-          />
-        </div>
-        <div className={styles['popup-form-group']}>
-          <label htmlFor="description" className={styles['popup-label']}>Description</label>
-          <Textarea
-            id="description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-          />
-        </div>
-        <div className={styles['popup-form-group']}>
-          <label htmlFor="endDate" className={styles['popup-label']}>End Date</label>
-          <Input
-            id="endDate"
-            type="date"
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-          />
-        </div>
-        <div className={styles['popup-form-group']}>
-          <label htmlFor="project-type" className={styles['popup-label']}>Type</label>
-          <Select
-            value={type}
-            onValueChange={(v) => setType(v as ProjectType)}
-          >
-            <SelectTrigger id="project-type" className={styles['select-trigger']}>
-              <SelectValue placeholder="Sélectionner un type" />
-            </SelectTrigger>
-            <SelectContent>
+    <form noValidate onSubmit={handleSubmit} className="flex flex-col gap-5">
+      <div className="rounded-2xl border border-border/80 bg-card p-4 shadow-sm sm:p-5">
+        <div className="grid grid-cols-1 gap-x-5 gap-y-4 md:grid-cols-2">
+          <p className={sectionEyebrowClass}>General information</p>
+
+          <div className={groupClass("name")}>
+            <label htmlFor="project-name" className={fieldLabelClass}>
+              Project name
+            </label>
+            <input
+              id="project-name"
+              type="text"
+              value={name}
+              onChange={(e) => {
+                setName(e.target.value);
+                setErrors((p) => ({ ...p, name: undefined }));
+              }}
+              autoComplete="off"
+              className={controlClass(!!errors.name, "h-11")}
+              aria-invalid={!!errors.name}
+            />
+            {errors.name && (
+              <p className="text-xs font-medium text-destructive" role="alert">
+                {errors.name}
+              </p>
+            )}
+          </div>
+
+          <div className={groupClass("startDate")}>
+            <label htmlFor="project-startDate" className={fieldLabelClass}>
+              Start date
+            </label>
+            <input
+              id="project-startDate"
+              type="date"
+              value={startDate}
+              onChange={(e) => {
+                setStartDate(e.target.value);
+                setErrors((p) => ({
+                  ...p,
+                  startDate: undefined,
+                  endDate: undefined,
+                }));
+              }}
+              className={controlClass(!!errors.startDate, "h-11")}
+              aria-invalid={!!errors.startDate}
+            />
+            {errors.startDate && (
+              <p className="text-xs font-medium text-destructive" role="alert">
+                {errors.startDate}
+              </p>
+            )}
+          </div>
+
+          <div className={`md:col-span-2 ${groupClass("description")}`}>
+            <label htmlFor="project-description" className={fieldLabelClass}>
+              Description
+            </label>
+            <textarea
+              id="project-description"
+              value={description}
+              onChange={(e) => {
+                setDescription(e.target.value);
+                setErrors((p) => ({ ...p, description: undefined }));
+              }}
+              className={controlClass(!!errors.description, "min-h-[104px] resize-y py-2.5")}
+              aria-invalid={!!errors.description}
+            />
+            {errors.description && (
+              <p className="text-xs font-medium text-destructive" role="alert">
+                {errors.description}
+              </p>
+            )}
+          </div>
+
+          <p className={sectionEyebrowClass}>Schedule &amp; budget</p>
+
+          <div className={groupClass("endDate")}>
+            <label htmlFor="project-endDate" className={fieldLabelClass}>
+              End date
+            </label>
+            <input
+              id="project-endDate"
+              type="date"
+              value={endDate}
+              onChange={(e) => {
+                setEndDate(e.target.value);
+                setErrors((p) => ({ ...p, endDate: undefined }));
+              }}
+              className={controlClass(!!errors.endDate, "h-11")}
+              aria-invalid={!!errors.endDate}
+            />
+            {errors.endDate && (
+              <p className="text-xs font-medium text-destructive" role="alert">
+                {errors.endDate}
+              </p>
+            )}
+          </div>
+
+          <div className="flex flex-col gap-1.5">
+            <label htmlFor="project-type" className={fieldLabelClass}>
+              Type
+            </label>
+            <select
+              id="project-type"
+              value={type}
+              onChange={(e) => setType(e.target.value as ProjectType)}
+              className={controlClass(false, "h-11")}
+            >
               {PROJECT_TYPES.map((t) => (
-                <SelectItem key={t} value={t}>
-                  {t}
-                </SelectItem>
+                <option key={t} value={t}>
+                  {TYPE_LABELS[t]}
+                </option>
               ))}
             </select>
           </div>

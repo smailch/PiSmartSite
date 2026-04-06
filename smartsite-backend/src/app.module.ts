@@ -1,11 +1,16 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { join } from 'node:path';
-
-/** Racine du package backend (parent de `dist/` à l’exécution — `.env` toujours chargé). */
-const backendEnvDir = join(__dirname, '..');
 import { validateGroqEnv } from './analysis-ai/groq-env.validation';
 import { ResourcesModule } from './resources/resources.module';
+
+/**
+ * Racine du package `smartsite-backend/`.
+ * En build, `app.module` est émis sous `dist/src/`, donc `join(__dirname, '..')` ne suffit pas
+ * pour trouver `.env` à la racine — `process.cwd()` avec `npm run start:dev` depuis ce dossier est fiable.
+ */
+const backendRoot = join(process.cwd());
 import { JobsModule } from './jobs/jobs.module';
 import { ProjectsModule } from './projects/projects.module';
 import { TasksModule } from './tasks/tasks.module';
@@ -15,9 +20,19 @@ import { TelegramModule } from './telegram/telegram.module';
 import { HumanResourcesModule } from './human-resources/human-resources.module';
 import { EquipmentResourcesModule } from './equipment-resources/equipment-resources.module';
 import { AttendanceModule } from './attendance/attendance.module';
+import { DocumentsModule } from './documents/documents.module';
+import { ProgressPhotosModule } from './progress-photos/progress-photos.module';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: [
+        join(backendRoot, '.env.local'),
+        join(backendRoot, '.env'),
+      ],
+      validate: validateGroqEnv,
+    }),
     // Connexion MongoDB Atlas
     MongooseModule.forRoot(
       'mongodb+srv://mourad:mourad@smartsite.poyscqk.mongodb.net/smartsite?retryWrites=true&w=majority'
@@ -32,6 +47,8 @@ import { AttendanceModule } from './attendance/attendance.module';
     HumanResourcesModule,
     EquipmentResourcesModule,
     AttendanceModule,
+    DocumentsModule,
+    ProgressPhotosModule,
   ],
   controllers: [],
   providers: [],

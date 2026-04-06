@@ -47,7 +47,7 @@ export function getCriticalPathTaskIds(tasks: BackendTask[]): string[] {
   return getCriticalPath(mapBackendTasksToCritical(tasks));
 }
 
-/** Écart dépenses − budget (DH) ; null si budget non numérique. */
+/** Écart dépenses − budget (€) ; null si budget non numérique. */
 export function projectBudgetDelta(project: Project): number | null {
   if (typeof project.budget !== "number" || Number.isNaN(project.budget)) {
     return null;

@@ -5,11 +5,37 @@ const USER_ID = "65cfa1a7cf3f4e38dc1db123";
 
 import MainLayout from '@/components/MainLayout';
 import PageHeader from '@/components/PageHeader';
-import DataTable from '@/components/DataTable';
-import type { Project } from '@/lib/types';
+import DataTable, { type Column } from '@/components/DataTable';
+import type { Project, ProjectAiInsightsResponse } from '@/lib/types';
 import { ApiError } from '@/lib/types';
-import { Folder, Cake as Crane, Filter, Trash2, Pencil, Plus, Sparkles, BarChart3 } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import {
+  Folder,
+  Cake as Crane,
+  Filter,
+  Trash2,
+  Pencil,
+  Plus,
+  Sparkles,
+  BarChart3,
+  Brain,
+  MessageCircle,
+  LayoutDashboard,
+  Bot,
+  User,
+  SendHorizontal,
+  FileText,
+  Loader2,
+  CalendarClock,
+  TrendingUp,
+  ListChecks,
+  Lightbulb,
+  RefreshCw,
+  AlertTriangle,
+  Clock,
+  Gauge,
+} from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
   getProjects,
@@ -28,7 +54,140 @@ import type { Human } from '@/lib/types';
 import { generateTasksFromProject, type GeminiTaskProposal } from '@/lib/geminiTasks';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import ProjectForm from '@/components/ProjectForm';
+import DeleteProjectDialog from '@/components/DeleteProjectDialog';
 import { toast } from '@/hooks/use-toast';
+import { formatDh } from '@/lib/formatMoney';
+import { cn } from '@/lib/utils';
+
+const DESCRIPTION_PREVIEW_LEN = 20;
+
+/** Shell: floating glass modal for AI dialogs */
+const aiModalShell =
+  'gap-0 overflow-hidden rounded-3xl border-0 bg-card/95 p-0 shadow-[0_24px_64px_-12px_rgba(15,23,42,0.35)] backdrop-blur-2xl ring-1 ring-black/[0.06] dark:bg-zinc-950/92 dark:ring-white/[0.08] dark:shadow-[0_24px_64px_-12px_rgba(0,0,0,0.62)]';
+
+const aiModalHeaderIndigo =
+  'shrink-0 border-b border-white/10 bg-gradient-to-br from-indigo-500/[0.14] via-card/80 to-card px-5 pb-4 pt-6 sm:px-6 dark:from-indigo-500/[0.18] dark:via-card/90';
+
+const aiModalHeaderEmerald =
+  'shrink-0 border-b border-white/10 bg-gradient-to-br from-emerald-500/[0.12] via-card/80 to-card px-5 pb-4 pt-6 sm:px-6 dark:from-emerald-500/[0.16] dark:via-card/90';
+
+const aiModalHeaderTeal =
+  'shrink-0 border-b border-white/10 bg-gradient-to-br from-teal-500/[0.12] via-card/80 to-card px-5 pb-4 pt-6 sm:px-6 dark:from-teal-500/[0.16] dark:via-card/90';
+
+const aiModalHeaderAssistant =
+  'shrink-0 border-b border-border/40 bg-gradient-to-br from-violet-500/[0.14] via-teal-500/[0.06] to-card px-5 pb-5 pt-6 sm:px-7 dark:from-violet-500/[0.18] dark:via-teal-500/[0.08] dark:to-card/95';
+
+const aiModalBody = 'min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-6';
+
+const aiModalFooter =
+  'shrink-0 gap-3 border-t border-border/50 bg-gradient-to-t from-muted/40 to-muted/15 px-5 py-4 backdrop-blur-md dark:from-muted/25 dark:to-muted/10 sm:flex-row sm:justify-end sm:px-6';
+
+/** Truncates text to `maxLen` characters, then appends "…" if longer. */
+function truncateDescription(text: string | undefined | null, maxLen: number = DESCRIPTION_PREVIEW_LEN): string {
+  const s = text != null ? String(text).trim() : '';
+  if (!s) return '—';
+  if (s.length <= maxLen) return s;
+  return `${s.slice(0, maxLen)}...`;
+}
+
+/** Server-computed budget delta % (may be null). */
+function formatBudgetDeltaPercent(value: number | null): string {
+  if (value === null || Number.isNaN(value)) return '—';
+  const sign = value > 0 ? '+' : '';
+  return `${sign}${new Intl.NumberFormat('en-US', { maximumFractionDigits: 2, minimumFractionDigits: 0 }).format(value)} %`;
+}
+
+function projectStatusLabel(status: string): string {
+  const m: Record<string, string> = {
+    'En cours': 'In progress',
+    Terminé: 'Completed',
+    'En retard': 'Behind schedule',
+  };
+  return m[status] ?? status;
+}
+
+function projectTypeLabel(type: string): string {
+  const m: Record<string, string> = {
+    Construction: 'Construction',
+    Rénovation: 'Renovation',
+    Maintenance: 'Maintenance',
+    Autre: 'Other',
+  };
+  return m[type] ?? type;
+}
+
+function budgetDelayModeLabel(mode: ProjectAiInsightsResponse['analysis']['budgetDelayTradeoff']['recommendedMode']): string {
+  switch (mode) {
+    case 'economique':
+      return 'Cost-saving';
+    case 'accelere':
+      return 'Accelerated';
+    default:
+      return 'Balanced';
+  }
+}
+
+function riskImpactClass(impact: 'low' | 'medium' | 'high'): string {
+  switch (impact) {
+    case 'high':
+      return 'bg-red-100 text-red-900 dark:bg-red-950/50 dark:text-red-200';
+    case 'medium':
+      return 'bg-amber-100 text-amber-900 dark:bg-amber-950/40 dark:text-amber-100';
+    default:
+      return 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200';
+  }
+}
+
+function riskImpactLabel(impact: 'low' | 'medium' | 'high'): string {
+  switch (impact) {
+    case 'high':
+      return 'High';
+    case 'medium':
+      return 'Medium';
+    default:
+      return 'Low';
+  }
+}
+
+function riskImpactBorderClass(impact: 'low' | 'medium' | 'high'): string {
+  switch (impact) {
+    case 'high':
+      return 'border-l-red-500';
+    case 'medium':
+      return 'border-l-amber-500';
+    default:
+      return 'border-l-slate-400 dark:border-l-slate-500';
+  }
+}
+
+function InsightsConfidenceBar({ value }: { value: number }) {
+  const pct = Math.round(Math.min(1, Math.max(0, value)) * 100);
+  return (
+    <div className="flex min-w-0 flex-1 flex-col gap-1 sm:max-w-[200px]">
+      <div className="flex items-center justify-between gap-2 text-[11px] text-muted-foreground">
+        <span className="inline-flex items-center gap-1 font-medium">
+          <Gauge className="h-3.5 w-3.5 shrink-0 opacity-80" aria-hidden />
+          Confidence
+        </span>
+        <span className="tabular-nums font-semibold text-foreground">{pct}%</span>
+      </div>
+      <div
+        className="h-2 w-full overflow-hidden rounded-full bg-muted/80 ring-1 ring-border/50 dark:bg-muted/40"
+        role="presentation"
+      >
+        <div
+          className="h-full rounded-full bg-gradient-to-r from-emerald-600 to-teal-500 dark:from-emerald-500 dark:to-teal-400"
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+    </div>
+  );
+}
+
+type ProjectStatusFilter = 'All' | Project['status'];
+
+/** Row type for the projects table — virtual `actions` column is not on the API model */
+type ProjectTableRow = Project & { actions?: undefined };
 
 export default function ProjectsPage() {
   const router = useRouter();
@@ -37,9 +196,14 @@ export default function ProjectsPage() {
   const [initialLoading, setInitialLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [filter, setFilter] = useState<string>('All');
+  const [filter, setFilter] = useState<ProjectStatusFilter>('All');
   const [open, setOpen] = useState(false);
   const [editProject, setEditProject] = useState<Project | null>(null);
+  const [projectPendingDelete, setProjectPendingDelete] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
+  const [isDeleteProjectSubmitting, setIsDeleteProjectSubmitting] = useState(false);
 
   const [aiOpen, setAiOpen] = useState(false);
   const [aiProject, setAiProject] = useState<Project | null>(null);
@@ -48,6 +212,26 @@ export default function ProjectsPage() {
   const [aiTasks, setAiTasks] = useState<GeminiTaskProposal[]>([]);
   const [aiSelected, setAiSelected] = useState<Set<number>>(new Set());
   const [aiCreating, setAiCreating] = useState(false);
+
+  const [insightsOpen, setInsightsOpen] = useState(false);
+  const [insightsProject, setInsightsProject] = useState<Project | null>(null);
+  const [insightsLoading, setInsightsLoading] = useState(false);
+  const [insightsError, setInsightsError] = useState<string | null>(null);
+  const [insightsData, setInsightsData] = useState<ProjectAiInsightsResponse | null>(null);
+
+  const [assistantOpen, setAssistantOpen] = useState(false);
+  const [assistantProject, setAssistantProject] = useState<Project | null>(null);
+  const [assistantMessages, setAssistantMessages] = useState<
+    Array<{ role: 'user' | 'assistant'; content: string }>
+  >([]);
+  const [assistantInput, setAssistantInput] = useState('');
+  const [assistantLoading, setAssistantLoading] = useState(false);
+  const [assistantError, setAssistantError] = useState<string | null>(null);
+  const [assistantReport, setAssistantReport] = useState<string | null>(null);
+  const [assistantReportLoading, setAssistantReportLoading] = useState(false);
+  const [assistantReportError, setAssistantReportError] = useState<string | null>(null);
+
+  const assistantChatScrollRef = useRef<HTMLDivElement>(null);
 
   function isValidObjectId(id: string | undefined): boolean {
     return typeof id === 'string' && /^[a-fA-F0-9]{24}$/.test(id);
@@ -59,7 +243,7 @@ export default function ProjectsPage() {
       setProjects(Array.isArray(data) ? data.filter(p => p && isValidObjectId(p._id)) : []);
     } catch (err) {
       console.error('[fetchProjects]', err);
-      setError('Erreur de chargement');
+      setError('Failed to load data');
     } finally {
       setInitialLoading(false);
     }
@@ -78,6 +262,13 @@ export default function ProjectsPage() {
     fetchProjects();
     fetchSiteEngineers();
   }, []);
+
+  useEffect(() => {
+    if (!assistantOpen) return;
+    const el = assistantChatScrollRef.current;
+    if (!el) return;
+    el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+  }, [assistantOpen, assistantMessages, assistantLoading, assistantReport, assistantReportLoading]);
 
   if (initialLoading) {
     return (
@@ -101,10 +292,15 @@ export default function ProjectsPage() {
 
   const filteredProjects = (filter === 'All'
     ? projects
-    : projects.filter(p => p.status === filter)
-  ).filter(p => isValidObjectId(p._id));
+    : projects.filter((p) => p.status === filter)
+  ).filter((p) => isValidObjectId(p._id));
 
-  const statusOptions = ['All', 'In Progress', 'Planning', 'Completed'];
+  const statusFilterButtons: { label: string; value: ProjectStatusFilter }[] = [
+    { label: 'All', value: 'All' },
+    { label: 'In progress', value: 'En cours' },
+    { label: 'Completed', value: 'Terminé' },
+    { label: 'Behind schedule', value: 'En retard' },
+  ];
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -132,7 +328,7 @@ export default function ProjectsPage() {
 
   const handleEditClick = (project: Project) => {
     if (!isValidObjectId(project._id)) {
-      toast({ title: 'Erreur', description: 'Projet non modifiable : identifiant MongoDB absent ou invalide.' });
+      toast({ title: 'Error', description: 'Cannot edit project: invalid or missing MongoDB id.' });
       return;
     }
     setEditProject(project);
@@ -141,7 +337,7 @@ export default function ProjectsPage() {
 
   const openAiForProject = async (row: Project) => {
     if (!isValidObjectId(row._id)) {
-      toast({ title: 'Erreur', description: 'Projet invalide pour la génération IA.' });
+      toast({ title: 'Error', description: 'Invalid project for AI task generation.' });
       return;
     }
     setAiProject(row);
@@ -155,11 +351,102 @@ export default function ProjectsPage() {
       setAiTasks(tasks);
       setAiSelected(new Set(tasks.map((_, i) => i)));
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Échec de la génération';
+      const msg = err instanceof Error ? err.message : 'Generation failed';
       setAiError(msg);
       toast({ title: 'Gemini', description: msg });
     } finally {
       setAiLoading(false);
+    }
+  };
+
+  const openInsightsForProject = async (row: Project) => {
+    if (!isValidObjectId(row._id)) {
+      toast({ title: 'Error', description: 'Invalid project for AI analysis.' });
+      return;
+    }
+    setInsightsProject(row);
+    setInsightsOpen(true);
+    setInsightsError(null);
+    setInsightsData(null);
+    setInsightsLoading(true);
+    try {
+      const data = await analyzeProjectInsights(row._id);
+      setInsightsData(data);
+    } catch (err: unknown) {
+      const msg =
+        err instanceof ApiError
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : 'Analysis failed';
+      setInsightsError(msg);
+      toast({ title: 'AI analysis', description: msg });
+    } finally {
+      setInsightsLoading(false);
+    }
+  };
+
+  const openAssistantForProject = (row: Project) => {
+    if (!isValidObjectId(row._id)) {
+      toast({ title: 'Error', description: 'Invalid project for assistant.' });
+      return;
+    }
+    setAssistantProject(row);
+    setAssistantMessages([]);
+    setAssistantInput('');
+    setAssistantError(null);
+    setAssistantReport(null);
+    setAssistantReportError(null);
+    setAssistantOpen(true);
+    setAssistantReportLoading(true);
+    void (async () => {
+      try {
+        const { report } = await projectAssistantInitialReport(row._id);
+        setAssistantReport(report);
+      } catch (err: unknown) {
+        const msg =
+          err instanceof ApiError
+            ? err.message
+            : err instanceof Error
+              ? err.message
+              : 'Could not generate report';
+        setAssistantReportError(msg);
+        toast({ title: 'Assistant report', description: msg });
+      } finally {
+        setAssistantReportLoading(false);
+      }
+    })();
+  };
+
+  const sendAssistantMessage = async () => {
+    const text = assistantInput.trim();
+    if (!assistantProject || !isValidObjectId(assistantProject._id) || !text || assistantLoading) return;
+    if (assistantReportLoading) return;
+
+    const userMsg = { role: 'user' as const, content: text };
+    const prefix = assistantReport
+      ? [{ role: 'assistant' as const, content: assistantReport }]
+      : [];
+    const nextForApi = [...prefix, ...assistantMessages, userMsg];
+
+    setAssistantMessages([...assistantMessages, userMsg]);
+    setAssistantInput('');
+    setAssistantError(null);
+    setAssistantLoading(true);
+    try {
+      const { reply } = await projectAssistantChat(assistantProject._id, nextForApi);
+      setAssistantMessages([...assistantMessages, userMsg, { role: 'assistant', content: reply }]);
+    } catch (err: unknown) {
+      const msg =
+        err instanceof ApiError
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : 'Assistant request failed';
+      setAssistantError(msg);
+      toast({ title: 'Assistant', description: msg });
+    } finally {
+      setAssistantLoading(false);
     }
   };
 
@@ -176,11 +463,12 @@ export default function ProjectsPage() {
     if (!aiProject || !isValidObjectId(aiProject._id)) return;
     setAiCreating(true);
     try {
+      const idByProposalIndex = new Map<number, string>();
       let n = 0;
       for (let i = 0; i < aiTasks.length; i++) {
         if (!aiSelected.has(i)) continue;
         const t = aiTasks[i];
-        await createTask({
+        const created = await createTask({
           title: t.title,
           description: t.description || undefined,
           projectId: aiProject._id,
@@ -188,50 +476,90 @@ export default function ProjectsPage() {
           priority: t.priority,
           status: t.status,
           progress: t.progress,
+          dependsOn: [],
+          ...(t.startDate ? { startDate: t.startDate } : {}),
+          ...(t.endDate ? { endDate: t.endDate } : {}),
         });
+        idByProposalIndex.set(i, created._id);
         n += 1;
       }
       if (n === 0) {
-        toast({ title: 'Aucune tâche', description: 'Cochez au moins une proposition.' });
+        toast({ title: 'No tasks', description: 'Select at least one suggestion.' });
         return;
       }
-      toast({ title: 'Tâches créées', description: `${n} tâche(s) ajoutée(s) au projet.` });
+
+      for (let i = 0; i < aiTasks.length; i++) {
+        if (!aiSelected.has(i)) continue;
+        const t = aiTasks[i];
+        const indices = Array.isArray(t.dependsOnIndices) ? t.dependsOnIndices : [];
+        const depIds = [
+          ...new Set(
+            indices
+              .filter(
+                (j) =>
+                  Number.isInteger(j) &&
+                  j >= 0 &&
+                  j < aiTasks.length &&
+                  j !== i &&
+                  idByProposalIndex.has(j),
+              )
+              .map((j) => idByProposalIndex.get(j)!),
+          ),
+        ];
+        if (depIds.length === 0) continue;
+        const taskId = idByProposalIndex.get(i)!;
+        try {
+          await updateTask(taskId, { dependsOn: depIds });
+        } catch (depErr) {
+          console.error('[handleCreateAiTasks] dependsOn update', depErr);
+        }
+      }
+
+      toast({ title: 'Tasks created', description: `${n} task(s) added to the project.` });
       setAiOpen(false);
       setAiProject(null);
       setAiTasks([]);
       setAiSelected(new Set());
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Erreur lors de la création';
-      toast({ title: 'Erreur', description: msg });
+      const msg = err instanceof Error ? err.message : 'Error while creating tasks';
+      toast({ title: 'Error', description: msg });
     } finally {
       setAiCreating(false);
     }
   };
 
-  const handleDeleteProject = async (_id: string) => {
-    if (!isValidObjectId(_id)) {
-      toast({ title: 'Erreur', description: 'Suppression impossible : identifiant MongoDB absent ou invalide.' });
+  const handleConfirmDeleteProject = async () => {
+    const pending = projectPendingDelete;
+    if (!pending || !isValidObjectId(pending.id)) {
+      toast({ title: 'Error', description: 'Cannot delete: invalid or missing MongoDB id.' });
+      setProjectPendingDelete(null);
       return;
     }
+    setIsDeleteProjectSubmitting(true);
     try {
-      await deleteProject(_id);
-      toast({ title: 'Projet supprimé', description: 'Le projet a été supprimé avec succès.' });
-      setProjects((prev) => prev.filter((p) => p._id !== _id));
+      await deleteProject(pending.id);
+      toast({ title: 'Project deleted', description: 'The project was removed successfully.' });
+      setProjects((prev) => prev.filter((p) => p._id !== pending.id));
+      setProjectPendingDelete(null);
     } catch (err: unknown) {
       console.error('[DELETE project]', err);
-      const msg = err instanceof ApiError ? err.message : (err as Error)?.message ?? 'Erreur lors de la suppression';
-      toast({ title: 'Erreur', description: msg });
+      const msg = err instanceof ApiError ? err.message : (err as Error)?.message ?? 'Delete failed';
+      toast({ title: 'Error', description: msg });
+    } finally {
+      setIsDeleteProjectSubmitting(false);
     }
   };
 
-  const tableColumns = [
+  const tableColumns: Column<ProjectTableRow>[] = [
     {
       key: 'name' as const,
       label: 'Project Name',
-      render: (value: string | number | undefined, row: Project) => (
-        <div className="flex items-center gap-3">
+      headerClassName: 'w-[17%]',
+      cellClassName: 'align-top',
+      render: (value: string | number | undefined, row: ProjectTableRow) => (
+        <div className="flex min-w-0 items-start gap-3">
           {getProjectIcon(0)}
-          <div>
+          <div className="min-w-0">
             <p className="font-semibold text-foreground">
               {isValidObjectId(row._id) ? (
                 <Link
@@ -244,7 +572,7 @@ export default function ProjectsPage() {
                 <>{value != null ? String(value) : ''}</>
               )}
             </p>
-            <p className="max-w-md text-sm text-muted-foreground" title={row.description?.trim() ? row.description : undefined}>
+            <p className="max-w-full text-sm text-muted-foreground sm:max-w-[14rem]" title={row.description?.trim() ? row.description : undefined}>
               {truncateDescription(row.description)}
             </p>
           </div>
@@ -254,36 +582,66 @@ export default function ProjectsPage() {
     {
       key: 'description' as const,
       label: 'Description',
+      headerClassName: 'w-[11%]',
+      cellClassName: 'align-top',
+      render: (value: string | number | undefined) => (
+        <span className="line-clamp-3 text-muted-foreground" title={value != null && String(value).length > DESCRIPTION_PREVIEW_LEN ? String(value) : undefined}>
+          {truncateDescription(value != null ? String(value) : undefined)}
+        </span>
+      ),
     },
     {
       key: 'type' as const,
       label: 'Type',
+      headerClassName: 'w-[7%]',
+      cellClassName: 'align-top whitespace-nowrap',
       render: (value: string | number | undefined) =>
-        value != null && value !== '' ? String(value) : '—',
+        value != null && value !== '' ? projectTypeLabel(String(value)) : '—',
     },
     {
       key: 'budget' as const,
-      label: 'Budget',
+      label: 'Allocated budget',
+      align: 'right' as const,
+      headerClassName: 'w-[8%]',
+      cellClassName: 'align-top whitespace-nowrap',
       render: (value: number | string | undefined) =>
-        value != null && value !== '' && !Number.isNaN(Number(value))
-          ? new Intl.NumberFormat('fr-FR', {
+        value != null && value !== '' && !Number.isNaN(Number(value)) ? (
+          <span className="tabular-nums font-medium text-foreground">
+            {new Intl.NumberFormat('en-US', {
               style: 'currency',
               currency: 'EUR',
               maximumFractionDigits: 0,
-            }).format(Number(value))
-          : '—',
+            }).format(Number(value))}
+          </span>
+        ) : (
+          <span className="text-muted-foreground">—</span>
+        ),
+    },
+    {
+      key: 'spentBudget' as const,
+      label: 'Spent budget',
+      align: 'right' as const,
+      headerClassName: 'w-[8%]',
+      cellClassName: 'align-top whitespace-nowrap',
+      render: (_value: string | number | undefined, row: ProjectTableRow) => (
+        <span className="tabular-nums font-semibold text-foreground">{formatDh(row.spentBudget)}</span>
+      ),
     },
     {
       key: 'location' as const,
-      label: 'Lieu',
+      label: 'Location',
+      headerClassName: 'w-[11%]',
+      cellClassName: 'align-top',
       render: (value: string | number | undefined) => {
         const s = value != null ? String(value).trim() : '';
-        return s ? s : '—';
+        return s ? <span className="break-words">{s}</span> : '—';
       },
     },
     {
       key: 'startDate' as const,
       label: 'Start Date',
+      headerClassName: 'w-[8%]',
+      cellClassName: 'align-top whitespace-nowrap',
       render: (val: any) => (
         val ? new Date(val).toLocaleDateString() : "-"
       ),
@@ -291,6 +649,8 @@ export default function ProjectsPage() {
     {
       key: 'endDate' as const,
       label: 'End Date',
+      headerClassName: 'w-[8%]',
+      cellClassName: 'align-top whitespace-nowrap',
       render: (val: any) => (
         val ? new Date(val).toLocaleDateString() : "-"
       ),
@@ -298,21 +658,32 @@ export default function ProjectsPage() {
     {
       key: 'status' as const,
       label: 'Status',
-      render: (value: string) => (
-        <span className={getStatusColor(value)}>{value}</span>
+      headerClassName: 'w-[9%]',
+      cellClassName: 'align-top whitespace-nowrap',
+      render: (value: string | number | undefined) => (
+        <span className={getStatusColor(String(value ?? ''))}>
+          {projectStatusLabel(String(value ?? ''))}
+        </span>
       ),
     },
     {
       key: 'actions' as const,
       label: 'Actions',
-      render: (_: any, row: Project) => (
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+      align: 'center' as const,
+      headerClassName: 'w-[13%] min-w-[220px]',
+      cellClassName: 'align-middle',
+      render: (_value: string | number | undefined, row: ProjectTableRow) => (
+        <div
+          role="group"
+          aria-label={`Actions for ${row.name}`}
+          className="flex flex-wrap items-center justify-center gap-1.5 sm:gap-2"
+        >
           <button
             type="button"
             title="Project analysis (backend AI — budget & delay computed server-side)"
             aria-label={`Backend AI analysis for ${row.name}`}
             onClick={() => openInsightsForProject(row)}
-            className="inline-flex size-9 items-center justify-center rounded-lg bg-emerald-800 text-white shadow-sm transition-[filter] hover:brightness-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-45"
+            className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg bg-emerald-800 text-white shadow-sm transition-[filter] hover:brightness-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-45"
             disabled={!isValidObjectId(row._id)}
           >
             <Brain size={18} className="shrink-0" aria-hidden />
@@ -322,7 +693,7 @@ export default function ProjectsPage() {
             title="Project assistant (Groq — chat)"
             aria-label={`Open project assistant for ${row.name}`}
             onClick={() => openAssistantForProject(row)}
-            className="inline-flex size-9 items-center justify-center rounded-lg bg-teal-800 text-white shadow-sm transition-[filter] hover:brightness-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-45"
+            className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg bg-teal-800 text-white shadow-sm transition-[filter] hover:brightness-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-45"
             disabled={!isValidObjectId(row._id)}
           >
             <MessageCircle size={18} className="shrink-0" aria-hidden />
@@ -332,30 +703,36 @@ export default function ProjectsPage() {
             title="Generate tasks (Gemini AI)"
             aria-label={`Generate tasks with AI for ${row.name}`}
             onClick={() => openAiForProject(row)}
-            className="inline-flex size-9 items-center justify-center rounded-lg bg-indigo-800 text-white shadow-sm transition-[filter] hover:brightness-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-45"
+            className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg bg-indigo-800 text-white shadow-sm transition-[filter] hover:brightness-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-45"
             disabled={!isValidObjectId(row._id)}
           >
-            <Sparkles size={20} color="#fff" style={{ verticalAlign: 'middle' }} />
+            <Sparkles size={18} className="shrink-0" aria-hidden />
           </button>
           <button
             type="button"
             title="Edit"
             aria-label={`Edit project: ${row.name}`}
             onClick={() => handleEditClick(row)}
-            className="inline-flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm transition-[filter] hover:brightness-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-45"
+            className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm transition-[filter] hover:brightness-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-45"
             disabled={!isValidObjectId(row._id)}
           >
-            <Pencil size={20} color="#fff" style={{ verticalAlign: 'middle' }} />
+            <Pencil size={18} className="shrink-0" aria-hidden />
           </button>
           <button
             type="button"
             title="Delete"
             aria-label={`Delete project: ${row.name}`}
-            onClick={() => handleDeleteProject(row._id)}
-            className="inline-flex size-9 items-center justify-center rounded-lg border border-destructive/30 bg-background text-destructive shadow-sm transition-colors hover:bg-destructive/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-45"
-            disabled={!isValidObjectId(row._id)}
+            onClick={() => {
+              if (!isValidObjectId(row._id)) return;
+              setProjectPendingDelete({ id: row._id, name: row.name });
+            }}
+            className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg border border-destructive/30 bg-background text-destructive shadow-sm transition-colors hover:bg-destructive/10 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-45"
+            disabled={
+              !isValidObjectId(row._id) ||
+              (isDeleteProjectSubmitting && projectPendingDelete?.id === row._id)
+            }
           >
-            <Trash2 size={22} color="#f28c28" style={{ verticalAlign: 'middle' }} />
+            <Trash2 size={18} className="shrink-0" aria-hidden />
           </button>
           <button
             type="button"
@@ -365,11 +742,11 @@ export default function ProjectsPage() {
               if (!isValidObjectId(row._id)) return;
               router.push(`/projects/${row._id}/overview`);
             }}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-secondary px-2.5 py-2 text-xs font-semibold text-foreground shadow-sm transition-colors hover:bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:px-3"
+            className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-border bg-secondary px-2.5 py-2 text-xs font-semibold text-foreground shadow-sm transition-colors hover:bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:px-3"
             disabled={!isValidObjectId(row._id)}
           >
             <LayoutDashboard size={16} className="shrink-0 text-primary" aria-hidden />
-            <span className="hidden sm:inline">Synthèse</span>
+            <span className="hidden sm:inline">Overview</span>
           </button>
           <button
             type="button"
@@ -379,11 +756,11 @@ export default function ProjectsPage() {
               if (!isValidObjectId(row._id)) return;
               router.push(`/projects/${row._id}/gantt`);
             }}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-secondary px-2.5 py-2 text-xs font-semibold text-foreground shadow-sm transition-colors hover:bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:px-3"
+            className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-border bg-secondary px-2.5 py-2 text-xs font-semibold text-foreground shadow-sm transition-colors hover:bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:px-3"
             disabled={!isValidObjectId(row._id)}
           >
-            <span aria-hidden>📊</span>
-            <span className="hidden sm:inline">Gantt</span>
+            <BarChart3 size={16} className="shrink-0 text-primary" aria-hidden />
+            <span className="hidden md:inline">Gantt</span>
           </button>
         </div>
       ),
@@ -392,7 +769,7 @@ export default function ProjectsPage() {
 
   const handleUpdateProject = async (payload: Omit<Project, 'id' | '_id'>) => {
     if (!editProject || !isValidObjectId(editProject._id)) {
-      toast({ title: 'Erreur', description: 'Projet non modifiable : identifiant MongoDB absent ou invalide.' });
+      toast({ title: 'Error', description: 'Cannot update project: invalid or missing MongoDB id.' });
       return;
     }
     const _id = editProject._id;
@@ -404,14 +781,14 @@ export default function ProjectsPage() {
     setSaving(true);
     try {
       await updateProject(_id, body as Partial<Omit<Project, '_id'>>);
-      toast({ title: 'Projet modifié', description: 'Le projet a été mis à jour.' });
+      toast({ title: 'Project updated', description: 'The project was saved successfully.' });
       setOpen(false);
       setEditProject(null);
       await fetchProjects();
     } catch (err: unknown) {
       console.error('[UPDATE project]', err);
-      const msg = err instanceof ApiError ? err.message : (err as Error)?.message ?? 'Erreur lors de la modification';
-      toast({ title: 'Erreur', description: msg });
+      const msg = err instanceof ApiError ? err.message : (err as Error)?.message ?? 'Update failed';
+      toast({ title: 'Error', description: msg });
     } finally {
       setSaving(false);
     }
@@ -430,13 +807,13 @@ export default function ProjectsPage() {
     setSaving(true);
     try {
       await createProject(finalPayload);
-      toast({ title: 'Projet créé', description: 'Le projet a été ajouté avec succès.' });
+      toast({ title: 'Project created', description: 'The project was added successfully.' });
       setOpen(false);
       await fetchProjects();
     } catch (err: unknown) {
       console.error('[CREATE project]', err);
-      const msg = err instanceof ApiError ? err.message : (err as Error)?.message ?? 'Erreur lors de la création';
-      toast({ title: 'Erreur', description: msg });
+      const msg = err instanceof ApiError ? err.message : (err as Error)?.message ?? 'Create failed';
+      toast({ title: 'Error', description: msg });
     } finally {
       setSaving(false);
     }
@@ -444,6 +821,15 @@ export default function ProjectsPage() {
 
   return (
     <MainLayout>
+      <DeleteProjectDialog
+        open={projectPendingDelete !== null}
+        projectTitle={projectPendingDelete?.name ?? ''}
+        onConfirm={() => {
+          void handleConfirmDeleteProject();
+        }}
+        onCancel={() => setProjectPendingDelete(null)}
+        isDeleting={isDeleteProjectSubmitting}
+      />
       <PageHeader
         title="Projects"
         description="Manage and monitor all construction projects"
@@ -529,12 +915,12 @@ export default function ProjectsPage() {
                 : 'bg-secondary text-foreground hover:bg-muted',
             )}
           >
-            {status}
+            {btn.label}
           </button>
         ))}
       </div>
 
-      <DataTable
+      <DataTable<ProjectTableRow>
         columns={tableColumns}
         data={filteredProjects}
         title="All projects"
@@ -677,29 +1063,9 @@ export default function ProjectsPage() {
                   className="w-full rounded-xl border border-border/80 bg-background px-4 py-2.5 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:w-auto"
                   disabled={aiCreating}
                 >
-                  <input
-                    type="checkbox"
-                    className="mt-1 h-4 w-4 shrink-0"
-                    checked={aiSelected.has(i)}
-                    onChange={() => toggleAiTask(i)}
-                    aria-label={`Sélectionner : ${t.title}`}
-                  />
-                  <div className="min-w-0 flex-1">
-                    <p className="font-semibold text-foreground">{t.title}</p>
-                    {t.description ? (
-                      <p className="text-sm text-muted-foreground mt-1">{t.description}</p>
-                    ) : null}
-                    <p className="text-xs text-muted-foreground mt-2">
-                      {t.duration} j · {t.priority} · {t.status}
-                    </p>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-
-          <DialogFooter className="flex-col sm:flex-row gap-2">
-            <DialogClose asChild>
+                  Close
+                </button>
+              </DialogClose>
               <button
                 type="button"
                 onClick={handleCreateAiTasks}
@@ -707,7 +1073,7 @@ export default function ProjectsPage() {
                 aria-busy={aiCreating}
                 className="w-full rounded-xl bg-indigo-800 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-800/25 transition-[filter,transform] hover:brightness-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 sm:w-auto"
               >
-                Fermer
+                {aiCreating ? 'Creating…' : 'Create selected tasks'}
               </button>
             </DialogFooter>
           </div>
@@ -729,24 +1095,28 @@ export default function ProjectsPage() {
           showCloseButton
           className={cn(
             aiModalShell,
-            'flex max-h-[min(92vh,860px)] w-full max-w-[calc(100%-1.5rem)] flex-col sm:max-w-2xl',
+            'flex max-h-[min(92vh,900px)] w-full max-w-[calc(100%-1.25rem)] flex-col sm:max-w-3xl lg:max-w-[44rem]',
           )}
         >
           <div className="flex min-h-0 min-w-0 flex-1 flex-col">
             <DialogHeader className={cn(aiModalHeaderEmerald, 'text-left')}>
               <DialogTitle className="flex flex-wrap items-center gap-3 text-xl font-semibold tracking-tight text-foreground">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-emerald-500/20 shadow-inner ring-1 ring-emerald-500/25">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-emerald-500/20 shadow-inner ring-1 ring-emerald-500/25">
                   <Brain className="h-5 w-5 text-emerald-700 dark:text-emerald-400" aria-hidden />
                 </span>
-                AI project analysis
+                <span className="min-w-0">AI project analysis</span>
               </DialogTitle>
               <DialogDescription className="text-left text-sm leading-relaxed">
                 {insightsProject ? (
                   <>
-                    <span className="font-medium text-foreground">{insightsProject.name}</span>
+                    <span className="font-semibold text-foreground">{insightsProject.name}</span>
                     {insightsLoading ? (
-                      <span className="text-muted-foreground"> — analyzing…</span>
-                    ) : null}
+                      <span className="text-muted-foreground"> — generating insights…</span>
+                    ) : (
+                      <span className="block text-muted-foreground mt-0.5">
+                        Budget, delays, risks and actions — computed on the server.
+                      </span>
+                    )}
                   </>
                 ) : (
                   <span className="text-muted-foreground">Server-side budget and schedule analysis.</span>
@@ -754,108 +1124,158 @@ export default function ProjectsPage() {
               </DialogDescription>
             </DialogHeader>
 
-            <div className={aiModalBody}>
+            <div className={cn(aiModalBody, '[scrollbar-width:thin]')}>
               {insightsLoading && (
-                <p
+                <div
                   role="status"
                   aria-live="polite"
                   aria-busy="true"
-                  className="py-8 text-center text-sm text-muted-foreground"
+                  className="flex flex-col items-center justify-center gap-4 py-14"
                 >
-                  Connecting to server and generating analysis…
-                </p>
+                  <div
+                    className="flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-500/10 ring-1 ring-emerald-500/20"
+                    aria-hidden
+                  >
+                    <Loader2 className="h-7 w-7 animate-spin text-emerald-600 dark:text-emerald-400" />
+                  </div>
+                  <div className="text-center">
+                    <p className="text-sm font-medium text-foreground">Analyzing your project</p>
+                    <p className="mt-1 max-w-sm text-xs leading-relaxed text-muted-foreground">
+                      Connecting to the backend and running the AI pipeline. This may take a few seconds.
+                    </p>
+                  </div>
+                </div>
               )}
 
               {insightsError && !insightsLoading && (
-                <p
+                <div
                   role="alert"
-                  className="rounded-xl border border-destructive/40 bg-destructive/5 px-3 py-2.5 text-sm text-destructive"
+                  className="flex gap-3 rounded-2xl border border-destructive/35 bg-destructive/[0.07] p-4 dark:bg-destructive/10"
                 >
-                  {insightsError}
-                </p>
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-destructive/15 text-destructive">
+                    <AlertTriangle className="h-4 w-4" aria-hidden />
+                  </span>
+                  <p className="min-w-0 flex-1 text-sm leading-relaxed text-destructive">{insightsError}</p>
+                </div>
               )}
 
               {!insightsLoading && insightsData && (
-                <div className="space-y-5 text-sm">
-                  <div className="flex flex-wrap items-center gap-2 text-xs">
-                    <span
-                      className={`rounded-full px-2.5 py-0.5 font-semibold ${
-                        insightsData.source === 'groq'
-                          ? 'bg-emerald-100 text-emerald-900 dark:bg-emerald-950/60 dark:text-emerald-200'
-                          : 'bg-muted text-foreground dark:bg-muted dark:text-foreground'
-                      }`}
-                    >
-                      {insightsData.source === 'groq' ? 'AI (Groq)' : 'Fallback (no LLM)'}
-                    </span>
-                    <span className="text-muted-foreground">
-                      {new Date(insightsData.generatedAt).toLocaleString('en-US')}
-                    </span>
-                    <span className="text-muted-foreground">
-                      Confidence:{' '}
-                      {new Intl.NumberFormat('en-US', { style: 'percent', maximumFractionDigits: 0 }).format(
-                        insightsData.analysis.confidence,
-                      )}
-                    </span>
+                <div className="space-y-6 text-sm">
+                  <div className="flex flex-col gap-3 rounded-2xl border border-border/60 bg-muted/20 p-4 dark:bg-muted/10 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span
+                        className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${
+                          insightsData.source === 'groq'
+                            ? 'bg-emerald-500/15 text-emerald-900 ring-1 ring-emerald-500/25 dark:bg-emerald-500/10 dark:text-emerald-100 dark:ring-emerald-400/30'
+                            : 'bg-muted px-3 py-1 text-foreground ring-1 ring-border/60'
+                        }`}
+                      >
+                        <Sparkles className="h-3.5 w-3.5 opacity-90" aria-hidden />
+                        {insightsData.source === 'groq' ? 'AI (Groq)' : 'Fallback (deterministic)'}
+                      </span>
+                      <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+                        <CalendarClock className="h-3.5 w-3.5 shrink-0 opacity-80" aria-hidden />
+                        {new Date(insightsData.generatedAt).toLocaleString(undefined, {
+                          dateStyle: 'medium',
+                          timeStyle: 'short',
+                        })}
+                      </span>
+                    </div>
+                    <InsightsConfidenceBar value={insightsData.analysis.confidence} />
                   </div>
 
-                  <section className="rounded-2xl border border-border/70 bg-muted/20 p-4 shadow-sm dark:bg-muted/10">
-                    <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      Budget & schedule (server-calculated)
-                    </h3>
-                    <dl className="grid gap-2 sm:grid-cols-2">
-                      <div>
-                        <dt className="text-muted-foreground">Budget variance vs allocated</dt>
-                        <dd className="text-lg font-semibold tabular-nums text-foreground">
-                          {formatBudgetDeltaPercent(
-                            insightsData.analysis.budgetDelayTradeoff.estimatedBudgetDeltaPercent,
-                          )}
-                        </dd>
+                  <section className="overflow-hidden rounded-2xl border border-border/70 bg-card shadow-sm ring-1 ring-black/[0.03] dark:ring-white/[0.06]">
+                    <div className="border-b border-border/60 bg-gradient-to-r from-teal-500/10 via-transparent to-emerald-500/10 px-4 py-3 dark:from-teal-500/15 dark:to-emerald-500/10">
+                      <h3 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-foreground/90">
+                        <TrendingUp className="h-4 w-4 text-teal-600 dark:text-teal-400" aria-hidden />
+                        Budget &amp; schedule
+                        <span className="font-normal normal-case text-muted-foreground">· server KPIs</span>
+                      </h3>
+                    </div>
+                    <div className="p-4 sm:p-5">
+                      <dl className="grid gap-3 sm:grid-cols-3">
+                        <div className="rounded-xl border border-border/50 bg-muted/25 px-3 py-3 dark:bg-muted/15">
+                          <dt className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                            Budget variance
+                          </dt>
+                          <dd className="mt-1.5 text-xl font-bold tabular-nums tracking-tight text-foreground">
+                            {formatBudgetDeltaPercent(
+                              insightsData.analysis.budgetDelayTradeoff.estimatedBudgetDeltaPercent,
+                            )}
+                          </dd>
+                        </div>
+                        <div className="rounded-xl border border-border/50 bg-muted/25 px-3 py-3 dark:bg-muted/15">
+                          <dt className="flex items-center gap-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                            <Clock className="h-3 w-3" aria-hidden />
+                            Delay
+                          </dt>
+                          <dd className="mt-1.5 text-xl font-bold tabular-nums tracking-tight text-foreground">
+                            {insightsData.analysis.budgetDelayTradeoff.estimatedDelayDays}
+                            <span className="text-sm font-semibold text-muted-foreground"> d</span>
+                          </dd>
+                        </div>
+                        <div className="rounded-xl border border-border/50 bg-muted/25 px-3 py-3 dark:bg-muted/15 sm:col-span-1">
+                          <dt className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                            Recommended mode
+                          </dt>
+                          <dd className="mt-1.5 text-base font-semibold leading-snug text-foreground">
+                            {budgetDelayModeLabel(insightsData.analysis.budgetDelayTradeoff.recommendedMode)}
+                          </dd>
+                        </div>
+                      </dl>
+                      <div className="mt-4 rounded-xl border border-dashed border-border/70 bg-background/60 px-3 py-3 text-sm leading-relaxed text-muted-foreground dark:bg-background/40">
+                        {insightsData.analysis.budgetDelayTradeoff.rationale}
                       </div>
-                      <div>
-                        <dt className="text-muted-foreground">Delay (days)</dt>
-                        <dd className="text-lg font-semibold tabular-nums text-foreground">
-                          {insightsData.analysis.budgetDelayTradeoff.estimatedDelayDays}
-                        </dd>
-                      </div>
-                      <div className="sm:col-span-2">
-                        <dt className="text-muted-foreground">Recommended mode</dt>
-                        <dd className="font-medium text-foreground">
-                          {budgetDelayModeLabel(insightsData.analysis.budgetDelayTradeoff.recommendedMode)}
-                        </dd>
-                      </div>
-                    </dl>
-                    <p className="mt-3 border-t border-border/80 pt-3 text-muted-foreground">
-                      {insightsData.analysis.budgetDelayTradeoff.rationale}
-                    </p>
+                    </div>
                   </section>
 
-                  <section>
-                    <h3 className="mb-2 font-semibold text-foreground">Summary</h3>
-                    <p className="whitespace-pre-wrap leading-relaxed text-muted-foreground">
+                  <section className="rounded-2xl border border-emerald-500/20 bg-gradient-to-br from-emerald-500/[0.06] via-card to-transparent p-5 dark:from-emerald-500/[0.09] dark:via-card/95">
+                    <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
+                      <FileText className="h-4 w-4 text-emerald-600 dark:text-emerald-400" aria-hidden />
+                      Summary
+                    </h3>
+                    <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-foreground/90">
                       {insightsData.analysis.summary}
                     </p>
                   </section>
 
                   <section>
-                    <h3 className="mb-2 font-semibold text-foreground">Risks</h3>
+                    <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
+                      <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" aria-hidden />
+                      Top risks
+                      <span className="text-xs font-normal text-muted-foreground">
+                        ({insightsData.analysis.topRisks.length})
+                      </span>
+                    </h3>
                     <ul className="space-y-3">
                       {insightsData.analysis.topRisks.map((r, i) => (
                         <li
                           key={i}
-                          className="rounded-xl border border-border/70 bg-background/80 p-3 shadow-sm dark:bg-card/50"
+                          className={cn(
+                            'rounded-xl border border-border/60 border-l-4 bg-card/90 py-3 pl-4 pr-3 shadow-sm dark:bg-card/60',
+                            riskImpactBorderClass(r.impact),
+                          )}
                         >
                           <div className="flex flex-wrap items-start gap-2">
+                            <span className="flex h-6 min-w-[1.5rem] items-center justify-center rounded-md bg-muted px-1.5 text-[11px] font-bold tabular-nums text-muted-foreground">
+                              {i + 1}
+                            </span>
                             <span
-                              className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${riskImpactClass(r.impact)}`}
+                              className={cn(
+                                'shrink-0 rounded-full px-2 py-0.5 text-[11px] font-semibold',
+                                riskImpactClass(r.impact),
+                              )}
                             >
                               {riskImpactLabel(r.impact)}
                             </span>
-                            <span className="font-medium text-foreground">{r.title}</span>
+                            <span className="min-w-0 flex-1 font-semibold leading-snug text-foreground">
+                              {r.title}
+                            </span>
                           </div>
-                          <p className="mt-2 text-muted-foreground">{r.action}</p>
+                          <p className="mt-2 pl-9 text-sm leading-relaxed text-muted-foreground">{r.action}</p>
                           {insightsProject && r.relatedTasks && r.relatedTasks.length > 0 ? (
-                            <div className="mt-3 border-t border-border/60 pt-2">
-                              <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                            <div className="mt-3 border-t border-border/50 pt-3 pl-9">
+                              <p className="mb-2 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
                                 Related tasks
                               </p>
                               <ul className="flex flex-wrap gap-2">
@@ -863,7 +1283,7 @@ export default function ProjectsPage() {
                                   <li key={t.id}>
                                     <Link
                                       href={`/tasks?project=${insightsProject._id}&view=board&focusTask=${t.id}`}
-                                      className="inline-flex max-w-[240px] truncate rounded-md bg-primary/10 px-2 py-1 text-xs font-medium text-primary hover:bg-primary/15 hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                                      className="inline-flex max-w-[260px] truncate rounded-lg bg-primary/12 px-2.5 py-1.5 text-xs font-medium text-primary ring-1 ring-primary/15 transition-colors hover:bg-primary/18 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                                       title={t.title}
                                     >
                                       {t.title}
@@ -879,44 +1299,82 @@ export default function ProjectsPage() {
                   </section>
 
                   <section>
-                    <h3 className="mb-2 font-semibold text-foreground">Next actions</h3>
-                    <ol className="list-decimal space-y-1.5 pl-5 text-muted-foreground">
+                    <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
+                      <ListChecks className="h-4 w-4 text-primary" aria-hidden />
+                      Next actions
+                    </h3>
+                    <ol className="space-y-2">
                       {insightsData.analysis.nextActions.map((a, i) => (
-                        <li key={i}>{a}</li>
+                        <li
+                          key={i}
+                          className="flex gap-3 rounded-xl border border-border/50 bg-muted/20 px-3 py-2.5 dark:bg-muted/10"
+                        >
+                          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-xs font-bold text-primary">
+                            {i + 1}
+                          </span>
+                          <span className="min-w-0 flex-1 leading-relaxed text-foreground/90">{a}</span>
+                        </li>
                       ))}
                     </ol>
                   </section>
 
-                  <section className="rounded-2xl border border-border/70 bg-muted/15 p-4 shadow-sm dark:bg-muted/10">
-                    <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                      Analyse des retards
+                  <section className="rounded-2xl border border-border/70 bg-muted/15 p-4 shadow-sm dark:bg-muted/10 sm:p-5">
+                    <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
+                      <Clock className="h-4 w-4 text-orange-600 dark:text-orange-400" aria-hidden />
+                      Delay analysis
                     </h3>
-                    <p className="mb-3 whitespace-pre-wrap leading-relaxed text-foreground">
+                    <p className="mb-4 whitespace-pre-wrap text-[15px] leading-relaxed text-foreground/90">
                       {insightsData.analysis.delayAnalysis.summary}
                     </p>
-                    <ul className="list-disc space-y-1.5 pl-5 text-sm text-muted-foreground">
+                    <ul className="space-y-2">
                       {insightsData.analysis.delayAnalysis.contributingFactors.map((f, i) => (
-                        <li key={i}>{f}</li>
+                        <li
+                          key={i}
+                          className="flex gap-2 text-sm text-muted-foreground before:mt-2 before:h-1.5 before:w-1.5 before:shrink-0 before:rounded-full before:bg-orange-500/70 before:content-['']"
+                        >
+                          <span className="min-w-0 leading-relaxed">{f}</span>
+                        </li>
                       ))}
                     </ul>
                   </section>
 
                   <section>
-                    <h3 className="mb-2 font-semibold text-foreground">Suggestions de planning</h3>
-                    <ul className="list-disc space-y-1.5 pl-5 text-muted-foreground">
-                      {insightsData.analysis.planningSuggestions.map((s, i) => (
-                        <li key={i}>{s}</li>
-                      ))}
-                    </ul>
-                  </section>
-
-                  <section>
-                    <h3 className="mb-2 font-semibold text-foreground">
-                      Travail répétitif &amp; automatisation
+                    <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
+                      <Lightbulb className="h-4 w-4 text-amber-500" aria-hidden />
+                      Planning suggestions
                     </h3>
-                    <ul className="list-disc space-y-1.5 pl-5 text-muted-foreground">
+                    <ul className="space-y-2">
+                      {insightsData.analysis.planningSuggestions.map((s, i) => (
+                        <li
+                          key={i}
+                          className="flex gap-2 rounded-lg border border-border/40 bg-background/50 px-3 py-2 text-muted-foreground dark:bg-card/40"
+                        >
+                          <span
+                            className="mt-0.5 h-5 w-5 shrink-0 rounded-md bg-amber-500/15 text-center text-[10px] font-bold leading-5 text-amber-800 dark:text-amber-200"
+                            aria-hidden
+                          >
+                            {i + 1}
+                          </span>
+                          <span className="min-w-0 leading-relaxed">{s}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
+
+                  <section>
+                    <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
+                      <RefreshCw className="h-4 w-4 text-violet-600 dark:text-violet-400" aria-hidden />
+                      Repetitive work &amp; automation
+                    </h3>
+                    <ul className="space-y-2">
                       {insightsData.analysis.repetitiveWorkAndAutomation.map((s, i) => (
-                        <li key={i}>{s}</li>
+                        <li
+                          key={i}
+                          className="relative rounded-xl border border-violet-500/15 bg-violet-500/[0.04] py-2.5 pl-9 pr-3 text-muted-foreground dark:bg-violet-500/[0.07]"
+                        >
+                          <span className="absolute left-3 top-3 h-1.5 w-1.5 rounded-full bg-violet-500" aria-hidden />
+                          <span className="leading-relaxed">{s}</span>
+                        </li>
                       ))}
                     </ul>
                   </section>
@@ -958,140 +1416,231 @@ export default function ProjectsPage() {
           showCloseButton
           className={cn(
             aiModalShell,
-            'flex max-h-[min(92vh,880px)] w-full max-w-[calc(100%-1.5rem)] flex-col sm:max-w-2xl',
+            '!flex min-h-0 max-h-[min(94vh,920px)] w-full max-w-[calc(100%-1rem)] flex-col gap-0 p-0 sm:max-w-[min(40rem,calc(100%-2rem))] lg:max-w-3xl',
           )}
         >
-          <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-            <DialogHeader className={cn(aiModalHeaderTeal, 'text-left')}>
-              <DialogTitle className="flex items-center gap-3 text-xl font-semibold tracking-tight text-foreground">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-teal-500/20 shadow-inner ring-1 ring-teal-500/25">
-                  <MessageCircle className="h-5 w-5 text-teal-700 dark:text-teal-400" aria-hidden />
+          <div className="flex min-h-0 min-w-0 max-h-[inherit] flex-1 flex-col overflow-hidden">
+            <DialogHeader className={cn(aiModalHeaderAssistant, 'shrink-0 space-y-0 text-left')}>
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div className="flex min-w-0 flex-1 items-start gap-4">
+                  <div
+                    className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500/30 to-teal-500/20 shadow-md ring-1 ring-white/25 dark:ring-white/10"
+                    aria-hidden
+                  >
+                    <MessageCircle className="h-6 w-6 text-violet-800 dark:text-violet-200" />
+                  </div>
+                  <div className="min-w-0 flex-1 space-y-1.5">
+                    <DialogTitle className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
+                      Project assistant
+                    </DialogTitle>
+                    {assistantProject ? (
+                      <p className="truncate text-sm font-medium text-foreground/90">
+                        {assistantProject.name}
+                      </p>
+                    ) : null}
+                    <DialogDescription className="!mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+                      A generated report on the project and tasks, then optional chat with the AI (Groq).
+                    </DialogDescription>
+                  </div>
+                </div>
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-background/90 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground shadow-sm backdrop-blur-sm">
+                  <Sparkles className="size-3.5 shrink-0 text-amber-500" aria-hidden />
+                  Groq
                 </span>
-                Project assistant
-              </DialogTitle>
-              <DialogDescription className="text-left text-sm leading-relaxed">
-                {assistantProject ? (
-                  <>
-                    Groq · <span className="font-medium text-foreground">{assistantProject.name}</span> — report
-                    first; optional questions below or close when done.
-                  </>
-                ) : (
-                  <span className="text-muted-foreground">
-                    Chat assistant with an initial report, then optional follow-up questions.
-                  </span>
-                )}
-              </DialogDescription>
+              </div>
             </DialogHeader>
 
-            <div className={cn(aiModalBody, 'flex min-h-0 flex-1 flex-col gap-4 overflow-hidden')}>
-              <div className="min-h-0 shrink-0">
-                <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Project & tasks report
-                </h3>
+            <div
+              className={cn(
+                'min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-4 sm:px-7 sm:py-5',
+                '[scrollbar-width:thin]',
+              )}
+            >
+              <section className="space-y-2.5 pb-4">
+                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  <FileText className="size-3.5 opacity-80" aria-hidden />
+                  Project &amp; task summary
+                </div>
                 <div
                   role="region"
-                  aria-label="Generated project and tasks report"
-                  className="max-h-[min(34vh,320px)] overflow-y-auto rounded-2xl border border-border/60 bg-muted/20 p-4 text-sm text-foreground shadow-inner [scrollbar-width:thin] dark:bg-muted/10"
+                  aria-label="Generated project and task report"
+                  className="relative max-h-[min(36vh,360px)] overflow-y-auto rounded-2xl border border-border/50 bg-gradient-to-b from-muted/35 via-muted/15 to-transparent p-4 text-sm shadow-inner ring-1 ring-inset ring-black/[0.04] dark:from-muted/20 dark:via-muted/10 dark:ring-white/[0.06] [scrollbar-width:thin]"
                 >
                   {assistantReportLoading ? (
-                    <p role="status" aria-live="polite" aria-busy="true" className="text-muted-foreground">
-                      Generating report…
-                    </p>
+                    <div className="space-y-4" role="status" aria-live="polite" aria-busy="true">
+                      <div className="flex items-center gap-2.5 text-muted-foreground">
+                        <Loader2 className="size-4 shrink-0 animate-spin text-violet-600 dark:text-violet-400" aria-hidden />
+                        <span className="text-sm font-medium">Generating report…</span>
+                      </div>
+                      <div className="space-y-2.5 pl-1">
+                        <div className="h-2.5 w-full max-w-[95%] animate-pulse rounded-full bg-muted" />
+                        <div className="h-2.5 w-full max-w-[88%] animate-pulse rounded-full bg-muted" />
+                        <div className="h-2.5 w-full max-w-[72%] animate-pulse rounded-full bg-muted" />
+                      </div>
+                    </div>
                   ) : assistantReportError ? (
-                    <p role="alert" className="text-destructive">
+                    <div
+                      role="alert"
+                      className="rounded-xl border border-destructive/30 bg-destructive/5 px-3 py-2.5 text-sm text-destructive"
+                    >
                       {assistantReportError}
-                    </p>
+                    </div>
                   ) : assistantReport ? (
-                    <div className="whitespace-pre-wrap leading-relaxed">{assistantReport}</div>
+                    <div className="whitespace-pre-wrap leading-[1.65] text-foreground [text-wrap:pretty]">
+                      {assistantReport}
+                    </div>
                   ) : (
-                    <p className="text-muted-foreground">No report yet.</p>
+                    <p className="text-sm text-muted-foreground">No report yet.</p>
                   )}
                 </div>
-              </div>
+              </section>
 
-              <div className="min-h-0 flex flex-1 flex-col border-t border-border/50 pt-4">
-                <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Optional — follow-up questions
-                </h3>
+              <section className="flex flex-col gap-2.5 border-t border-border/40 pt-5">
+                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  <Bot className="size-3.5 opacity-80" aria-hidden />
+                  Follow-up questions
+                </div>
                 <div
+                  ref={assistantChatScrollRef}
                   role="log"
                   aria-label="Assistant conversation"
                   aria-live="polite"
-                  className="max-h-[min(26vh,240px)] min-h-[100px] flex-1 space-y-3 overflow-y-auto rounded-2xl border border-border/60 bg-muted/15 p-3 text-sm [scrollbar-width:thin] dark:bg-muted/10"
+                  className="max-h-[min(36vh,320px)] min-h-[100px] space-y-4 overflow-y-auto rounded-2xl border border-border/50 bg-muted/10 p-3.5 dark:bg-muted/[0.08] [scrollbar-width:thin] sm:p-4"
                 >
                   {assistantMessages.length === 0 && !assistantLoading ? (
-                    <p className="text-xs text-muted-foreground">
-                      You can skip this and close when the report is enough.
-                    </p>
+                    <div className="flex flex-col items-center justify-center gap-2 py-8 text-center">
+                      <div className="rounded-full bg-muted/60 p-3 dark:bg-muted/30">
+                        <MessageCircle className="size-6 text-muted-foreground" aria-hidden />
+                      </div>
+                      <p className="max-w-[240px] text-xs leading-relaxed text-muted-foreground">
+                        Optional: ask a question after the summary, or close the window if the report is enough.
+                      </p>
+                    </div>
                   ) : null}
                   {assistantMessages.map((m, i) => (
                     <div
                       key={i}
-                      className={`rounded-xl px-3 py-2 ${
-                        m.role === 'user'
-                          ? 'ml-3 bg-primary text-primary-foreground shadow-md'
-                          : 'mr-3 border border-border/70 bg-background/90 text-foreground shadow-sm'
-                      }`}
+                      className={cn(
+                        'flex gap-3',
+                        m.role === 'user' ? 'flex-row-reverse' : 'flex-row',
+                      )}
                     >
-                      <p className="whitespace-pre-wrap leading-relaxed">{m.content}</p>
+                      <div
+                        className={cn(
+                          'flex h-9 w-9 shrink-0 items-center justify-center rounded-full shadow-sm ring-2 ring-background',
+                          m.role === 'user'
+                            ? 'bg-primary text-primary-foreground'
+                            : 'bg-gradient-to-br from-violet-500/20 to-teal-500/15 text-violet-800 dark:text-violet-200',
+                        )}
+                        aria-hidden
+                      >
+                        {m.role === 'user' ? (
+                          <User className="size-4" strokeWidth={2.25} />
+                        ) : (
+                          <Bot className="size-4" strokeWidth={2.25} />
+                        )}
+                      </div>
+                      <div
+                        className={cn(
+                          'max-w-[min(100%,28rem)] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed shadow-sm sm:px-4 sm:py-3',
+                          m.role === 'user'
+                            ? 'rounded-br-md bg-primary text-primary-foreground'
+                            : 'rounded-bl-md border border-border/60 bg-card/95 text-foreground backdrop-blur-sm dark:bg-card/80',
+                        )}
+                      >
+                        <p className="whitespace-pre-wrap [text-wrap:pretty]">{m.content}</p>
+                      </div>
                     </div>
                   ))}
                   {assistantLoading ? (
-                    <p role="status" aria-live="polite" className="text-xs text-muted-foreground">
-                      Thinking…
-                    </p>
+                    <div className="flex gap-3" role="status" aria-live="polite">
+                      <div
+                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-500/20 to-teal-500/15 text-violet-800 dark:text-violet-200"
+                        aria-hidden
+                      >
+                        <Bot className="size-4" strokeWidth={2.25} />
+                      </div>
+                      <div className="flex items-center gap-1.5 rounded-2xl rounded-bl-md border border-border/50 bg-card/90 px-4 py-3 dark:bg-card/70">
+                        <span className="size-1.5 animate-bounce rounded-full bg-muted-foreground/70 [animation-duration:520ms]" />
+                        <span
+                          className="size-1.5 animate-bounce rounded-full bg-muted-foreground/70 [animation-duration:520ms]"
+                          style={{ animationDelay: '120ms' }}
+                        />
+                        <span
+                          className="size-1.5 animate-bounce rounded-full bg-muted-foreground/70 [animation-duration:520ms]"
+                          style={{ animationDelay: '240ms' }}
+                        />
+                      </div>
+                    </div>
                   ) : null}
                   {assistantError ? (
-                    <p role="alert" className="text-sm text-destructive">
+                    <p role="alert" className="rounded-lg border border-destructive/25 bg-destructive/5 px-3 py-2 text-sm text-destructive">
                       {assistantError}
                     </p>
                   ) : null}
                 </div>
-              </div>
+              </section>
+            </div>
 
-              <div className="flex shrink-0 flex-col gap-2 sm:flex-row sm:items-end">
-                <textarea
-                  id="project-assistant-followup"
-                  value={assistantInput}
-                  onChange={(e) => setAssistantInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      void sendAssistantMessage();
+            <div className="shrink-0 border-t border-border/60 bg-muted/30 px-5 py-3 backdrop-blur-md dark:bg-muted/20 sm:px-7 sm:py-4">
+              <div className="rounded-2xl border border-border bg-background p-2 shadow-sm dark:bg-card">
+                <div className="flex items-end gap-2">
+                  <textarea
+                    id="project-assistant-followup"
+                    value={assistantInput}
+                    onChange={(e) => setAssistantInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        void sendAssistantMessage();
+                      }
+                    }}
+                    placeholder={
+                      assistantReportLoading
+                        ? 'Please wait, generating report…'
+                        : 'Ask your question (optional)…'
                     }
-                  }}
-                  placeholder={
-                    assistantReportLoading
-                      ? 'Wait for the report…'
-                      : 'Ask a question (optional)…'
-                  }
-                  rows={2}
-                  aria-label="Optional follow-up question for the project assistant"
-                  className="min-h-[72px] w-full flex-1 resize-y rounded-xl border border-border/80 bg-input px-3 py-2.5 text-sm text-foreground shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                  disabled={assistantLoading || assistantReportLoading}
-                />
-                <button
-                  type="button"
-                  onClick={() => void sendAssistantMessage()}
-                  disabled={
-                    assistantLoading ||
-                    assistantReportLoading ||
-                    !assistantInput.trim()
-                  }
-                  aria-busy={assistantLoading}
-                  className="shrink-0 rounded-xl bg-teal-900 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-teal-900/30 transition-[filter,transform] hover:brightness-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50"
-                >
-                  Send
-                </button>
+                    rows={3}
+                    aria-label="Follow-up question for the project assistant"
+                    className="min-h-[80px] w-full flex-1 resize-y rounded-lg border border-input bg-background px-3 py-2.5 text-sm text-foreground shadow-[inset_0_1px_2px_rgba(0,0,0,0.04)] placeholder:text-muted-foreground focus-visible:border-ring focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 dark:shadow-[inset_0_1px_2px_rgba(0,0,0,0.2)]"
+                    disabled={assistantLoading || assistantReportLoading}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => void sendAssistantMessage()}
+                    disabled={
+                      assistantLoading ||
+                      assistantReportLoading ||
+                      !assistantInput.trim()
+                    }
+                    aria-busy={assistantLoading}
+                    title="Send"
+                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 to-teal-600 text-white shadow-md shadow-violet-900/20 transition-[filter,transform,box-shadow] hover:brightness-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.96] disabled:pointer-events-none disabled:opacity-45 dark:from-violet-500 dark:to-teal-600 dark:shadow-black/30"
+                  >
+                    <SendHorizontal className="size-5" strokeWidth={2} aria-hidden />
+                    <span className="sr-only">Send</span>
+                  </button>
+                </div>
+                <p className="px-1 pt-1.5 text-[10px] leading-snug text-muted-foreground">
+                  Enter to send · Shift+Enter for a new line
+                </p>
               </div>
             </div>
 
-            <DialogFooter className={aiModalFooter}>
+            <DialogFooter
+              className={cn(
+                aiModalFooter,
+                'flex-col gap-3 sm:flex-row sm:items-center sm:justify-between',
+              )}
+            >
+              <p className="order-2 text-center text-[11px] leading-relaxed text-muted-foreground sm:order-1 sm:text-left">
+                AI can make mistakes — double-check figures and important decisions.
+              </p>
               <DialogClose asChild>
                 <button
                   type="button"
-                  aria-label="Close project assistant dialog"
-                  className="inline-flex w-full items-center justify-center rounded-xl border border-border/80 bg-background px-4 py-2.5 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:w-auto"
+                  aria-label="Close project assistant"
+                  className="order-1 inline-flex w-full items-center justify-center rounded-xl border border-border/80 bg-background px-4 py-2.5 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:order-2 sm:w-auto"
                 >
                   Close
                 </button>

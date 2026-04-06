@@ -6,8 +6,8 @@ dist/
 build/
 coverage/
 *.tsbuildinfo
-pnpm-lock.yaml          # tu avais supprimé le pnpm-lock, mieux l'ignorer si tu utilises npm
-package-lock.json       # optionnel : à garder seulement si tu utilises npm partout
+pnpm-lock.yaml          # non utilisé si équipe npm
+# package-lock.json est versionné pour que npm ci / installs soient reproductibles
 
 # ==================== NestJS / Backend ====================
 dist/
@@ -80,3 +80,5 @@ temp/
 # Dépôt privé équipe : clés API présentes dans le dépôt (exceptions après .env* / *.local)
 !smartsite-frontend/.env.local
 !smartsite-backend/.env
+!smarsite-frontend/.env.example
+!smartsite-backend/.env.example

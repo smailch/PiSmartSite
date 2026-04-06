@@ -10,18 +10,20 @@ import {
   Wallet,
   AlertCircle,
   FileText,
+  Camera,
   Menu,
   X,
   Home,
   Clipboard,
   Briefcase,
-  Package,
   UserCircle,
   Wrench,
+  Handshake,
 } from 'lucide-react';
 
 const navigationItems = [
-  { id: 'dashboard', label: 'Daaashboard', icon: Home, href: '/' },
+  { id: 'dashboard', label: 'Dashboard', icon: Home, href: '/home' },
+  { id: 'clients', label: 'Espace client', icon: Handshake, href: '/dashboard/clients' },
   { id: 'projects', label: 'Projects', icon: Building2, href: '/projects' },
   { id: 'jobs', label: 'Jobs', icon: Briefcase, href: '/jobs' },
   { id: 'humans', label: 'Humans', icon: UserCircle, href: '/humans' },
@@ -32,6 +34,12 @@ const navigationItems = [
   { id: 'budget', label: 'Budget', icon: Wallet, href: '/budget' },
   { id: 'alerts', label: 'Alerts', icon: AlertCircle, href: '/alerts' },
   { id: 'documents', label: 'Documents', icon: FileText, href: '/documents' },
+  {
+    id: 'progress-photos',
+    label: 'Progress Photos',
+    icon: Camera,
+    href: '/progress-photos',
+  },
 ];
 
 export default function Sidebar() {
@@ -70,7 +78,9 @@ export default function Sidebar() {
         <nav className="flex-1 space-y-2 overflow-y-auto p-4" aria-label="Main">
           {navigationItems.map((item) => {
             const Icon = item.icon;
-            const isActive = pathname === item.href;
+            const isActive =
+              pathname === item.href ||
+              (item.href !== '/' && pathname.startsWith(`${item.href}/`));
             return (
               <Link
                 key={item.id}

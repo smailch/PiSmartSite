@@ -29,6 +29,9 @@ export class Project {
   @Prop({ min: 0 })
   budget?: number;
 
+  @Prop({ min: 0, default: 0 })
+  spentBudget: number;
+
   @Prop()
   location?: string;
 

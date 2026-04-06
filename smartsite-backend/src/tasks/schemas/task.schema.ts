@@ -71,6 +71,9 @@ export class Task {
   @Prop({ type: Types.ObjectId, ref: 'Human', required: false })
   assignedTo?: Types.ObjectId | null;
 
+  @Prop({ min: 0, default: 0 })
+  spentBudget: number;
+
   @Prop({ default: Date.now })
   createdAt: Date;
 }

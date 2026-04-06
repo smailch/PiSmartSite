@@ -6,6 +6,9 @@ import type {
   CreateJobPayload,
   UpdateJobPayload,
   Project,
+  ProjectAiInsightsResponse,
+  ProjectAssistantChatResponse,
+  ProjectAssistantInitialReportResponse,
   BackendTask,
   BackendUser,
   Human,
@@ -71,6 +74,10 @@ async function apiFetch<T>(
 /* ======================
         SWR Keys
 ====================== */
+
+export function getProjectsKey() {
+  return `/projects`;
+}
 
 export function getTasksKey() {
   return `/tasks`;
