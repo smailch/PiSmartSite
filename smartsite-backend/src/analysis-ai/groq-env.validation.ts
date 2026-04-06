@@ -1,7 +1,11 @@
 import { z } from 'zod';
 
 const envSchema = z.object({
-  GROQ_API_KEY: z.string().min(1, 'GROQ_API_KEY is required'),
+  /** Vide en local si l’IA Groq n’est pas utilisée ; les routes concernées répondront alors avec une erreur explicite. */
+  GROQ_API_KEY: z.preprocess(
+    (v) => (v === undefined || v === null ? '' : String(v).trim()),
+    z.string(),
+  ),
   /** Clé de secours (même compte ou autre) : utilisée si la clé principale reçoit HTTP 429. */
   GROQ_API_KEY_FALLBACK: z.preprocess(
     (v) =>

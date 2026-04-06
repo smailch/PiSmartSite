@@ -283,7 +283,7 @@ export default function HumanForm({ mode, initialData }: HumanFormProps) {
       <div className="max-w-5xl mx-auto">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-12 gap-6">
           <div>
-            <h1 className="text-4xl lg:text-5xl font-extrabold text-[#0b4f6c] tracking-tight">
+            <h1 className="text-4xl lg:text-5xl font-semibold tracking-tight text-blue-600">
               {mode === "create" ? "Register New Person" : "Update Person Details"}
             </h1>
             <p className="mt-4 text-xl text-gray-600 max-w-2xl">
@@ -315,15 +315,15 @@ export default function HumanForm({ mode, initialData }: HumanFormProps) {
         <form
           onSubmit={handleSubmit}
           noValidate
-          className="bg-white border border-gray-200/80 rounded-3xl shadow-2xl overflow-hidden"
+          className="overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-sm"
         >
           <div className="p-8 lg:p-12 xl:p-16 space-y-14">
             <div>
               <div className="flex items-center gap-4 mb-8">
-                <div className="h-14 w-14 rounded-2xl bg-[#0b4f6c]/10 flex items-center justify-center">
-                  <Users size={28} className="text-[#0b4f6c]" />
+                <div className="h-14 w-14 rounded-2xl bg-blue-50 flex items-center justify-center">
+                  <Users size={28} className="text-blue-600" />
                 </div>
-                <h2 className="text-3xl font-bold text-[#0b4f6c]">Personal Information</h2>
+                <h2 className="text-3xl font-bold text-blue-600">Personal Information</h2>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-10">
@@ -349,7 +349,7 @@ export default function HumanForm({ mode, initialData }: HumanFormProps) {
                         value={formData[field.name as keyof HumanModel] as string}
                         onChange={handleChange}
                         onBlur={handleBlur}
-                        className={`w-full pl-12 pr-5 py-5 border-2 rounded-2xl text-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#f28c28]/40 focus:border-[#0b4f6c] transition-all duration-200 shadow-sm ${
+                        className={`w-full pl-12 pr-5 py-5 border-2 rounded-2xl text-lg bg-white focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-blue-400 transition-all duration-200 shadow-sm ${
                           errors[field.name as keyof FormErrors] && touched[field.name]
                             ? "border-red-500"
                             : "border-gray-300"
@@ -377,7 +377,7 @@ export default function HumanForm({ mode, initialData }: HumanFormProps) {
                     value={formData.birthDate}
                     onChange={handleChange}
                     onBlur={handleBlur}
-                    className={`w-full px-5 py-5 border-2 rounded-2xl text-lg focus:outline-none focus:ring-2 focus:ring-[#f28c28]/40 focus:border-[#0b4f6c] transition-all duration-200 shadow-sm ${
+                    className={`w-full px-5 py-5 border-2 rounded-2xl text-lg focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-blue-400 transition-all duration-200 shadow-sm ${
                       errors.birthDate && touched.birthDate ? "border-red-500" : "border-gray-300"
                     }`}
                   />
@@ -393,10 +393,10 @@ export default function HumanForm({ mode, initialData }: HumanFormProps) {
 
             <div className="pt-10 border-t border-gray-100">
               <div className="flex items-center gap-4 mb-8">
-                <div className="h-14 w-14 rounded-2xl bg-[#f28c28]/10 flex items-center justify-center">
-                  <FileText size={28} className="text-[#f28c28]" />
+                <div className="h-14 w-14 rounded-2xl bg-orange-50 flex items-center justify-center">
+                  <FileText size={28} className="text-orange-500" />
                 </div>
-                <h2 className="text-3xl font-bold text-[#0b4f6c]">Documents & Status</h2>
+                <h2 className="text-3xl font-bold text-blue-600">Documents & Status</h2>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-10">
@@ -415,9 +415,9 @@ export default function HumanForm({ mode, initialData }: HumanFormProps) {
                   <button
                     type="button"
                     onClick={() => cvInputRef.current?.click()}
-                    className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-gray-300 bg-gray-50 px-5 py-4 text-lg font-medium text-gray-800 hover:border-[#0b4f6c] hover:bg-white transition shadow-sm"
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-gray-300 bg-gray-50 px-5 py-4 text-lg font-medium text-gray-800 hover:border-blue-300 hover:bg-white transition shadow-sm"
                   >
-                    <Upload size={22} className="text-[#0b4f6c]" />
+                    <Upload size={22} className="text-blue-600" />
                     Choose CV file
                   </button>
                   <p className="text-sm text-gray-600 break-all">
@@ -458,9 +458,9 @@ export default function HumanForm({ mode, initialData }: HumanFormProps) {
                   <button
                     type="button"
                     onClick={() => imageInputRef.current?.click()}
-                    className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-gray-300 bg-gray-50 px-5 py-4 text-lg font-medium text-gray-800 hover:border-[#0b4f6c] hover:bg-white transition shadow-sm"
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-gray-300 bg-gray-50 px-5 py-4 text-lg font-medium text-gray-800 hover:border-blue-300 hover:bg-white transition shadow-sm"
                   >
-                    <ImageIcon size={22} className="text-[#0b4f6c]" />
+                    <ImageIcon size={22} className="text-blue-600" />
                     Choose image
                   </button>
                   {imagePreview && (
@@ -516,7 +516,7 @@ export default function HumanForm({ mode, initialData }: HumanFormProps) {
                     onChange={handleChange}
                     className="sr-only peer"
                   />
-                  <div className="w-20 h-10 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#f28c28]/30 rounded-full peer peer-checked:after:translate-x-10 peer-checked:after:border-white after:content-[''] after:absolute after:top-1 after:left-1 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-8 after:w-8 after:transition-all peer-checked:bg-[#0b4f6c]" />
+                  <div className="w-20 h-10 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-200/60 rounded-full peer peer-checked:after:translate-x-10 peer-checked:after:border-white after:content-[''] after:absolute after:top-1 after:left-1 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-8 after:w-8 after:transition-all peer-checked:bg-blue-500" />
                 </label>
               </div>
             </div>
@@ -533,7 +533,7 @@ export default function HumanForm({ mode, initialData }: HumanFormProps) {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className={`px-12 py-5 bg-[#0b4f6c] text-white text-xl font-bold rounded-2xl shadow-xl hover:bg-[#0b4f6c]/95 hover:shadow-2xl focus:outline-none focus:ring-4 focus:ring-[#f28c28]/50 transition-all duration-300 flex items-center justify-center gap-4 min-w-[280px] ${
+                className={`px-12 py-5 bg-orange-500 text-white text-xl font-bold rounded-2xl shadow-sm hover:bg-orange-600 hover:shadow-sm focus:outline-none focus:ring-4 focus:ring-orange-200 transition-all duration-300 flex items-center justify-center gap-4 min-w-[280px] ${
                   isSubmitting ? "opacity-80 cursor-not-allowed" : ""
                 }`}
               >

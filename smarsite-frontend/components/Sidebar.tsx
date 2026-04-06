@@ -54,28 +54,30 @@ export default function Sidebar() {
         onClick={() => setOpen(!open)}
         aria-label={open ? 'Close navigation menu' : 'Open navigation menu'}
         aria-expanded={open}
-        className="fixed left-4 top-4 z-50 rounded-lg bg-primary p-2 text-primary-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring focus-visible:ring-offset-2 md:hidden"
+        className="fixed left-4 top-4 z-50 rounded-xl bg-gradient-to-r from-orange-500 to-orange-400 p-2.5 text-white shadow-md shadow-orange-900/30 transition-all duration-300 ease-out hover:shadow-lg hover:scale-[1.02] active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 md:hidden"
       >
         {open ? <X size={24} aria-hidden /> : <Menu size={24} aria-hidden />}
       </button>
 
       {/* Sidebar */}
       <aside
-        className={`fixed left-0 top-0 h-screen bg-primary text-sidebar-foreground shadow-lg transition-all duration-300 flex flex-col ${
+        className={`fixed left-0 top-0 z-40 flex h-screen flex-col border-r border-white/10 bg-slate-950/55 shadow-lg shadow-black/25 backdrop-blur-xl transition-all duration-300 ease-out ${
           open ? 'w-64' : '-translate-x-full md:translate-x-0 md:w-64'
         } md:relative md:translate-x-0`}
       >
         {/* Logo */}
-        <div className="p-6 border-b border-sidebar-border">
-          <h1 className="flex items-center gap-2 text-2xl font-bold text-accent">
-            <Building2 size={28} className="shrink-0 text-accent" aria-hidden />
-            SmartSite
+        <div className="border-b border-white/10 p-6">
+          <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight text-slate-100">
+            <Building2 size={28} className="shrink-0 text-blue-400" aria-hidden />
+            <span>
+              Smart<span className="text-orange-400">Site</span>
+            </span>
           </h1>
-          <p className="mt-1 text-xs text-sidebar-foreground/90">Construction Management</p>
+          <p className="mt-1.5 text-xs text-slate-500">Construction Management</p>
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 space-y-2 overflow-y-auto p-4" aria-label="Main">
+        <nav className="flex-1 space-y-1 overflow-y-auto p-4" aria-label="Main">
           {navigationItems.map((item) => {
             const Icon = item.icon;
             const isActive =
@@ -87,22 +89,22 @@ export default function Sidebar() {
                 href={item.href}
                 onClick={() => setOpen(false)}
                 aria-current={isActive ? 'page' : undefined}
-                className={`flex items-center gap-3 rounded-lg px-4 py-3 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring focus-visible:ring-offset-2 focus-visible:ring-offset-primary ${
+                className={`flex items-center gap-3 rounded-xl px-4 py-3 text-sm transition-all duration-300 ease-out focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 ${
                   isActive
-                    ? 'bg-sidebar-primary font-semibold text-sidebar-primary-foreground'
-                    : 'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
+                    ? 'border border-blue-500/20 bg-gradient-to-r from-blue-500/25 via-blue-500/10 to-transparent font-medium text-blue-300 shadow-sm shadow-blue-950/20'
+                    : 'border border-transparent text-slate-400 hover:bg-white/[0.06] hover:text-slate-100'
                 }`}
               >
                 <Icon size={20} className="shrink-0" aria-hidden />
-                <span className="text-sm">{item.label}</span>
+                <span>{item.label}</span>
               </Link>
             );
           })}
         </nav>
 
         {/* Footer */}
-        <div className="p-4 border-t border-sidebar-border">
-          <p className="text-center text-xs text-sidebar-foreground/90">v0.1.0</p>
+        <div className="border-t border-white/10 p-4">
+          <p className="text-center text-xs text-slate-500">v0.1.0</p>
         </div>
       </aside>
     </>

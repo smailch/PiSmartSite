@@ -11,9 +11,9 @@ export const metadata: Metadata = {
 };
 
 const navLink =
-  "rounded-full px-3 py-1.5 text-sm font-medium text-white/80 transition-colors hover:bg-white/10 hover:text-white";
+  "rounded-full px-3 py-1.5 text-sm font-medium text-slate-300 transition-all duration-200 hover:bg-white/[0.06] hover:text-white";
 const navCta =
-  "rounded-full border border-white/20 bg-white/[0.07] px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:border-[#f28c28]/60 hover:bg-[#f28c28]/12 hover:text-[#f28c28]";
+  "rounded-full border border-orange-500/40 bg-orange-500/15 px-4 py-2 text-sm font-semibold text-orange-300 shadow-sm shadow-black/20 backdrop-blur-sm transition-all duration-200 hover:border-orange-400/60 hover:bg-orange-500/25";
 
 export default function ClientsMarketingLayout({
   children,
@@ -23,11 +23,11 @@ export default function ClientsMarketingLayout({
   return (
     <div
       className={cn(
-        "min-h-screen bg-[#041a24] text-white antialiased",
-        "selection:bg-[#f28c28]/35 selection:text-white",
+        "min-h-screen bg-slate-950 text-slate-100 antialiased",
+        "selection:bg-orange-500/30 selection:text-white",
       )}
     >
-      <header className="fixed top-0 z-50 w-full border-b border-white/[0.08] bg-[#0b4f6c]/88 shadow-[0_1px_0_rgba(242,140,40,0.12)] backdrop-blur-xl backdrop-saturate-150">
+      <header className="fixed top-0 z-50 w-full border-b border-white/10 bg-slate-950/80 shadow-lg shadow-black/25 backdrop-blur-xl">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4 sm:px-6 sm:py-5">
           <Link
             href="/dashboard/clients"

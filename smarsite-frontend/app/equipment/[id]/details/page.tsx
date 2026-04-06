@@ -45,10 +45,10 @@ export default function EquipmentDetailsPage({
       />
 
       {isLoading ? (
-        <div className="mx-auto max-w-4xl rounded-xl border border-border bg-card p-12 shadow-sm">
+        <div className="mx-auto max-w-4xl rounded-2xl border border-gray-100 bg-white p-12 shadow-sm">
           <div className="flex flex-col items-center gap-3">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-            <p className="text-muted-foreground">Chargement…</p>
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-100 border-t-blue-500" />
+            <p className="text-gray-500">Chargement…</p>
           </div>
         </div>
       ) : error || !equipment ? (
@@ -58,7 +58,7 @@ export default function EquipmentDetailsPage({
           </p>
           <Link
             href="/equipment"
-            className="mt-4 inline-block text-sm text-primary underline"
+            className="mt-4 inline-block text-sm text-blue-600 underline hover:text-blue-700"
           >
             Retour à la liste
           </Link>
@@ -66,22 +66,22 @@ export default function EquipmentDetailsPage({
       ) : (
         <div className="mx-auto max-w-4xl space-y-8">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <h2 className="text-2xl font-bold text-foreground">{equipment.name}</h2>
+            <h2 className="text-2xl font-semibold text-gray-800">{equipment.name}</h2>
             <Link
               href={`/equipment/${id}/edit`}
-              className="inline-flex items-center gap-2 rounded-xl bg-[#0b4f6c] px-5 py-2.5 text-sm font-semibold text-white shadow hover:bg-[#0b4f6c]/90"
+              className="inline-flex items-center gap-2 rounded-xl bg-orange-500 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:bg-orange-600"
             >
               <Pencil className="h-4 w-4" />
               Modifier
             </Link>
           </div>
 
-          <div className="rounded-2xl border border-gray-200/80 bg-white p-6 shadow-lg dark:border-gray-800 dark:bg-gray-900/80">
+          <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900/80">
             <div className="mb-6 flex items-center gap-3 border-b border-gray-100 pb-4 dark:border-gray-800">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#0b4f6c]/10">
-                <Package className="h-6 w-6 text-[#0b4f6c]" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50">
+                <Package className="h-6 w-6 text-blue-600" />
               </div>
-              <h3 className="text-lg font-semibold text-[#0b4f6c] dark:text-gray-100">
+              <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">
                 Identification
               </h3>
             </div>
@@ -93,12 +93,12 @@ export default function EquipmentDetailsPage({
             </dl>
           </div>
 
-          <div className="rounded-2xl border border-gray-200/80 bg-white p-6 shadow-lg dark:border-gray-800 dark:bg-gray-900/80">
+          <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900/80">
             <div className="mb-6 flex items-center gap-3 border-b border-gray-100 pb-4 dark:border-gray-800">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#f28c28]/10">
-                <Calendar className="h-6 w-6 text-[#f28c28]" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-orange-50">
+                <Calendar className="h-6 w-6 text-orange-500" />
               </div>
-              <h3 className="text-lg font-semibold text-[#0b4f6c] dark:text-gray-100">
+              <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-100">
                 Dates & emplacement
               </h3>
             </div>

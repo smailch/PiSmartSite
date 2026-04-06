@@ -45,9 +45,9 @@ ChartJS.register(
   Filler
 );
 
-/** SmartSite palette */
-const PRIMARY = "#0b4f6c";
-const ACCENT = "#f28c28";
+/** SmartSite palette — soft brand */
+const PRIMARY = "#2563eb";
+const ACCENT = "#f97316";
 
 type StepFilter = "all" | "dangerous" | "safe";
 
@@ -58,15 +58,15 @@ function isDangerousLevel(level: string | undefined): boolean {
 function dangerBadgeClass(level: string | undefined): string {
   switch (level) {
     case "CRITICAL":
-      return "bg-[#7f1d1d] text-white border-[#991b1b]";
+      return "border border-red-200 bg-red-50 text-red-800";
     case "HIGH":
-      return "bg-red-600 text-white border-red-700";
+      return "border border-orange-200 bg-orange-50 text-orange-800";
     case "MEDIUM":
-      return "text-white border-[#f28c28]";
+      return "border border-amber-200 bg-amber-50 text-amber-900";
     case "LOW":
-      return "bg-emerald-600 text-white border-emerald-700";
+      return "border border-green-200 bg-green-50 text-green-800";
     default:
-      return "bg-gray-500 text-white border-gray-600";
+      return "border border-gray-200 bg-gray-100 text-gray-700";
   }
 }
 
@@ -106,7 +106,7 @@ function CircularProgress({ value }: { value: number }) {
           fill="none"
           stroke="currentColor"
           strokeWidth="10"
-          className="text-[#0b4f6c]/15"
+          className="text-blue-100"
         />
         <circle
           cx="60"
@@ -366,7 +366,7 @@ export default function JobProgressPage() {
 
       {loading ? (
         <div
-          className="rounded-2xl border p-16 shadow-lg bg-white dark:bg-gray-900/80"
+          className="rounded-2xl border border-gray-100 bg-white p-16 shadow-sm dark:bg-gray-900/80"
           style={{ borderColor: `${PRIMARY}33` }}
         >
           <div className="flex flex-col items-center gap-4">
@@ -414,7 +414,7 @@ export default function JobProgressPage() {
               type="button"
               onClick={() => void handleSaveAll()}
               disabled={saving}
-              className="rounded-xl px-5 py-2.5 text-sm font-semibold text-white shadow-lg transition hover:opacity-90 disabled:opacity-50"
+              className="rounded-xl px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:opacity-90 disabled:opacity-50"
               style={{
                 background: `linear-gradient(135deg, ${PRIMARY} 0%, ${ACCENT} 100%)`,
               }}
@@ -432,7 +432,7 @@ export default function JobProgressPage() {
             ].map((card) => (
               <div
                 key={card.label}
-                className="rounded-2xl border bg-white p-5 shadow-md transition hover:shadow-lg dark:bg-gray-900/90"
+                className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition-all duration-200 hover:border-gray-200 dark:bg-gray-900/90"
                 style={{ borderColor: `${PRIMARY}22` }}
               >
                 <p
@@ -451,7 +451,7 @@ export default function JobProgressPage() {
 
           <div className="grid gap-6 lg:grid-cols-[1fr_minmax(200px,280px)] lg:items-start">
             <div
-              className="rounded-2xl border bg-white p-6 shadow-xl dark:bg-gray-900/90"
+              className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm dark:bg-gray-900/90"
               style={{ borderColor: `${PRIMARY}22` }}
             >
               <h3 className="mb-4 text-sm font-semibold" style={{ color: PRIMARY }}>
@@ -474,7 +474,7 @@ export default function JobProgressPage() {
               </p>
             </div>
             <div
-              className="flex justify-center rounded-2xl border bg-gradient-to-br from-white to-slate-50 p-6 shadow-lg dark:from-gray-900 dark:to-slate-900/80"
+              className="flex justify-center rounded-2xl border border-gray-100 bg-gradient-to-br from-white to-slate-50 p-6 shadow-sm dark:from-gray-900 dark:to-slate-900/80"
               style={{ borderColor: `${PRIMARY}22` }}
             >
               <CircularProgress value={percentage} />
@@ -482,7 +482,7 @@ export default function JobProgressPage() {
           </div>
 
           <div
-            className="rounded-2xl border bg-white p-6 shadow-xl dark:bg-gray-900/90"
+            className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm dark:bg-gray-900/90"
             style={{ borderColor: `${PRIMARY}22` }}
           >
             <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold" style={{ color: PRIMARY }}>
@@ -538,7 +538,7 @@ export default function JobProgressPage() {
               return (
                 <li
                   key={`${step.step}-${i}-${step.date ?? ""}`}
-                  className="group rounded-2xl border bg-white p-5 shadow-md transition hover:shadow-xl dark:bg-gray-900/95"
+                  className="group rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition-all duration-200 hover:border-gray-200 dark:bg-gray-900/95"
                   style={{ borderColor: `${PRIMARY}18` }}
                 >
                   <div className="flex flex-col gap-5 lg:flex-row lg:items-start">

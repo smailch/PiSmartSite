@@ -34,7 +34,7 @@ export default function DeleteProjectDialog({
         if (!next && !isDeleting) onCancel();
       }}
     >
-      <AlertDialogContent className="border-border bg-card">
+      <AlertDialogContent className="border-white/10 bg-card/95 text-card-foreground shadow-2xl shadow-black/50 backdrop-blur-xl">
         <AlertDialogHeader>
           <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
             <AlertTriangle className="h-6 w-6 text-destructive" />

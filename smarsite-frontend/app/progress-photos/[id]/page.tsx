@@ -354,9 +354,9 @@ export default function ProgressPhotoDetailPage() {
 
       {/* Validate Modal */}
       {showValidateModal && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl">
-            <h2 className="text-2xl font-bold mb-6">Validate Photo</h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/75 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-xl border border-white/10 bg-card/95 p-8 text-card-foreground shadow-2xl shadow-black/50 backdrop-blur-xl">
+            <h2 className="mb-6 text-2xl font-bold text-card-foreground">Validate Photo</h2>
             
             <form onSubmit={handleValidate} className="space-y-5">
               <div>
@@ -365,10 +365,10 @@ export default function ProgressPhotoDetailPage() {
                   <button
                     type="button"
                     onClick={() => setValidationStatus('approved')}
-                    className={`flex-1 py-2 px-4 rounded-lg border ${
+                    className={`flex-1 rounded-lg border px-4 py-2 ${
                       validationStatus === 'approved'
-                        ? 'bg-green-100 border-green-500 text-green-700'
-                        : 'border-gray-300 hover:bg-gray-50'
+                        ? 'border-emerald-500 bg-emerald-500/15 text-emerald-200'
+                        : 'border-white/15 bg-white/[0.04] text-slate-200 hover:bg-white/[0.08]'
                     }`}
                   >
                     <CheckCircle size={18} className="inline mr-2" />
@@ -377,10 +377,10 @@ export default function ProgressPhotoDetailPage() {
                   <button
                     type="button"
                     onClick={() => setValidationStatus('rejected')}
-                    className={`flex-1 py-2 px-4 rounded-lg border ${
+                    className={`flex-1 rounded-lg border px-4 py-2 ${
                       validationStatus === 'rejected'
-                        ? 'bg-red-100 border-red-500 text-red-700'
-                        : 'border-gray-300 hover:bg-gray-50'
+                        ? 'border-red-500 bg-red-500/15 text-red-200'
+                        : 'border-white/15 bg-white/[0.04] text-slate-200 hover:bg-white/[0.08]'
                     }`}
                   >
                     <XCircle size={18} className="inline mr-2" />
@@ -394,7 +394,7 @@ export default function ProgressPhotoDetailPage() {
                 <textarea
                   value={validationNote}
                   onChange={(e) => setValidationNote(e.target.value)}
-                  className="w-full px-4 py-2 border rounded-lg"
+                  className="w-full rounded-lg border border-white/10 bg-slate-900/50 px-4 py-2 text-slate-100 placeholder:text-slate-500 focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/25"
                   rows={3}
                   placeholder="Add a comment about this photo..."
                 />
@@ -404,7 +404,7 @@ export default function ProgressPhotoDetailPage() {
                 <button
                   type="button"
                   onClick={() => setShowValidateModal(false)}
-                  className="flex-1 py-3 border rounded-xl hover:bg-gray-50"
+                  className="flex-1 rounded-xl border border-white/15 py-3 text-slate-200 hover:bg-white/[0.06]"
                 >
                   Cancel
                 </button>
@@ -423,9 +423,9 @@ export default function ProgressPhotoDetailPage() {
 
       {/* Edit Modal */}
       {showEditModal && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-8 max-w-md w-full shadow-2xl">
-            <h2 className="text-2xl font-bold mb-6">Edit Photo Details</h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/75 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-xl border border-white/10 bg-card/95 p-8 text-card-foreground shadow-2xl shadow-black/50 backdrop-blur-xl">
+            <h2 className="mb-6 text-2xl font-bold text-card-foreground">Edit Photo Details</h2>
             
             <form onSubmit={handleUpdate} className="space-y-5">
               <div>
@@ -433,7 +433,7 @@ export default function ProgressPhotoDetailPage() {
                 <textarea
                   value={editCaption}
                   onChange={(e) => setEditCaption(e.target.value)}
-                  className="w-full px-4 py-2 border rounded-lg"
+                  className="w-full rounded-lg border border-white/10 bg-slate-900/50 px-4 py-2 text-slate-100 placeholder:text-slate-500 focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/25"
                   rows={3}
                   placeholder="Add a caption..."
                 />
@@ -447,7 +447,7 @@ export default function ProgressPhotoDetailPage() {
                   max="100"
                   value={editProgress || ''}
                   onChange={(e) => setEditProgress(e.target.value ? parseInt(e.target.value) : undefined)}
-                  className="w-full px-4 py-2 border rounded-lg"
+                  className="w-full rounded-lg border border-white/10 bg-slate-900/50 px-4 py-2 text-slate-100 placeholder:text-slate-500 focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/25"
                   placeholder="0-100"
                 />
               </div> */}
@@ -465,7 +465,7 @@ export default function ProgressPhotoDetailPage() {
                 <button
                   type="button"
                   onClick={() => setShowEditModal(false)}
-                  className="flex-1 py-3 border rounded-xl hover:bg-gray-50"
+                  className="flex-1 rounded-xl border border-white/15 py-3 text-slate-200 hover:bg-white/[0.06]"
                 >
                   Cancel
                 </button>

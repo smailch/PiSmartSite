@@ -1,125 +1,190 @@
-# SmartSite CRUD
+<h1 align="center">PiSmartSite</h1>
 
-Plateforme full-stack pour la gestion de projets de construction/maintenance. Le frontend propose un tableau de bord (projets, taches, ressources, planning, rapports) et le backend expose une API REST NestJS pour la persistence MongoDB.
+<p align="center" style="margin: 15px;">
+  <img src="https://readme-typing-svg.herokuapp.com?duration=2000&color=00BFFF&center=true&vCenter=true&width=500&lines=Plateforme+full+stack+pour+le+chantier;Gestion+de+projets+%26+t%C3%A2ches;Planning+Gantt+%2B+Kanban;Documents+%26+photos+d%E2%80%99avancement;IA+optionnelle+%28Groq%2C+Gemini%2C+OpenRouter%29" alt="Typing SVG" />
+</p>
 
-## Points forts
-- Gestion des projets, taches, ressources, budgets, documents et equipe.
-- Planning Gantt et visualisations.
-- API REST modulaire (Jobs, Projects, Resources, Tasks, Users).
-- Generation de taches assistee par IA (optionnel, OpenRouter/Gemini).
+<h3 align="center">🏗️ Construction & maintenance · Projets, tâches, équipe et budget</h3>
+<h3 align="center">⚡ Frontend React (Next.js) · NestJS · MongoDB · PI Full Stack JS (ESPRIT)</h3>
 
-## Stack technique
+<p align="center">
+  📚 <strong>Projet académique</strong> · Encadrante : <strong>Sassi Soumaya</strong>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=next.js&logoColor=white" alt="Next.js" />
+  <img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React" />
+  <img src="https://img.shields.io/badge/NestJS-E0234E?style=for-the-badge&logo=nestjs&logoColor=white" alt="NestJS" />
+  <img src="https://img.shields.io/badge/MongoDB-47A248?style=for-the-badge&logo=mongodb&logoColor=white" alt="MongoDB" />
+  <img src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" />
+</p>
+
+---
+
+<h2 align="center">À propos</h2>
+
+<p align="center">
+  Application web pour piloter des <strong>projets de construction</strong> : vue d’ensemble, <strong>tâches</strong>, <strong>ressources</strong>, <strong>budget</strong>, <strong>documents</strong>, <strong>photos d’avancement</strong> et reporting.  
+  Le frontend est construit avec <strong>React</strong> dans <strong>Next.js</strong> (App Router), API <strong>NestJS</strong>, données <strong>MongoDB</strong>. Service Python <strong>FastAPI + YOLO</strong> optionnel pour l’analyse de photos de chantier.
+</p>
+
+### Fonctionnalités principales
+
+- CRUD **projets**, **tâches**, **ressources**, **jobs** (avancement, photos), **humains**, équipement, présences
+- **Gantt**, **Kanban**, rapports
+- **Documents** (versions) et **progress-photos** (validation, estimation IA selon configuration)
+- **IA** : analyse projet (Groq, backend), suggestions de tâches (OpenRouter / routes Next), debug Gemini (optionnel)
+- API REST modulaire
+
+---
+
+<h1 align="center">Stack & outils 🛠</h1>
+
+<h3 align="center">Base web</h3>
+<p align="center">
+    <a href="https://www.w3.org/html/" target="_blank">
+        <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/html5/html5-original-wordmark.svg" alt="html5" width="50" height="50"/>
+    </a>
+    <a href="https://www.w3schools.com/css/" target="_blank">
+        <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/css3/css3-original-wordmark.svg" alt="css3" width="50" height="50"/>
+    </a>
+    <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript" target="_blank">
+        <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/javascript/javascript-original.svg" alt="javascript" width="50" height="50"/>
+    </a>
+    <a href="https://www.typescriptlang.org/" target="_blank">
+        <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/typescript/typescript-original.svg" alt="typescript" width="50" height="50"/>
+    </a>
+</p>
+
+<h3 align="center">Frontend</h3>
+<p align="center">
+    <a href="https://reactjs.org/" target="_blank">
+        <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/react/react-original-wordmark.svg" alt="react" width="50" height="50"/>
+    </a>
+    <a href="https://nextjs.org/" target="_blank">
+        <img src="https://cdn.worldvectorlogo.com/logos/nextjs-2.svg" alt="nextjs" width="50" height="50"/>
+    </a>
+</p>
+
+<h3 align="center">Backend & données</h3>
+<p align="center">
+    <a href="https://nodejs.org/" target="_blank">
+        <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/nodejs/nodejs-original-wordmark.svg" alt="nodejs" width="50" height="50"/>
+    </a>
+    <a href="https://nestjs.com/" target="_blank">
+        <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/nestjs/nestjs-original.svg" alt="nestjs" width="50" height="50"/>
+    </a>
+    <a href="https://www.mongodb.com/" target="_blank">
+        <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/mongodb/mongodb-original-wordmark.svg" alt="mongodb" width="50" height="50"/>
+    </a>
+</p>
+
+<h3 align="center">IA & service chantier (optionnel)</h3>
+<p align="center">
+    <a href="https://www.python.org/" target="_blank">
+        <img src="https://raw.githubusercontent.com/devicons/devicon/master/icons/python/python-original.svg" alt="python" width="50" height="50"/>
+    </a>
+    <a href="https://fastapi.tiangolo.com/" target="_blank">
+        <img src="https://cdn.worldvectorlogo.com/logos/fastapi.svg" alt="fastapi" width="50" height="50"/>
+    </a>
+</p>
+
+---
+
+<h2 align="center">Architecture (résumé)</h2>
 
 | Couche | Technologie |
 |--------|-------------|
-| **Frontend** | **React** (bibliothèque UI) avec **Next.js** (App Router, SSR/CSR, API routes) |
-| **UI** | React 19, Tailwind CSS, Radix UI |
+| **Frontend** | **React** + Next.js (App Router), Tailwind, Radix UI |
 | **Backend** | NestJS, Mongoose |
-| **IA chantier (optionnel)** | Service Python `smartsite-ai-service` (FastAPI, Ultralytics YOLO) — appelé par Nest pour `POST /jobs/:id/progress/photo` |
+| **IA chantier** | `smartsite-ai-service` — FastAPI, YOLO |
 | **Base de données** | MongoDB |
 
-Le frontend n’est pas une app React « CLI » classique seule : il est basé sur **Next.js**, qui utilise **React** pour tous les composants et l’état côté client.
+---
 
-## Fonctionnalités principales
+<h2 align="center">Structure du dépôt</h2>
 
-- CRUD projets, tâches, ressources agrégées, jobs (liés aux tâches, avancement + IA), humains, équipement, présences
-- Budget, Gantt, rapports
-- **IA** : analyse projet (Groq, backend), assistant chat + rapport initial (Groq), suggestions de tâches avec dépendances (OpenRouter, route Next)
-- Tableau Kanban des tâches, liens projet → board
-
-## Structure du dépôt
-
-## Structure du depot
 ```
 PiSmartSite/
-├── smarsite-frontend/     # Next.js + React
+├── smarsite-frontend/     # Next.js (interface React)
 ├── smartsite-backend/     # API NestJS
-├── smartsite-ai-service/  # FastAPI + YOLO — analyse sécurité (casque / gilet) sur photos d’avancement job
+├── smartsite-ai-service/  # FastAPI + YOLO — analyse sécurité (photos d’avancement)
 ├── .gitignore
 └── README.md
 ```
 
-## Prerequis
-- Node.js 18+ (recommande)
-- pnpm (optionnel) ou npm
-- MongoDB (local ou Atlas)
+---
 
-## Installation rapide
+<h2 align="center">Prérequis</h2>
 
-### Frontend
-```
+- Node.js **18+**
+- **npm** ou pnpm
+- **MongoDB** (local ou Atlas)
+- Python **3.x** (uniquement pour `smartsite-ai-service`)
+
+---
+
+<h2 align="center">Démarrage rapide</h2>
+
+### Frontend (React + Next.js)
+
+```bash
 cd smarsite-frontend
-pnpm install
-pnpm dev
+npm install
+npm run dev
 ```
 
 ### Backend
-```
+
+```bash
 cd smartsite-backend
 npm install
 npm run start:dev
 ```
 
-Frontend: http://localhost:3000
-Backend: http://localhost:3200
+- Application : [http://localhost:3000](http://localhost:3000)  
+- API : [http://localhost:3200](http://localhost:3200)
 
-### Service IA chantier (`smartsite-ai-service`, optionnel)
+### Variables d’environnement
 
-Utilisé par le backend lors de l’upload d’une **photo d’avancement** sur un job (`POST /jobs/:id/progress/photo`). Sans ce service, l’API enregistre quand même la photo mais l’analyse retombe sur un message « service indisponible ».
+- **Frontend** : `smarsite-frontend/.env.local` — modèle : `.env.example`
+- **Backend** : `smartsite-backend/.env` — modèle : `.env.example`
+
+### Service IA (`smartsite-ai-service`, optionnel)
 
 ```bash
 cd smartsite-ai-service
 python -m venv .venv
 # Windows : .venv\Scripts\activate
 pip install -r requirements.txt
-# Placer les poids YOLO (ex. weights/detect.pt) puis :
 set YOLO_MODEL_PATH=weights\detect.pt
 uvicorn main:app --host 0.0.0.0 --port 8001
 ```
 
 Dans `smartsite-backend/.env` : `AI_ANALYSIS_URL=http://127.0.0.1:8001/analyze-image` (voir `.env.example`).
 
-### Frontend
+---
 
-### Frontend (smarsite-frontend/.env.local)
-```
-NEXT_PUBLIC_API_URL=http://localhost:3200
-OPENROUTER_API_KEY=your_key
-OPENROUTER_MODEL=meta-llama/llama-3-8b-instruct
-REACT_APP_GEMINI_API_KEY=your_key
-```
+<h2 align="center">Scripts utiles</h2>
 
-Notes:
-- OPENROUTER_API_KEY et OPENROUTER_MODEL sont utilises pour la generation de taches (optionnel).
-- REACT_APP_GEMINI_API_KEY est utilise par la route de debug Gemini (optionnel).
+| Dossier | Commandes |
+|---------|-----------|
+| `smarsite-frontend` | `npm run dev` · `build` · `start` · `lint` |
+| `smartsite-backend` | `npm run start:dev` · `build` · `start:prod` · `lint` · `test` · `migrate:tasks:dates` |
 
-### Backend
-- La connexion MongoDB est actuellement definie en dur dans le module principal.
-- La migration de taches supporte les variables MONGODB_URI, MONGO_URI ou SMARTSITE_MONGODB_URI.
+---
 
-## Scripts utiles
+<h2 align="center">Bonnes pratiques</h2>
 
-### Frontend (smarsite-frontend)
-- dev: `npm run dev`
-- build: `npm run build`
-- start: `npm run start`
-- lint: `npm run lint`
+- Ne pas commiter de **secrets** (`.env` / `.env.local` en local uniquement si besoin).
+- Ajuster **CORS** et l’URI **MongoDB** selon l’environnement.
 
-### Backend (smartsite-backend)
-- dev: `npm run start:dev`
-- build: `npm run build`
-- start: `npm run start`
-- start:prod: `npm run start:prod`
-- lint: `npm run lint`
-- format: `npm run format`
-- test: `npm run test`
-- test:e2e: `npm run test:e2e`
-- migration taches: `npm run migrate:tasks:dates`
+---
 
-## Bonnes pratiques
-- Eviter de commiter les secrets (.env).
-- Externaliser la chaine de connexion MongoDB avant un deploiement.
-- Verifier la configuration CORS selon votre domaine.
+<p align="center">
+  ⭐️ <em>PiSmartSite — PI Full Stack JS — ESPRIT</em>
+</p>
 
-## Support
-Ouvrir une issue ou contacter l equipe projet pour toute question.
+<p align="center">
+    <img src="https://camo.githubusercontent.com/64b973cb57806dd2b625e57e40571ce9ca4b4086d5c1ca932910cdaed296020a/68747470733a2f2f6d656469612e67697068792e636f6d2f6d656469612f7a356943766f316f4362717437756b4d51732f67697068792e676966" alt="" width="300"/>
+</p>

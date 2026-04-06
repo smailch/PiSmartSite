@@ -233,11 +233,11 @@ export default function ValidatePhotosPage() {
 
       {/* Validation Modal */}
       {selectedPhoto && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/75 p-4 backdrop-blur-sm">
+          <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl border border-white/10 bg-card/95 text-card-foreground shadow-2xl shadow-black/50 backdrop-blur-xl">
             {/* Header */}
-            <div className="sticky top-0 bg-white border-b border-border px-6 py-4">
-              <h3 className="text-lg font-semibold">Validate Photo</h3>
+            <div className="sticky top-0 z-10 border-b border-white/10 bg-card/95 px-6 py-4 backdrop-blur-xl">
+              <h3 className="text-lg font-semibold text-card-foreground">Validate Photo</h3>
               <p className="text-sm text-muted-foreground mt-1">
                 Project: {selectedPhoto.projectId} • Uploaded by: {selectedPhoto.uploadedBy}
               </p>
@@ -287,7 +287,7 @@ export default function ValidatePhotosPage() {
                   onChange={(e) => setValidationNote(e.target.value)}
                   placeholder="Add any comments or feedback..."
                   rows={4}
-                  className="w-full px-4 py-2 rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+                  className="w-full resize-none rounded-lg border border-white/10 bg-slate-900/50 px-4 py-2 text-slate-100 placeholder:text-slate-500 focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/25"
                 />
               </div>
 
@@ -299,7 +299,7 @@ export default function ValidatePhotosPage() {
                     setValidationNote('');
                   }}
                   disabled={isValidating}
-                  className="flex-1 px-4 py-3 rounded-lg border border-border hover:bg-secondary transition-colors font-medium disabled:opacity-50"
+                  className="flex-1 rounded-lg border border-white/15 px-4 py-3 font-medium text-slate-200 transition-colors hover:bg-white/[0.06] disabled:opacity-50"
                 >
                   Cancel
                 </button>

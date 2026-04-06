@@ -131,7 +131,7 @@ export default function DocumentsPage() {
       >
         <button
           onClick={() => setShowUploadModal(true)}
-          className="px-4 py-2 rounded-lg bg-accent text-white font-medium hover:bg-accent/90 flex items-center gap-2"
+          className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 font-medium text-primary-foreground shadow-md transition-[filter] hover:brightness-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         >
           <Upload size={18} />
           Upload Document
@@ -148,14 +148,14 @@ export default function DocumentsPage() {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-            className="w-full pl-10 pr-4 py-2 rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-primary"
+            className="w-full rounded-lg border border-white/10 bg-slate-900/50 py-2 pl-10 pr-4 text-slate-100 placeholder:text-slate-500 focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/25"
           />
         </div>
 
         <select
           value={categoryFilter}
           onChange={(e) => setCategoryFilter(e.target.value)}
-          className="px-4 py-2 rounded-lg border border-border focus:outline-none focus:ring-2 focus:ring-primary"
+          className="rounded-lg border border-white/10 bg-slate-900/50 px-4 py-2 text-sm text-slate-100 focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/25"
         >
           <option value="all">All Categories</option>
           <option value="plan">Plans</option>
@@ -167,7 +167,7 @@ export default function DocumentsPage() {
 
         <button
           onClick={handleSearch}
-          className="px-6 py-2 rounded-lg bg-primary text-white font-medium hover:bg-primary/90"
+          className="rounded-lg bg-primary px-6 py-2 font-medium text-primary-foreground shadow-md transition-[filter] hover:brightness-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         >
           Search
         </button>
@@ -175,38 +175,53 @@ export default function DocumentsPage() {
 
       {/* Documents Grid */}
       {loading ? (
-        <p className="text-center py-12">Loading documents...</p>
+        <div
+          role="status"
+          className="flex flex-col items-center justify-center gap-4 rounded-xl border border-white/10 bg-card/60 py-12 shadow-lg shadow-black/20 backdrop-blur-sm"
+        >
+          <div className="h-10 w-10 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          <p className="text-sm text-slate-400">Loading documents…</p>
+        </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           {filteredDocuments.map((doc) => (
             <div
               key={doc._id}
               onClick={() => router.push(`/documents/${doc._id}`)}
-              className="bg-white rounded-xl border border-border shadow-sm hover:shadow-lg p-6 transition-all cursor-pointer group"
+              className="group cursor-pointer rounded-xl border border-white/10 bg-card/80 p-6 shadow-lg shadow-black/25 backdrop-blur-sm transition-all hover:border-white/15 hover:shadow-xl"
             >
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-start gap-3 flex-1">
-                  <div className="text-4xl">📄</div>
-                  <div>
-                    <h3 className="font-semibold truncate group-hover:text-primary transition-colors">
+              <div className="mb-4 flex items-start justify-between">
+                <div className="flex flex-1 items-start gap-3">
+                  <div className="text-4xl opacity-90">📄</div>
+                  <div className="min-w-0">
+                    <h3 className="truncate font-semibold text-slate-100 transition-colors group-hover:text-primary">
                       {doc.title}
                     </h3>
-                    <p className="text-xs text-muted-foreground">{doc.fileType.toUpperCase()}</p>
+                    <p className="text-xs text-slate-500">{doc.fileType.toUpperCase()}</p>
                   </div>
                 </div>
                 <button
+                  type="button"
                   onClick={(e) => e.stopPropagation()}
-                  className="p-1 hover:bg-secondary rounded-lg"
+                  className="rounded-lg p-1 text-slate-400 transition-colors hover:bg-white/[0.08] hover:text-slate-200"
                 >
                   <MoreVertical size={18} />
                 </button>
               </div>
 
-              <div className="mb-4 pb-4 border-b flex justify-between">
-                <span className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${doc.category === 'plan' ? 'bg-blue-100 text-blue-700' : doc.category === 'report' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
+              <div className="mb-4 flex justify-between border-b border-white/10 pb-4">
+                <span
+                  className={`inline-block rounded-full px-3 py-1 text-xs font-semibold ring-1 ${
+                    doc.category === 'plan'
+                      ? 'bg-blue-500/15 text-blue-200 ring-blue-500/30'
+                      : doc.category === 'report'
+                        ? 'bg-emerald-500/15 text-emerald-200 ring-emerald-500/30'
+                        : 'bg-slate-500/15 text-slate-200 ring-slate-500/30'
+                  }`}
+                >
                   {doc.category}
                 </span>
-                <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1 text-xs text-slate-500">
                   <History size={12} /> v{doc.currentVersion}
                 </span>
               </div>
@@ -216,25 +231,27 @@ export default function DocumentsPage() {
                   href={doc.fileUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex-1 px-3 py-2 bg-primary text-white rounded-lg text-sm flex items-center justify-center gap-1 hover:bg-primary/90"
+                  className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground shadow-sm transition-[filter] hover:brightness-110"
                 >
                   <Download size={14} /> Download
                 </a>
                 <button
+                  type="button"
                   onClick={(e) => {
                     e.stopPropagation();
                     alert(`Versions for ${doc._id}`);
                   }}
-                  className="px-3 py-2 border border-primary text-primary rounded-lg hover:bg-primary/5"
+                  className="rounded-lg border border-white/15 px-3 py-2 text-primary transition-colors hover:bg-white/[0.06]"
                 >
                   <Clock size={16} />
                 </button>
                 <button
+                  type="button"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleDelete(doc._id);
                   }}
-                  className="px-3 py-2 border border-destructive text-destructive rounded-lg hover:bg-destructive/5"
+                  className="rounded-lg border border-destructive/40 px-3 py-2 text-red-300 transition-colors hover:bg-destructive/15"
                 >
                   <Trash2 size={16} />
                 </button>
@@ -245,26 +262,26 @@ export default function DocumentsPage() {
       )}
 
       {filteredDocuments.length === 0 && !loading && (
-        <div className="text-center py-12 bg-white rounded-xl border">
-          <FileText size={48} className="mx-auto text-muted-foreground mb-4" />
-          <p>No documents found</p>
+        <div className="rounded-xl border border-white/10 bg-card/60 py-12 text-center shadow-lg shadow-black/20 backdrop-blur-sm">
+          <FileText size={48} className="mx-auto mb-4 text-slate-500 opacity-70" />
+          <p className="text-slate-400">No documents found</p>
         </div>
       )}
 
       {/* Upload Modal */}
       {showUploadModal && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-8 max-w-lg w-full shadow-2xl">
-            <h2 className="text-2xl font-bold mb-6">Upload New Document</h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/75 p-4 backdrop-blur-sm">
+          <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl border border-white/10 bg-card/95 p-8 text-card-foreground shadow-2xl shadow-black/50 backdrop-blur-xl">
+            <h2 className="mb-6 text-2xl font-bold text-card-foreground">Upload New Document</h2>
             
             <div className="flex gap-2 mb-6">
               <button
                 type="button"
                 onClick={() => setUploadMode('url')}
-                className={`flex-1 py-2 rounded-lg border ${
+                className={`flex-1 rounded-lg border py-2 ${
                   uploadMode === 'url'
-                    ? 'bg-primary text-white border-primary'
-                    : 'border-gray-300 hover:bg-gray-50'
+                    ? 'border-primary bg-primary text-white'
+                    : 'border-white/15 bg-white/[0.04] text-slate-200 hover:bg-white/[0.08]'
                 }`}
               >
                 📎 URL
@@ -272,10 +289,10 @@ export default function DocumentsPage() {
               <button
                 type="button"
                 onClick={() => setUploadMode('local')}
-                className={`flex-1 py-2 rounded-lg border ${
+                className={`flex-1 rounded-lg border py-2 ${
                   uploadMode === 'local'
-                    ? 'bg-primary text-white border-primary'
-                    : 'border-gray-300 hover:bg-gray-50'
+                    ? 'border-primary bg-primary text-white'
+                    : 'border-white/15 bg-white/[0.04] text-slate-200 hover:bg-white/[0.08]'
                 }`}
               >
                 📁 Upload File
@@ -285,22 +302,22 @@ export default function DocumentsPage() {
             <form onSubmit={handleUpload} className="space-y-5">
               <div>
                 <label className="block text-sm font-medium mb-1">Title *</label>
-                <input name="title" required className="w-full px-4 py-2 border rounded-lg" placeholder="Document title" />
+                <input name="title" required className="w-full rounded-lg border border-white/10 bg-slate-900/50 px-4 py-2 text-slate-100 placeholder:text-slate-500 focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/25" placeholder="Document title" />
               </div>
 
               <div>
                 <label className="block text-sm font-medium mb-1">Description</label>
-                <textarea name="description" className="w-full px-4 py-2 border rounded-lg" rows={3} />
+                <textarea name="description" className="w-full rounded-lg border border-white/10 bg-slate-900/50 px-4 py-2 text-slate-100 placeholder:text-slate-500 focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/25" rows={3} />
               </div>
 
               <div>
                 <label className="block text-sm font-medium mb-1">Project ID *</label>
-                <input name="projectId" required className="w-full px-4 py-2 border rounded-lg" placeholder="proj-2025-001" />
+                <input name="projectId" required className="w-full rounded-lg border border-white/10 bg-slate-900/50 px-4 py-2 text-slate-100 placeholder:text-slate-500 focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/25" placeholder="proj-2025-001" />
               </div>
 
               <div>
                 <label className="block text-sm font-medium mb-1">Uploaded By *</label>
-                <input name="uploadedBy" required className="w-full px-4 py-2 border rounded-lg" placeholder="user-wassim" />
+                <input name="uploadedBy" required className="w-full rounded-lg border border-white/10 bg-slate-900/50 px-4 py-2 text-slate-100 placeholder:text-slate-500 focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/25" placeholder="user-wassim" />
               </div>
 
               {uploadMode === 'url' ? (
@@ -310,14 +327,14 @@ export default function DocumentsPage() {
                     <input
                       name="fileUrl"
                       required
-                      className="w-full px-4 py-2 border rounded-lg"
+                      className="w-full rounded-lg border border-white/10 bg-slate-900/50 px-4 py-2 text-slate-100 placeholder:text-slate-500 focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/25"
                       placeholder="https://example.com/document.pdf"
                     />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium mb-1">File Type *</label>
-                    <select name="fileType" required className="w-full px-4 py-2 border rounded-lg">
+                    <select name="fileType" required className="w-full rounded-lg border border-white/10 bg-slate-900/50 px-4 py-2 text-slate-100 placeholder:text-slate-500 focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/25">
                       <option value="">Select type</option>
                       <option value="pdf">PDF</option>
                       <option value="docx">Word</option>
@@ -330,7 +347,7 @@ export default function DocumentsPage() {
 
                   <div>
                     <label className="block text-sm font-medium mb-1">Category</label>
-                    <select name="category" className="w-full px-4 py-2 border rounded-lg">
+                    <select name="category" className="w-full rounded-lg border border-white/10 bg-slate-900/50 px-4 py-2 text-slate-100 placeholder:text-slate-500 focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/25">
                       <option value="other">Other</option>
                       <option value="plan">Plan</option>
                       <option value="report">Report</option>
@@ -347,13 +364,13 @@ export default function DocumentsPage() {
                       type="file"
                       name="file"
                       required
-                      className="w-full px-4 py-2 border rounded-lg"
+                      className="w-full rounded-lg border border-white/10 bg-slate-900/50 px-4 py-2 text-slate-100 placeholder:text-slate-500 focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/25"
                     />
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium mb-1">Category</label>
-                    <select name="category" className="w-full px-4 py-2 border rounded-lg">
+                    <select name="category" className="w-full rounded-lg border border-white/10 bg-slate-900/50 px-4 py-2 text-slate-100 placeholder:text-slate-500 focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/25">
                       <option value="other">Other</option>
                       <option value="plan">Plan</option>
                       <option value="report">Report</option>
@@ -368,7 +385,7 @@ export default function DocumentsPage() {
                 <button
                   type="button"
                   onClick={() => setShowUploadModal(false)}
-                  className="flex-1 py-3 border border-border rounded-xl hover:bg-gray-50"
+                  className="flex-1 rounded-xl border border-white/15 py-3 text-slate-200 hover:bg-white/[0.06]"
                 >
                   Cancel
                 </button>

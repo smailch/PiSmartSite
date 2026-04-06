@@ -318,19 +318,19 @@ export default function DocumentDetailPage() {
 
       {/* New Version Modal with Dual Upload Mode */}
       {showNewVersionModal && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-8 max-w-lg w-full shadow-2xl">
-            <h2 className="text-2xl font-bold mb-6">Add New Version</h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/75 p-4 backdrop-blur-sm">
+          <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl border border-white/10 bg-card/95 p-8 text-card-foreground shadow-2xl shadow-black/50 backdrop-blur-xl">
+            <h2 className="mb-6 text-2xl font-bold text-card-foreground">Add New Version</h2>
 
             {/* Toggle between URL and Local Upload */}
             <div className="flex gap-2 mb-6">
               <button
                 type="button"
                 onClick={() => setUploadMode('url')}
-                className={`flex-1 py-2 rounded-lg border ${
+                className={`flex-1 rounded-lg border py-2 ${
                   uploadMode === 'url'
-                    ? 'bg-primary text-white border-primary'
-                    : 'border-gray-300 hover:bg-gray-50'
+                    ? 'border-primary bg-primary text-white'
+                    : 'border-white/15 bg-white/[0.04] text-slate-200 hover:bg-white/[0.08]'
                 }`}
               >
                 📎 URL
@@ -338,10 +338,10 @@ export default function DocumentDetailPage() {
               <button
                 type="button"
                 onClick={() => setUploadMode('local')}
-                className={`flex-1 py-2 rounded-lg border ${
+                className={`flex-1 rounded-lg border py-2 ${
                   uploadMode === 'local'
-                    ? 'bg-primary text-white border-primary'
-                    : 'border-gray-300 hover:bg-gray-50'
+                    ? 'border-primary bg-primary text-white'
+                    : 'border-white/15 bg-white/[0.04] text-slate-200 hover:bg-white/[0.08]'
                 }`}
               >
                 📁 Upload File
@@ -356,7 +356,7 @@ export default function DocumentDetailPage() {
                   <input
                     name="fileUrl"
                     required
-                    className="w-full px-4 py-2 border rounded-lg"
+                    className="w-full rounded-lg border border-white/10 bg-slate-900/50 px-4 py-2 text-slate-100 placeholder:text-slate-500 focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/25"
                     placeholder="https://example.com/new-version.pdf"
                   />
                 </div>
@@ -368,7 +368,7 @@ export default function DocumentDetailPage() {
                     name="file"
                     required
                     accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.zip"
-                    className="w-full px-4 py-2 border rounded-lg"
+                    className="w-full rounded-lg border border-white/10 bg-slate-900/50 px-4 py-2 text-slate-100 placeholder:text-slate-500 focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/25"
                   />
                   <p className="text-xs text-muted-foreground mt-1">
                     Max size: 10MB. Supported: PDF, Word, Excel, Images, ZIP
@@ -381,7 +381,7 @@ export default function DocumentDetailPage() {
                 <input
                   name="uploadedBy"
                   required
-                  className="w-full px-4 py-2 border rounded-lg"
+                  className="w-full rounded-lg border border-white/10 bg-slate-900/50 px-4 py-2 text-slate-100 placeholder:text-slate-500 focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/25"
                   placeholder="Your name"
                   defaultValue="wassim"
                 />
@@ -391,7 +391,7 @@ export default function DocumentDetailPage() {
                 <label className="block text-sm font-medium mb-1">Change Note</label>
                 <textarea
                   name="changeNote"
-                  className="w-full px-4 py-2 border rounded-lg"
+                  className="w-full rounded-lg border border-white/10 bg-slate-900/50 px-4 py-2 text-slate-100 placeholder:text-slate-500 focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/25"
                   rows={3}
                   placeholder="What changed in this version? (optional)"
                 />
@@ -401,7 +401,7 @@ export default function DocumentDetailPage() {
                 <button
                   type="button"
                   onClick={() => setShowNewVersionModal(false)}
-                  className="flex-1 py-3 border rounded-xl hover:bg-gray-50"
+                  className="flex-1 rounded-xl border border-white/15 py-3 text-slate-200 hover:bg-white/[0.06]"
                 >
                   Cancel
                 </button>

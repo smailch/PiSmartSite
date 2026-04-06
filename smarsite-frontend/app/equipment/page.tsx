@@ -130,8 +130,8 @@ export default function EquipmentResourcesPage() {
 
       {/* DELETE CONFIRM */}
       {deleteTarget && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-card rounded-xl p-6 w-full max-w-md shadow-lg">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/75 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-xl border border-white/10 bg-card/95 p-6 text-card-foreground shadow-2xl shadow-black/50 backdrop-blur-xl">
             <h3 className="text-lg font-semibold mb-2">
               Delete Equipment
             </h3>

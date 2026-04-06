@@ -23,9 +23,21 @@ interface ProgressPhoto {
 }
 
 const statusConfig = {
-  pending: { label: 'Pending', color: 'bg-yellow-100 text-yellow-700', icon: Clock },
-  approved: { label: 'Approved', color: 'bg-green-100 text-green-700', icon: CheckCircle },
-  rejected: { label: 'Rejected', color: 'bg-red-100 text-red-700', icon: XCircle },
+  pending: {
+    label: 'Pending',
+    color: 'bg-amber-500/20 text-amber-100 ring-1 ring-amber-400/35',
+    icon: Clock,
+  },
+  approved: {
+    label: 'Approved',
+    color: 'bg-emerald-500/20 text-emerald-100 ring-1 ring-emerald-400/35',
+    icon: CheckCircle,
+  },
+  rejected: {
+    label: 'Rejected',
+    color: 'bg-red-500/20 text-red-100 ring-1 ring-red-400/35',
+    icon: XCircle,
+  },
 };
 
 export default function ProgressPhotosPage() {
@@ -143,7 +155,7 @@ export default function ProgressPhotosPage() {
       <PageHeader title="Progress Photos" description="Upload and manage construction progress photos">
         <button
           onClick={() => setShowUploadModal(true)}
-          className="px-4 py-2 rounded-lg bg-accent text-white font-medium hover:bg-accent/90 flex items-center gap-2"
+          className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 font-medium text-primary-foreground shadow-md transition-[filter] hover:brightness-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         >
           <Camera size={18} />
           Upload Progress Photo
@@ -155,7 +167,7 @@ export default function ProgressPhotosPage() {
         <select
           value={selectedProject}
           onChange={(e) => setSelectedProject(e.target.value)}
-          className="px-4 py-2 rounded-lg border border-border"
+          className="rounded-lg border border-white/10 bg-slate-900/50 px-4 py-2 text-sm text-slate-100 focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/25"
         >
           {projects.map((p) => (
             <option key={p} value={p}>
@@ -166,20 +178,20 @@ export default function ProgressPhotosPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-white rounded-xl border p-6">
-          <p className="text-sm text-muted-foreground">Total Photos</p>
-          <p className="text-3xl font-bold">{filteredPhotos.length}</p>
+      <div className="mb-8 grid grid-cols-1 gap-6 md:grid-cols-3">
+        <div className="rounded-xl border border-white/10 bg-card/80 p-6 shadow-lg shadow-black/25 backdrop-blur-sm">
+          <p className="text-sm text-slate-400">Total Photos</p>
+          <p className="text-3xl font-bold tabular-nums text-slate-50">{filteredPhotos.length}</p>
         </div>
-        <div className="bg-white rounded-xl border p-6">
-          <p className="text-sm text-muted-foreground">Pending</p>
-          <p className="text-3xl font-bold text-yellow-600">
+        <div className="rounded-xl border border-white/10 bg-card/80 p-6 shadow-lg shadow-black/25 backdrop-blur-sm">
+          <p className="text-sm text-slate-400">Pending</p>
+          <p className="text-3xl font-bold tabular-nums text-amber-300">
             {filteredPhotos.filter((p) => p.validationStatus === 'pending').length}
           </p>
         </div>
-        <div className="bg-white rounded-xl border p-6">
-          <p className="text-sm text-muted-foreground">Approved</p>
-          <p className="text-3xl font-bold text-green-600">
+        <div className="rounded-xl border border-white/10 bg-card/80 p-6 shadow-lg shadow-black/25 backdrop-blur-sm">
+          <p className="text-sm text-slate-400">Approved</p>
+          <p className="text-3xl font-bold tabular-nums text-emerald-300">
             {filteredPhotos.filter((p) => p.validationStatus === 'approved').length}
           </p>
         </div>
@@ -187,20 +199,24 @@ export default function ProgressPhotosPage() {
 
       {/* Photos Grid */}
       {loading ? (
-        <div className="flex items-center justify-center py-16">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
+        <div
+          role="status"
+          className="flex flex-col items-center justify-center gap-4 rounded-xl border border-white/10 bg-card/60 py-16 shadow-lg shadow-black/20 backdrop-blur-sm"
+        >
+          <div className="h-12 w-12 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          <p className="text-sm text-slate-400">Loading photos…</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           {filteredPhotos.map((photo) => {
             const StatusIcon = statusConfig[photo.validationStatus].icon;
             return (
               <div
                 key={photo._id}
                 onClick={() => router.push(`/progress-photos/${photo._id}`)}
-                className="bg-white rounded-xl border overflow-hidden hover:shadow-lg transition-all cursor-pointer group"
+                className="group cursor-pointer overflow-hidden rounded-xl border border-white/10 bg-card/80 shadow-lg shadow-black/25 backdrop-blur-sm transition-all hover:border-white/15 hover:shadow-xl"
               >
-                <div className="relative aspect-video bg-secondary">
+                <div className="relative aspect-video bg-slate-900/60">
                   <img
                     src={`${API_BASE}${photo.photoUrl.startsWith('/') ? '' : '/'}${photo.photoUrl}`}
                     alt={photo.caption || 'Progress photo'}
@@ -218,22 +234,22 @@ export default function ProgressPhotosPage() {
                   </div>
                 </div>
 
-                <div className="p-4">
-                  <p className="font-semibold text-sm mb-1 line-clamp-2">
+                <div className="border-t border-white/10 p-4">
+                  <p className="mb-1 line-clamp-2 text-sm font-semibold text-slate-100">
                     {photo.caption || 'No caption'}
                   </p>
-                  <p className="text-xs text-muted-foreground mb-3">Project {photo.projectId}</p>
+                  <p className="mb-3 text-xs text-slate-500">Project {photo.projectId}</p>
 
                   {/* Progress Bar */}
                   {photo.estimatedProgress != null && (
                     <div className="mb-3">
                       <div className="flex justify-between items-center mb-1">
-                        <span className="text-xs text-muted-foreground flex items-center gap-1">
+                        <span className="flex items-center gap-1 text-xs text-slate-500">
                           🤖 AI Progress
                         </span>
                         <span className="text-xs font-semibold text-primary">{photo.estimatedProgress}%</span>
                       </div>
-                      <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                      <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/10">
                         <div
                           className="h-full bg-primary rounded-full transition-all"
                           style={{ width: `${photo.estimatedProgress}%` }}
@@ -242,7 +258,7 @@ export default function ProgressPhotosPage() {
                     </div>
                   )}
 
-                  <div className="flex justify-between text-xs text-muted-foreground">
+                  <div className="flex justify-between text-xs text-slate-500">
                     <span>{new Date(photo.takenAt).toLocaleDateString()}</span>
                     <span>{photo.uploadedBy}</span>
                   </div>
@@ -252,7 +268,7 @@ export default function ProgressPhotosPage() {
                       e.stopPropagation();
                       handleDelete(photo._id);
                     }}
-                    className="mt-4 w-full py-2 text-sm text-destructive hover:bg-destructive/5 rounded-lg border border-destructive"
+                    className="mt-4 w-full rounded-lg border border-destructive/40 py-2 text-sm text-red-300 transition-colors hover:bg-destructive/15"
                   >
                     Delete
                   </button>
@@ -264,17 +280,17 @@ export default function ProgressPhotosPage() {
       )}
 
       {filteredPhotos.length === 0 && !loading && (
-        <div className="text-center py-16 bg-white rounded-xl border">
-          <Camera size={64} className="mx-auto text-muted-foreground mb-4 opacity-40" />
-          <p className="text-xl text-muted-foreground">No progress photos yet</p>
+        <div className="rounded-xl border border-white/10 bg-card/60 py-16 text-center shadow-lg shadow-black/20 backdrop-blur-sm">
+          <Camera size={64} className="mx-auto mb-4 text-slate-500 opacity-70" />
+          <p className="text-xl text-slate-400">No progress photos yet</p>
         </div>
       )}
 
       {/* Upload Modal */}
       {showUploadModal && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-8 max-w-lg w-full shadow-2xl max-h-[90vh] overflow-y-auto">
-            <h3 className="text-2xl font-semibold mb-2">Upload Progress Photo</h3>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/75 p-4 backdrop-blur-sm">
+          <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-xl border border-white/10 bg-card/95 p-8 text-card-foreground shadow-2xl shadow-black/50 backdrop-blur-xl">
+            <h3 className="mb-2 text-2xl font-semibold text-card-foreground">Upload Progress Photo</h3>
             <p className="text-sm text-muted-foreground mb-6">
               AI will automatically estimate construction progress from your photo.
             </p>
@@ -284,10 +300,10 @@ export default function ProgressPhotosPage() {
               <button
                 type="button"
                 onClick={() => setUploadMode('local')}
-                className={`flex-1 py-2 rounded-lg border ${
+                className={`flex-1 rounded-lg border py-2 ${
                   uploadMode === 'local'
-                    ? 'bg-primary text-white border-primary'
-                    : 'border-gray-300 hover:bg-gray-50'
+                    ? 'border-primary bg-primary text-white'
+                    : 'border-white/15 bg-white/[0.04] text-slate-200 hover:bg-white/[0.08]'
                 }`}
               >
                 📁 Upload File
@@ -295,10 +311,10 @@ export default function ProgressPhotosPage() {
               <button
                 type="button"
                 onClick={() => setUploadMode('url')}
-                className={`flex-1 py-2 rounded-lg border ${
+                className={`flex-1 rounded-lg border py-2 ${
                   uploadMode === 'url'
-                    ? 'bg-primary text-white border-primary'
-                    : 'border-gray-300 hover:bg-gray-50'
+                    ? 'border-primary bg-primary text-white'
+                    : 'border-white/15 bg-white/[0.04] text-slate-200 hover:bg-white/[0.08]'
                 }`}
               >
                 📎 URL
@@ -306,13 +322,13 @@ export default function ProgressPhotosPage() {
             </div>
 
             {uploadMode === 'local' && (
-              <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-xs text-green-700 flex items-center gap-2">
+              <div className="mb-4 flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs text-emerald-200">
                 🤖 <span>AI estimation will run automatically on uploaded files</span>
               </div>
             )}
 
             {uploadMode === 'url' && (
-              <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-xs text-yellow-700 flex items-center gap-2">
+              <div className="mb-4 flex items-center gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-100">
                 ⚠️ <span>AI estimation only works with file uploads, not URLs</span>
               </div>
             )}
@@ -320,12 +336,12 @@ export default function ProgressPhotosPage() {
             <form onSubmit={handleUpload} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium mb-1">Project ID *</label>
-                <input name="projectId" required className="w-full px-4 py-2 border rounded-lg" placeholder="proj-2025-001" />
+                <input name="projectId" required className="w-full rounded-lg border border-white/10 bg-slate-900/50 px-4 py-2 text-slate-100 placeholder:text-slate-500 focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/25" placeholder="proj-2025-001" />
               </div>
 
               <div>
                 <label className="block text-sm font-medium mb-1">Uploaded By *</label>
-                <input name="uploadedBy" required className="w-full px-4 py-2 border rounded-lg" placeholder="Your name" defaultValue="wassim" />
+                <input name="uploadedBy" required className="w-full rounded-lg border border-white/10 bg-slate-900/50 px-4 py-2 text-slate-100 placeholder:text-slate-500 focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/25" placeholder="Your name" defaultValue="wassim" />
               </div>
 
               {uploadMode === 'local' ? (
@@ -336,32 +352,32 @@ export default function ProgressPhotosPage() {
                     name="file"
                     required
                     accept="image/*"
-                    className="w-full px-4 py-2 border rounded-lg"
+                    className="w-full rounded-lg border border-white/10 bg-slate-900/50 px-4 py-2 text-slate-100 placeholder:text-slate-500 focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/25"
                   />
                   <p className="text-xs text-muted-foreground mt-1">Max 10MB · JPG, PNG, GIF, WEBP</p>
                 </div>
               ) : (
                 <div>
                   <label className="block text-sm font-medium mb-1">Photo URL *</label>
-                  <input name="photoUrl" required className="w-full px-4 py-2 border rounded-lg" placeholder="https://example.com/photo.jpg" />
+                  <input name="photoUrl" required className="w-full rounded-lg border border-white/10 bg-slate-900/50 px-4 py-2 text-slate-100 placeholder:text-slate-500 focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/25" placeholder="https://example.com/photo.jpg" />
                 </div>
               )}
 
               <div>
                 <label className="block text-sm font-medium mb-1">Caption (optional)</label>
-                <textarea name="caption" className="w-full px-4 py-2 border rounded-lg" rows={2} placeholder="Describe this progress photo..." />
+                <textarea name="caption" className="w-full rounded-lg border border-white/10 bg-slate-900/50 px-4 py-2 text-slate-100 placeholder:text-slate-500 focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/25" rows={2} placeholder="Describe this progress photo..." />
               </div>
 
               <div>
                 <label className="block text-sm font-medium mb-1">Taken At *</label>
-                <input name="takenAt" type="datetime-local" required className="w-full px-4 py-2 border rounded-lg" />
+                <input name="takenAt" type="datetime-local" required className="w-full rounded-lg border border-white/10 bg-slate-900/50 px-4 py-2 text-slate-100 placeholder:text-slate-500 focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/25" />
               </div>
 
               <div className="flex gap-3 mt-6">
                 <button
                   type="button"
                   onClick={() => { setShowUploadModal(false); setUploadMode('local'); }}
-                  className="flex-1 py-3 border rounded-xl hover:bg-gray-50"
+                  className="flex-1 rounded-xl border border-white/15 py-3 text-slate-200 hover:bg-white/[0.06]"
                   disabled={uploading}
                 >
                   Cancel

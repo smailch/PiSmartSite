@@ -13,8 +13,7 @@ import partnershipImg from "./images (1).jpg";
 import telegramQrImg from "./frame.png";
 import { cn } from "@/lib/utils";
 
-const BRAND_ORANGE = "#f28c28";
-const BRAND_CYAN = "#7cc3e0";
+const BRAND_ORANGE = "#f97316";
 
 const STATS = [
   { n: "15+", l: "Années d’expérience terrain" },
@@ -62,12 +61,12 @@ function PrimaryCta({
     <a
       href={href}
       className={cn(
-        "inline-flex items-center justify-center gap-2 rounded-2xl bg-[#f28c28] px-7 py-3.5 text-[15px] font-semibold text-white",
-        "shadow-[0_8px_24px_-4px_rgba(242,140,40,0.45)] transition duration-200",
-        "hover:translate-y-[-1px] hover:brightness-105 hover:shadow-[0_12px_28px_-4px_rgba(242,140,40,0.5)]",
-        "active:translate-y-0 active:brightness-95",
-        "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#f28c28]",
-        "motion-reduce:transform-none motion-reduce:hover:translate-y-0",
+        "inline-flex items-center justify-center gap-2 rounded-2xl bg-orange-500 px-7 py-3.5 text-[15px] font-semibold text-white",
+        "shadow-sm transition-all duration-200",
+        "hover:bg-orange-600 hover:scale-[1.01]",
+        "active:scale-100",
+        "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-300",
+        "motion-reduce:transform-none motion-reduce:hover:scale-100",
         className,
       )}
     >
@@ -90,7 +89,7 @@ function GhostCta({
       href={href}
       className={cn(
         "inline-flex items-center justify-center gap-2 rounded-2xl border border-white/25 bg-white/[0.06] px-7 py-3.5 text-[15px] font-semibold text-white backdrop-blur-sm",
-        "transition duration-200 hover:border-[#f28c28]/55 hover:bg-white/[0.10] hover:text-[#f28c28]",
+        "transition-all duration-200 hover:border-white/50 hover:bg-white/15 hover:text-orange-200",
         "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/40",
         className,
       )}
@@ -118,18 +117,18 @@ export default function ClientsMarketingPage() {
           sizes="100vw"
         />
         <div
-          className="absolute inset-0 bg-gradient-to-r from-[#0b4f6c]/94 via-[#0b4f6c]/62 to-[#041a24]/50 sm:via-[#0b4f6c]/45 sm:to-[#041a24]/35"
+          className="absolute inset-0 bg-gradient-to-r from-slate-900/78 via-slate-900/48 to-slate-900/25 sm:via-slate-900/35 sm:to-slate-800/15"
           aria-hidden
         />
         <div
-          className="absolute inset-0 bg-gradient-to-t from-[#041a24]/75 via-transparent to-[#0b4f6c]/25"
+          className="absolute inset-0 bg-gradient-to-t from-slate-950/55 via-transparent to-blue-900/15"
           aria-hidden
         />
         <div
-          className="pointer-events-none absolute inset-y-0 right-0 w-[min(40%,28rem)] -skew-x-[8deg] translate-x-1/4 bg-gradient-to-l from-[#f28c28]/88 to-[#f28c28]/20 opacity-90 sm:opacity-100"
+          className="pointer-events-none absolute inset-y-0 right-0 w-[min(40%,28rem)] -skew-x-[8deg] translate-x-1/4 bg-gradient-to-l from-orange-400/35 to-orange-200/10 opacity-90 sm:opacity-100"
           aria-hidden
         />
-        <div className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-white/[0.06]" aria-hidden />
+        <div className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-white/10" aria-hidden />
 
         <div className="relative mx-auto flex min-h-[min(92vh,56rem)] max-w-6xl flex-col justify-center px-4 pb-20 pt-10 sm:px-6 lg:pb-28">
           <p
@@ -148,7 +147,7 @@ export default function ClientsMarketingPage() {
             className="max-w-3xl text-balance text-4xl font-bold leading-[1.12] tracking-tight text-white sm:text-5xl md:text-6xl lg:text-[3.35rem]"
           >
             Conçu pour la force,{" "}
-            <span className="text-[#f28c28] drop-shadow-sm">livré avec rigueur</span>
+            <span className="text-orange-300 drop-shadow-sm">livré avec rigueur</span>
           </h1>
           <p className="mt-6 max-w-xl text-pretty text-base leading-relaxed text-white/[0.92] sm:text-lg sm:leading-relaxed">
             SmartSite vous accompagne avec une approche claire, des équipes alignées
@@ -164,13 +163,13 @@ export default function ClientsMarketingPage() {
           </div>
           <ul className="mt-16 flex flex-col gap-4 border-t border-white/15 pt-9 text-sm text-white/[0.88] sm:flex-row sm:flex-wrap sm:gap-x-12 sm:gap-y-3">
             <li className="flex items-start gap-3">
-              <span className="mt-0.5 font-mono text-xs font-bold tabular-nums text-[#f28c28]">
+              <span className="mt-0.5 font-mono text-xs font-bold tabular-nums text-orange-300">
                 01
               </span>
               <span className="leading-snug">Construction &amp; exécution maîtrisées</span>
             </li>
             <li className="flex items-start gap-3">
-              <span className="mt-0.5 font-mono text-xs font-bold tabular-nums text-[#f28c28]">
+              <span className="mt-0.5 font-mono text-xs font-bold tabular-nums text-orange-300">
                 02
               </span>
               <span className="leading-snug">Partenariat transparent avec nos clients</span>
@@ -182,11 +181,11 @@ export default function ClientsMarketingPage() {
       {/* Chiffres clés */}
       <section
         id="offre"
-        className="relative border-y border-white/[0.07] bg-[#0b4f6c] py-16 sm:py-20"
+        className="relative border-y border-white/10 bg-slate-900/40 py-16 sm:py-20"
         aria-labelledby="stats-heading"
       >
         <div
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(242,140,40,0.12),transparent)]"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(249,115,22,0.12),transparent)]"
           aria-hidden
         />
         <div className="relative mx-auto grid max-w-6xl gap-6 px-4 sm:grid-cols-3 sm:gap-8 sm:px-6">
@@ -197,15 +196,14 @@ export default function ClientsMarketingPage() {
             <div
               key={item.l}
               className={cn(
-                "rounded-2xl border border-white/10 bg-white/[0.06] px-6 py-7 text-center backdrop-blur-sm sm:text-left",
-                "shadow-[0_16px_40px_-24px_rgba(0,0,0,0.5)] transition hover:border-[#f28c28]/25",
+                "rounded-2xl border border-white/10 bg-card/70 px-6 py-7 text-center shadow-lg shadow-black/20 backdrop-blur-xl transition-all duration-200 hover:border-white/[0.14] sm:text-left",
                 i === 1 && "sm:translate-y-1",
               )}
             >
-              <p className="font-mono text-4xl font-bold tabular-nums tracking-tight text-[#f28c28] sm:text-5xl">
+              <p className="font-mono text-4xl font-bold tabular-nums tracking-tight text-orange-400 sm:text-5xl">
                 {item.n}
               </p>
-              <p className="mt-2.5 text-sm font-medium leading-snug text-white/80">
+              <p className="mt-2.5 text-sm font-medium leading-snug text-slate-400">
                 {item.l}
               </p>
             </div>
@@ -220,17 +218,17 @@ export default function ClientsMarketingPage() {
         aria-labelledby="engagements-heading"
       >
         <div className="mb-14 max-w-2xl">
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#f28c28]">
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-orange-400">
             Valeurs
           </p>
           <h2
             id="engagements-heading"
-            className="mt-3 text-balance text-3xl font-bold tracking-tight text-white sm:text-4xl"
+            className="mt-3 text-balance text-3xl font-semibold tracking-tight text-slate-100 sm:text-4xl"
           >
             Une expérience client{" "}
-            <span className="text-[#f28c28]">simple et premium</span>
+            <span className="text-orange-400">simple et premium</span>
           </h2>
-          <p className="mt-4 text-pretty text-base leading-relaxed text-white/65">
+          <p className="mt-4 text-pretty text-base leading-relaxed text-slate-400">
             Pas de tableaux techniques ici : nous mettons l&apos;accent sur la clarté,
             la confiance et la visibilité sur l&apos;essentiel, comme dans les meilleures
             vitrines du secteur BTP.
@@ -244,36 +242,35 @@ export default function ClientsMarketingPage() {
               <article
                 key={card.title}
                 className={cn(
-                  "group relative overflow-hidden rounded-3xl border p-8 transition duration-300",
-                  "shadow-[0_20px_50px_-28px_rgba(0,0,0,0.65)]",
+                  "group relative overflow-hidden rounded-3xl border border-white/10 bg-card/75 p-8 shadow-lg shadow-black/25 backdrop-blur-xl transition-all duration-300 hover:border-white/[0.14]",
                   isTeal
-                    ? "border-[#0b4f6c]/50 bg-gradient-to-b from-[#0b4f6c]/35 to-[#062636]/80 md:mt-10"
-                    : "border-white/[0.09] bg-white/[0.04] backdrop-blur-md hover:border-[#f28c28]/30",
+                    ? "md:mt-10 bg-gradient-to-b from-blue-500/10 to-card/75"
+                    : "",
                 )}
               >
                 <div
                   className={cn(
-                    "mb-5 inline-flex rounded-2xl p-3.5 ring-1",
+                    "mb-5 inline-flex rounded-2xl p-3.5",
                     isTeal
-                      ? "bg-white/[0.08] ring-white/10"
-                      : "bg-[#f28c28]/[0.12] ring-[#f28c28]/20",
+                      ? "border border-blue-500/20 bg-blue-500/15 ring-0"
+                      : "border border-orange-500/20 bg-orange-500/10 ring-0",
                   )}
                 >
                   <Icon
-                    className={cn("size-7", isTeal ? "text-[#7cc3e0]" : "text-[#f28c28]")}
+                    className={cn("size-7", isTeal ? "text-blue-400" : "text-orange-400")}
                     strokeWidth={1.75}
                     aria-hidden
                   />
                 </div>
-                <h3 className="text-lg font-semibold tracking-tight text-white">
+                <h3 className="text-lg font-semibold tracking-tight text-slate-100">
                   {card.title}
                 </h3>
-                <p className="mt-2.5 text-sm leading-relaxed text-white/60 group-hover:text-white/70">
+                <p className="mt-2.5 text-sm leading-relaxed text-slate-400 group-hover:text-slate-300">
                   {card.body}
                 </p>
                 {index === 1 && (
                   <div
-                    className="pointer-events-none absolute -right-12 -bottom-12 h-40 w-40 rounded-full bg-[#f28c28]/10 blur-3xl"
+                    className="pointer-events-none absolute -right-12 -bottom-12 h-40 w-40 rounded-full bg-orange-500/20 blur-3xl"
                     aria-hidden
                   />
                 )}
@@ -285,14 +282,14 @@ export default function ClientsMarketingPage() {
 
       {/* Partenariat */}
       <section
-        className="border-t border-white/[0.07] bg-[#050f16] py-16 sm:py-24"
+        className="border-t border-white/10 bg-slate-950 py-16 sm:py-24"
         aria-labelledby="partnership-heading"
       >
         <div className="mx-auto grid max-w-6xl items-center gap-14 px-4 sm:px-6 lg:grid-cols-2 lg:gap-20">
           <div className="relative">
-            <div className="relative aspect-[4/3] overflow-hidden rounded-3xl shadow-[0_28px_60px_-20px_rgba(0,0,0,0.75)] ring-1 ring-white/[0.08]">
+            <div className="relative aspect-[4/3] overflow-hidden rounded-3xl border border-white/10 shadow-lg shadow-black/30 ring-1 ring-white/5">
               <div
-                className="pointer-events-none absolute -left-3 top-10 z-10 h-36 w-9 -skew-y-6 rounded-sm bg-gradient-to-b from-[#f28c28] to-[#f28c28]/50 shadow-lg"
+                className="pointer-events-none absolute -left-3 top-10 z-10 h-36 w-9 -skew-y-6 rounded-sm bg-gradient-to-b from-orange-400 to-orange-300/70 shadow-sm"
                 aria-hidden
               />
               <Image
@@ -305,26 +302,26 @@ export default function ClientsMarketingPage() {
             </div>
           </div>
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#f28c28]">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-orange-400">
               Partenariat
             </p>
             <h2
               id="partnership-heading"
-              className="mt-3 text-balance text-3xl font-bold tracking-tight text-white sm:text-4xl"
+              className="mt-3 text-balance text-3xl font-semibold tracking-tight text-slate-100 sm:text-4xl"
             >
               La réussite se construit{" "}
-              <span style={{ color: BRAND_CYAN }}>mains dans la main</span>
+              <span className="text-blue-400">mains dans la main</span>
             </h2>
-            <p className="mt-5 text-pretty text-base leading-relaxed text-white/65">
+            <p className="mt-5 text-pretty text-base leading-relaxed text-slate-400">
               Comme sur vos chantiers, nous croyons à la proximité : écoute,
               engagement mutuel et objectifs partagés. Cette page est votre espace
               d&apos;accueil — clair, professionnel, tourné vers l&apos;action.
             </p>
             <ul className="mt-9 space-y-4">
               {PARTNERSHIP_POINTS.map((t) => (
-                <li key={t} className="flex gap-3 text-sm leading-snug text-white/[0.88]">
+                <li key={t} className="flex gap-3 text-sm leading-snug text-slate-300">
                   <CheckCircle2
-                    className="mt-0.5 size-5 shrink-0 text-[#f28c28]"
+                    className="mt-0.5 size-5 shrink-0 text-orange-400"
                     strokeWidth={1.75}
                     aria-hidden
                   />
@@ -345,31 +342,31 @@ export default function ClientsMarketingPage() {
       {/* Bot Telegram — QR */}
       <section
         id="telegram"
-        className="relative border-t border-white/[0.07] bg-[#041a24] py-16 sm:py-24"
+        className="relative border-t border-white/10 bg-slate-900/35 py-16 sm:py-24"
         aria-labelledby="telegram-heading"
       >
         <div
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_45%_at_50%_0%,rgba(242,140,40,0.08),transparent)]"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_70%_45%_at_50%_0%,rgba(249,115,22,0.1),transparent)]"
           aria-hidden
         />
         <div className="relative mx-auto max-w-6xl px-4 sm:px-6">
           <div className="mx-auto max-w-xl text-center">
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#f28c28]">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-orange-400">
               Assistant
             </p>
             <h2
               id="telegram-heading"
-              className="mt-3 text-balance text-2xl font-bold tracking-tight text-white sm:text-3xl"
+              className="mt-3 text-balance text-2xl font-semibold tracking-tight text-slate-100 sm:text-3xl"
             >
               Suivez votre chantier sur{" "}
-              <span className="text-[#7cc3e0]">Telegram</span>
+              <span className="text-blue-400">Telegram</span>
             </h2>
-            <p className="mt-4 text-pretty text-sm leading-relaxed text-white/65 sm:text-base">
+            <p className="mt-4 text-pretty text-sm leading-relaxed text-slate-400 sm:text-base">
               Scannez le code ci-dessous avec l&apos;appareil photo de votre téléphone pour ouvrir
               notre bot et échanger avec nous en direct.
             </p>
             <div className="mt-10 flex justify-center">
-              <div className="rounded-3xl bg-black p-6 shadow-[0_24px_60px_-16px_rgba(0,0,0,0.85)] ring-1 ring-white/[0.12] sm:p-8">
+              <div className="rounded-3xl border border-white/10 bg-card/80 p-6 shadow-lg shadow-black/25 backdrop-blur-xl sm:p-8">
                 <Image
                   src={telegramQrImg}
                   alt="Code QR pour ouvrir le bot Telegram SmartSite — texte SCAN ME sous le code"
@@ -385,29 +382,29 @@ export default function ClientsMarketingPage() {
       {/* Contact */}
       <section
         id="contact"
-        className="relative overflow-hidden border-t border-[#f28c28]/15 py-20 sm:py-28"
+        className="relative overflow-hidden border-t border-white/10 py-20 sm:py-28"
         aria-labelledby="contact-heading"
       >
         <div
-          className="absolute inset-0 bg-gradient-to-br from-[#0b4f6c] via-[#062636] to-[#02080c]"
+          className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900"
           aria-hidden
         />
         <div
-          className="pointer-events-none absolute -left-32 top-1/2 h-80 w-80 -translate-y-1/2 rounded-full bg-[#f28c28]/15 blur-[100px]"
+          className="pointer-events-none absolute -left-32 top-1/2 h-80 w-80 -translate-y-1/2 rounded-full bg-orange-500/15 blur-[100px]"
           aria-hidden
         />
         <div
-          className="pointer-events-none absolute -right-24 bottom-0 h-64 w-64 rounded-full bg-[#0b4f6c]/40 blur-[80px]"
+          className="pointer-events-none absolute -right-24 bottom-0 h-64 w-64 rounded-full bg-blue-500/15 blur-[80px]"
           aria-hidden
         />
         <div className="relative mx-auto max-w-2xl px-4 text-center sm:px-6">
           <h2
             id="contact-heading"
-            className="text-balance text-3xl font-bold tracking-tight text-white sm:text-4xl"
+            className="text-balance text-3xl font-semibold tracking-tight text-slate-100 sm:text-4xl"
           >
             Prêt à avancer sur votre prochain ouvrage ?
           </h2>
-          <p className="mx-auto mt-4 max-w-lg text-pretty text-base leading-relaxed text-white/70">
+          <p className="mx-auto mt-4 max-w-lg text-pretty text-base leading-relaxed text-slate-400">
             Une question, un besoin ou une visite de site : nos équipes vous répondent
             dans les meilleurs délais.
           </p>
@@ -415,9 +412,10 @@ export default function ClientsMarketingPage() {
             <a
               href="mailto:contact@smartsite.example"
               className={cn(
-                "inline-flex min-h-[3.25rem] min-w-[12.5rem] items-center justify-center gap-2 rounded-2xl bg-[#f28c28] px-8 py-3.5 text-base font-semibold text-white",
-                "shadow-[0_10px_28px_-6px_rgba(242,140,40,0.5)] transition duration-200 hover:brightness-110",
-                "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#f28c28]",
+                "inline-flex min-h-[3.25rem] min-w-[12.5rem] items-center justify-center gap-2 rounded-2xl bg-orange-500 px-8 py-3.5 text-base font-semibold text-white",
+                "shadow-sm transition-all duration-200 hover:bg-orange-600 hover:scale-[1.02]",
+                "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-300",
+                "motion-reduce:hover:scale-100",
               )}
             >
               Nous contacter
@@ -426,9 +424,9 @@ export default function ClientsMarketingPage() {
             <Link
               href="/home"
               className={cn(
-                "inline-flex min-h-[3.25rem] min-w-[12.5rem] items-center justify-center rounded-2xl border border-white/25 bg-white/[0.05] px-8 py-3.5 text-base font-semibold text-white backdrop-blur-sm",
-                "transition duration-200 hover:border-[#f28c28]/50 hover:text-[#f28c28]",
-                "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/35",
+                "inline-flex min-h-[3.25rem] min-w-[12.5rem] items-center justify-center rounded-2xl border border-white/10 bg-white/[0.06] px-8 py-3.5 text-base font-semibold text-slate-200 shadow-lg shadow-black/20 backdrop-blur-md",
+                "transition-all duration-200 hover:border-blue-500/30 hover:bg-blue-500/15 hover:text-blue-300",
+                "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-400/50",
               )}
             >
               Accès espace équipe
@@ -437,8 +435,8 @@ export default function ClientsMarketingPage() {
         </div>
       </section>
 
-      <footer className="border-t border-white/[0.06] bg-[#02080c] py-10 text-center">
-        <p className="text-xs font-medium text-white/40">
+      <footer className="border-t border-white/10 bg-slate-950 py-10 text-center">
+        <p className="text-xs font-medium text-slate-500">
           © {new Date().getFullYear()} SmartSite — Espace client
         </p>
       </footer>

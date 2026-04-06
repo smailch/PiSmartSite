@@ -61,26 +61,27 @@ import { cn } from '@/lib/utils';
 
 const DESCRIPTION_PREVIEW_LEN = 20;
 
-/** Shell: floating glass modal for AI dialogs */
+/** Shell: même langage que Dialog (glass sombre — sans dépendre de la classe .dark sur html) */
 const aiModalShell =
-  'gap-0 overflow-hidden rounded-3xl border-0 bg-card/95 p-0 shadow-[0_24px_64px_-12px_rgba(15,23,42,0.35)] backdrop-blur-2xl ring-1 ring-black/[0.06] dark:bg-zinc-950/92 dark:ring-white/[0.08] dark:shadow-[0_24px_64px_-12px_rgba(0,0,0,0.62)]';
+  'gap-0 overflow-hidden rounded-3xl border border-white/10 bg-card/95 p-0 text-card-foreground shadow-2xl shadow-black/50 backdrop-blur-xl';
 
 const aiModalHeaderIndigo =
-  'shrink-0 border-b border-white/10 bg-gradient-to-br from-indigo-500/[0.14] via-card/80 to-card px-5 pb-4 pt-6 sm:px-6 dark:from-indigo-500/[0.18] dark:via-card/90';
+  'shrink-0 border-b border-white/10 bg-gradient-to-br from-indigo-950/55 via-card/95 to-slate-950/90 px-5 pb-4 pt-6 sm:px-6';
 
 const aiModalHeaderEmerald =
-  'shrink-0 border-b border-white/10 bg-gradient-to-br from-emerald-500/[0.12] via-card/80 to-card px-5 pb-4 pt-6 sm:px-6 dark:from-emerald-500/[0.16] dark:via-card/90';
+  'shrink-0 border-b border-white/10 bg-gradient-to-br from-emerald-950/45 via-card/95 to-slate-950/90 px-5 pb-4 pt-6 sm:px-6';
 
 const aiModalHeaderTeal =
-  'shrink-0 border-b border-white/10 bg-gradient-to-br from-teal-500/[0.12] via-card/80 to-card px-5 pb-4 pt-6 sm:px-6 dark:from-teal-500/[0.16] dark:via-card/90';
+  'shrink-0 border-b border-white/10 bg-gradient-to-br from-slate-900 via-teal-950/35 to-card/95 px-5 pb-4 pt-6 sm:px-6';
 
 const aiModalHeaderAssistant =
-  'shrink-0 border-b border-border/40 bg-gradient-to-br from-violet-500/[0.14] via-teal-500/[0.06] to-card px-5 pb-5 pt-6 sm:px-7 dark:from-violet-500/[0.18] dark:via-teal-500/[0.08] dark:to-card/95';
+  'shrink-0 border-b border-white/10 bg-gradient-to-br from-slate-900 via-violet-950/40 to-slate-950/95 px-5 pb-5 pt-6 sm:px-7';
 
-const aiModalBody = 'min-h-0 flex-1 overflow-y-auto px-5 py-5 sm:px-6';
+const aiModalBody =
+  'min-h-0 flex-1 overflow-y-auto bg-slate-950/25 px-5 py-5 sm:px-6 [scrollbar-width:thin] [scrollbar-color:rgba(148,163,184,0.35)_transparent]';
 
 const aiModalFooter =
-  'shrink-0 gap-3 border-t border-border/50 bg-gradient-to-t from-muted/40 to-muted/15 px-5 py-4 backdrop-blur-md dark:from-muted/25 dark:to-muted/10 sm:flex-row sm:justify-end sm:px-6';
+  'shrink-0 gap-3 border-t border-white/10 bg-slate-950/55 px-5 py-4 backdrop-blur-md sm:flex-row sm:justify-end sm:px-6';
 
 /** Truncates text to `maxLen` characters, then appends "…" if longer. */
 function truncateDescription(text: string | undefined | null, maxLen: number = DESCRIPTION_PREVIEW_LEN): string {
@@ -130,11 +131,11 @@ function budgetDelayModeLabel(mode: ProjectAiInsightsResponse['analysis']['budge
 function riskImpactClass(impact: 'low' | 'medium' | 'high'): string {
   switch (impact) {
     case 'high':
-      return 'bg-red-100 text-red-900 dark:bg-red-950/50 dark:text-red-200';
+      return 'bg-red-500/15 text-red-200 ring-1 ring-red-500/25';
     case 'medium':
-      return 'bg-amber-100 text-amber-900 dark:bg-amber-950/40 dark:text-amber-100';
+      return 'bg-amber-500/15 text-amber-100 ring-1 ring-amber-500/25';
     default:
-      return 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200';
+      return 'bg-slate-500/15 text-slate-200 ring-1 ring-slate-500/25';
   }
 }
 
@@ -703,7 +704,7 @@ export default function ProjectsPage() {
             title="Generate tasks (Gemini AI)"
             aria-label={`Generate tasks with AI for ${row.name}`}
             onClick={() => openAiForProject(row)}
-            className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg bg-indigo-800 text-white shadow-sm transition-[filter] hover:brightness-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-45"
+            className="inline-flex size-9 shrink-0 items-center justify-center rounded-xl bg-orange-500 text-white shadow-sm transition-all duration-200 hover:bg-orange-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-45"
             disabled={!isValidObjectId(row._id)}
           >
             <Sparkles size={18} className="shrink-0" aria-hidden />
@@ -846,24 +847,24 @@ export default function ProjectsPage() {
           </DialogTrigger>
           <DialogContent
             showCloseButton
-            className="max-h-[min(92vh,920px)] w-full max-w-[calc(100%-1.25rem)] gap-0 overflow-hidden rounded-2xl border border-border/70 bg-card p-0 shadow-2xl shadow-black/12 ring-1 ring-black/5 sm:max-w-3xl dark:ring-white/10 dark:shadow-black/40"
+            className="max-h-[min(92vh,920px)] w-full max-w-[calc(100%-1.25rem)] gap-0 overflow-hidden rounded-2xl border border-white/10 bg-card/95 p-0 text-card-foreground shadow-2xl shadow-black/50 backdrop-blur-xl sm:max-w-3xl"
           >
             <div
               className="h-1 w-full shrink-0 bg-gradient-to-r from-primary via-[#0d6285] to-accent"
               aria-hidden
             />
             <div className="flex max-h-[min(92vh,920px)] min-h-0 flex-col">
-              <DialogHeader className="space-y-2 px-5 pb-2 pt-5 text-left sm:px-6 sm:pr-12">
-                <DialogTitle className="text-xl font-semibold tracking-tight text-foreground">
+              <DialogHeader className="space-y-2 border-b border-white/10 bg-gradient-to-br from-slate-800/80 via-card/95 to-slate-950/80 px-5 pb-4 pt-5 text-left sm:px-6 sm:pr-12">
+                <DialogTitle className="text-xl font-semibold tracking-tight text-slate-50">
                   {editProject ? 'Edit project' : 'Create project'}
                 </DialogTitle>
-                <DialogDescription className="text-sm leading-relaxed text-muted-foreground">
+                <DialogDescription className="text-sm leading-relaxed text-slate-400">
                   {editProject
                     ? 'Update the fields and save. Type and status match the server values.'
                     : 'Name and start date are required. Budget and location are optional.'}
                 </DialogDescription>
               </DialogHeader>
-              <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-muted/25 px-5 py-4 sm:px-6">
+              <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-slate-950/35 px-5 py-4 sm:px-6 [scrollbar-width:thin] [scrollbar-color:rgba(148,163,184,0.35)_transparent]">
                 <ProjectForm
                   key={editProject?._id ?? 'new-project'}
                   mode={editProject ? 'edit' : 'create'}
@@ -873,13 +874,13 @@ export default function ProjectsPage() {
                   onSubmit={editProject ? handleUpdateProject : handleCreateProject}
                 />
               </div>
-              <DialogFooter className="gap-3 border-t border-border/80 bg-muted/40 px-5 py-4 backdrop-blur-sm sm:justify-end sm:px-6">
+              <DialogFooter className="gap-3 border-t border-white/10 bg-slate-950/55 px-5 py-4 backdrop-blur-md sm:justify-end sm:px-6">
                 <DialogClose asChild>
                   <button
                     type="button"
                     disabled={saving}
                     aria-label="Cancel and close project form"
-                    className="inline-flex w-full items-center justify-center rounded-xl border border-border bg-background px-5 py-2.5 text-sm font-medium text-foreground shadow-sm transition-[color,box-shadow,background] hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring/40 disabled:pointer-events-none disabled:opacity-50 sm:w-auto"
+                    className="inline-flex w-full items-center justify-center rounded-xl border border-white/15 bg-white/[0.06] px-5 py-2.5 text-sm font-medium text-slate-100 shadow-sm transition-[color,box-shadow,background] hover:bg-white/[0.1] focus-visible:ring-2 focus-visible:ring-ring/40 disabled:pointer-events-none disabled:opacity-50 sm:w-auto"
                   >
                     Cancel
                   </button>
@@ -949,22 +950,22 @@ export default function ProjectsPage() {
         >
           <div className="flex min-h-0 min-w-0 flex-1 flex-col">
             <DialogHeader className={cn(aiModalHeaderIndigo, 'text-left')}>
-              <DialogTitle className="flex items-center gap-3 text-xl font-semibold tracking-tight text-foreground">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-indigo-500/20 shadow-inner ring-1 ring-indigo-500/25">
-                  <Sparkles className="h-5 w-5 text-indigo-600 dark:text-indigo-400" aria-hidden />
+              <DialogTitle className="flex items-center gap-3 text-xl font-semibold tracking-tight text-slate-50">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-indigo-500/25 shadow-inner ring-1 ring-indigo-400/30">
+                  <Sparkles className="h-5 w-5 text-indigo-300" aria-hidden />
                 </span>
                 AI-suggested tasks
               </DialogTitle>
-              <DialogDescription className="text-left text-sm leading-relaxed">
+              <DialogDescription className="text-left text-sm leading-relaxed text-slate-400">
                 {aiProject ? (
                   <>
-                    <span className="font-medium text-foreground">{aiProject.name}</span>
+                    <span className="font-medium text-slate-200">{aiProject.name}</span>
                     {aiLoading ? (
-                      <span className="text-muted-foreground"> — generating with Gemini…</span>
+                      <span className="text-slate-500"> — generating with Gemini…</span>
                     ) : null}
                   </>
                 ) : (
-                  <span className="text-muted-foreground">Select a project to generate tasks.</span>
+                  <span className="text-slate-500">Select a project to generate tasks.</span>
                 )}
               </DialogDescription>
             </DialogHeader>
@@ -998,7 +999,7 @@ export default function ProjectsPage() {
                   {aiTasks.map((t, i) => (
                     <li
                       key={i}
-                      className="flex gap-3 rounded-2xl border border-border/70 bg-muted/25 p-3.5 text-left shadow-sm transition-colors hover:bg-muted/35 dark:bg-muted/15 dark:hover:bg-muted/25"
+                      className="flex gap-3 rounded-2xl border border-white/10 bg-white/[0.04] p-3.5 text-left shadow-sm transition-colors hover:bg-white/[0.07]"
                     >
                       <input
                         type="checkbox"
@@ -1022,7 +1023,7 @@ export default function ProjectsPage() {
                         </p>
                         {Array.isArray(t.dependsOnIndices) && t.dependsOnIndices.length > 0 ? (
                           <p className="mt-2 text-xs leading-snug">
-                            <span className="font-semibold text-amber-900 dark:text-amber-100">
+                            <span className="font-semibold text-amber-200">
                               Depends on {t.dependsOnIndices.length} task
                               {t.dependsOnIndices.length === 1 ? '' : 's'}
                             </span>
@@ -1060,7 +1061,7 @@ export default function ProjectsPage() {
                 <button
                   type="button"
                   aria-label="Close suggested tasks dialog"
-                  className="w-full rounded-xl border border-border/80 bg-background px-4 py-2.5 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:w-auto"
+                  className="w-full rounded-xl border border-white/15 bg-white/[0.06] px-4 py-2.5 text-sm font-medium text-slate-100 shadow-sm transition-colors hover:bg-white/[0.1] focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:w-auto"
                   disabled={aiCreating}
                 >
                   Close
@@ -1071,7 +1072,7 @@ export default function ProjectsPage() {
                 onClick={handleCreateAiTasks}
                 disabled={aiCreating || aiTasks.length === 0 || aiLoading}
                 aria-busy={aiCreating}
-                className="w-full rounded-xl bg-indigo-800 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-800/25 transition-[filter,transform] hover:brightness-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 sm:w-auto"
+                className="w-full rounded-xl bg-orange-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:bg-orange-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 sm:w-auto"
               >
                 {aiCreating ? 'Creating…' : 'Create selected tasks'}
               </button>
@@ -1100,31 +1101,31 @@ export default function ProjectsPage() {
         >
           <div className="flex min-h-0 min-w-0 flex-1 flex-col">
             <DialogHeader className={cn(aiModalHeaderEmerald, 'text-left')}>
-              <DialogTitle className="flex flex-wrap items-center gap-3 text-xl font-semibold tracking-tight text-foreground">
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-emerald-500/20 shadow-inner ring-1 ring-emerald-500/25">
-                  <Brain className="h-5 w-5 text-emerald-700 dark:text-emerald-400" aria-hidden />
+              <DialogTitle className="flex flex-wrap items-center gap-3 text-xl font-semibold tracking-tight text-slate-50">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-emerald-500/25 shadow-inner ring-1 ring-emerald-400/30">
+                  <Brain className="h-5 w-5 text-emerald-300" aria-hidden />
                 </span>
                 <span className="min-w-0">AI project analysis</span>
               </DialogTitle>
-              <DialogDescription className="text-left text-sm leading-relaxed">
+              <DialogDescription className="text-left text-sm leading-relaxed text-slate-400">
                 {insightsProject ? (
                   <>
-                    <span className="font-semibold text-foreground">{insightsProject.name}</span>
+                    <span className="font-semibold text-slate-200">{insightsProject.name}</span>
                     {insightsLoading ? (
-                      <span className="text-muted-foreground"> — generating insights…</span>
+                      <span className="text-slate-500"> — generating insights…</span>
                     ) : (
-                      <span className="block text-muted-foreground mt-0.5">
+                      <span className="mt-0.5 block text-slate-500">
                         Budget, delays, risks and actions — computed on the server.
                       </span>
                     )}
                   </>
                 ) : (
-                  <span className="text-muted-foreground">Server-side budget and schedule analysis.</span>
+                  <span className="text-slate-500">Server-side budget and schedule analysis.</span>
                 )}
               </DialogDescription>
             </DialogHeader>
 
-            <div className={cn(aiModalBody, '[scrollbar-width:thin]')}>
+            <div className={aiModalBody}>
               {insightsLoading && (
                 <div
                   role="status"
@@ -1161,13 +1162,13 @@ export default function ProjectsPage() {
 
               {!insightsLoading && insightsData && (
                 <div className="space-y-6 text-sm">
-                  <div className="flex flex-col gap-3 rounded-2xl border border-border/60 bg-muted/20 p-4 dark:bg-muted/10 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+                  <div className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-white/[0.04] p-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
                     <div className="flex flex-wrap items-center gap-2">
                       <span
                         className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${
                           insightsData.source === 'groq'
-                            ? 'bg-emerald-500/15 text-emerald-900 ring-1 ring-emerald-500/25 dark:bg-emerald-500/10 dark:text-emerald-100 dark:ring-emerald-400/30'
-                            : 'bg-muted px-3 py-1 text-foreground ring-1 ring-border/60'
+                            ? 'bg-emerald-500/15 text-emerald-100 ring-1 ring-emerald-400/35'
+                            : 'bg-white/[0.06] px-3 py-1 text-slate-200 ring-1 ring-white/15'
                         }`}
                       >
                         <Sparkles className="h-3.5 w-3.5 opacity-90" aria-hidden />
@@ -1184,57 +1185,57 @@ export default function ProjectsPage() {
                     <InsightsConfidenceBar value={insightsData.analysis.confidence} />
                   </div>
 
-                  <section className="overflow-hidden rounded-2xl border border-border/70 bg-card shadow-sm ring-1 ring-black/[0.03] dark:ring-white/[0.06]">
-                    <div className="border-b border-border/60 bg-gradient-to-r from-teal-500/10 via-transparent to-emerald-500/10 px-4 py-3 dark:from-teal-500/15 dark:to-emerald-500/10">
-                      <h3 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-foreground/90">
+                  <section className="overflow-hidden rounded-2xl border border-white/10 bg-card/80 shadow-lg backdrop-blur-sm">
+                    <div className="border-b border-white/10 bg-gradient-to-r from-teal-500/15 via-transparent to-emerald-500/10 px-4 py-3">
+                      <h3 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-200">
                         <TrendingUp className="h-4 w-4 text-teal-600 dark:text-teal-400" aria-hidden />
                         Budget &amp; schedule
-                        <span className="font-normal normal-case text-muted-foreground">· server KPIs</span>
+                        <span className="font-normal normal-case text-slate-500">· server KPIs</span>
                       </h3>
                     </div>
                     <div className="p-4 sm:p-5">
                       <dl className="grid gap-3 sm:grid-cols-3">
-                        <div className="rounded-xl border border-border/50 bg-muted/25 px-3 py-3 dark:bg-muted/15">
-                          <dt className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                        <div className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-3">
+                          <dt className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
                             Budget variance
                           </dt>
-                          <dd className="mt-1.5 text-xl font-bold tabular-nums tracking-tight text-foreground">
+                          <dd className="mt-1.5 text-xl font-bold tabular-nums tracking-tight text-slate-50">
                             {formatBudgetDeltaPercent(
                               insightsData.analysis.budgetDelayTradeoff.estimatedBudgetDeltaPercent,
                             )}
                           </dd>
                         </div>
-                        <div className="rounded-xl border border-border/50 bg-muted/25 px-3 py-3 dark:bg-muted/15">
-                          <dt className="flex items-center gap-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                        <div className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-3">
+                          <dt className="flex items-center gap-1 text-[11px] font-medium uppercase tracking-wide text-slate-500">
                             <Clock className="h-3 w-3" aria-hidden />
                             Delay
                           </dt>
-                          <dd className="mt-1.5 text-xl font-bold tabular-nums tracking-tight text-foreground">
+                          <dd className="mt-1.5 text-xl font-bold tabular-nums tracking-tight text-slate-50">
                             {insightsData.analysis.budgetDelayTradeoff.estimatedDelayDays}
-                            <span className="text-sm font-semibold text-muted-foreground"> d</span>
+                            <span className="text-sm font-semibold text-slate-500"> d</span>
                           </dd>
                         </div>
-                        <div className="rounded-xl border border-border/50 bg-muted/25 px-3 py-3 dark:bg-muted/15 sm:col-span-1">
-                          <dt className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                        <div className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-3 sm:col-span-1">
+                          <dt className="text-[11px] font-medium uppercase tracking-wide text-slate-500">
                             Recommended mode
                           </dt>
-                          <dd className="mt-1.5 text-base font-semibold leading-snug text-foreground">
+                          <dd className="mt-1.5 text-base font-semibold leading-snug text-slate-50">
                             {budgetDelayModeLabel(insightsData.analysis.budgetDelayTradeoff.recommendedMode)}
                           </dd>
                         </div>
                       </dl>
-                      <div className="mt-4 rounded-xl border border-dashed border-border/70 bg-background/60 px-3 py-3 text-sm leading-relaxed text-muted-foreground dark:bg-background/40">
+                      <div className="mt-4 rounded-xl border border-dashed border-white/15 bg-slate-950/40 px-3 py-3 text-sm leading-relaxed text-slate-300">
                         {insightsData.analysis.budgetDelayTradeoff.rationale}
                       </div>
                     </div>
                   </section>
 
-                  <section className="rounded-2xl border border-emerald-500/20 bg-gradient-to-br from-emerald-500/[0.06] via-card to-transparent p-5 dark:from-emerald-500/[0.09] dark:via-card/95">
-                    <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
+                  <section className="rounded-2xl border border-emerald-500/25 bg-gradient-to-br from-emerald-500/[0.12] via-card/90 to-transparent p-5">
+                    <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-100">
                       <FileText className="h-4 w-4 text-emerald-600 dark:text-emerald-400" aria-hidden />
                       Summary
                     </h3>
-                    <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-foreground/90">
+                    <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-slate-200">
                       {insightsData.analysis.summary}
                     </p>
                   </section>
@@ -1252,7 +1253,7 @@ export default function ProjectsPage() {
                         <li
                           key={i}
                           className={cn(
-                            'rounded-xl border border-border/60 border-l-4 bg-card/90 py-3 pl-4 pr-3 shadow-sm dark:bg-card/60',
+                            'rounded-xl border border-white/10 border-l-4 bg-white/[0.04] py-3 pl-4 pr-3 shadow-sm',
                             riskImpactBorderClass(r.impact),
                           )}
                         >
@@ -1307,7 +1308,7 @@ export default function ProjectsPage() {
                       {insightsData.analysis.nextActions.map((a, i) => (
                         <li
                           key={i}
-                          className="flex gap-3 rounded-xl border border-border/50 bg-muted/20 px-3 py-2.5 dark:bg-muted/10"
+                          className="flex gap-3 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5"
                         >
                           <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-xs font-bold text-primary">
                             {i + 1}
@@ -1318,12 +1319,12 @@ export default function ProjectsPage() {
                     </ol>
                   </section>
 
-                  <section className="rounded-2xl border border-border/70 bg-muted/15 p-4 shadow-sm dark:bg-muted/10 sm:p-5">
-                    <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-foreground">
+                  <section className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 shadow-sm sm:p-5">
+                    <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-100">
                       <Clock className="h-4 w-4 text-orange-600 dark:text-orange-400" aria-hidden />
                       Delay analysis
                     </h3>
-                    <p className="mb-4 whitespace-pre-wrap text-[15px] leading-relaxed text-foreground/90">
+                    <p className="mb-4 whitespace-pre-wrap text-[15px] leading-relaxed text-slate-200">
                       {insightsData.analysis.delayAnalysis.summary}
                     </p>
                     <ul className="space-y-2">
@@ -1347,10 +1348,10 @@ export default function ProjectsPage() {
                       {insightsData.analysis.planningSuggestions.map((s, i) => (
                         <li
                           key={i}
-                          className="flex gap-2 rounded-lg border border-border/40 bg-background/50 px-3 py-2 text-muted-foreground dark:bg-card/40"
+                          className="flex gap-2 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-2 text-slate-400"
                         >
                           <span
-                            className="mt-0.5 h-5 w-5 shrink-0 rounded-md bg-amber-500/15 text-center text-[10px] font-bold leading-5 text-amber-800 dark:text-amber-200"
+                            className="mt-0.5 h-5 w-5 shrink-0 rounded-md bg-amber-500/20 text-center text-[10px] font-bold leading-5 text-amber-200"
                             aria-hidden
                           >
                             {i + 1}
@@ -1370,7 +1371,7 @@ export default function ProjectsPage() {
                       {insightsData.analysis.repetitiveWorkAndAutomation.map((s, i) => (
                         <li
                           key={i}
-                          className="relative rounded-xl border border-violet-500/15 bg-violet-500/[0.04] py-2.5 pl-9 pr-3 text-muted-foreground dark:bg-violet-500/[0.07]"
+                          className="relative rounded-xl border border-violet-500/20 bg-violet-500/[0.08] py-2.5 pl-9 pr-3 text-slate-400"
                         >
                           <span className="absolute left-3 top-3 h-1.5 w-1.5 rounded-full bg-violet-500" aria-hidden />
                           <span className="leading-relaxed">{s}</span>
@@ -1387,7 +1388,7 @@ export default function ProjectsPage() {
                 <button
                   type="button"
                   aria-label="Close project analysis dialog"
-                  className="inline-flex w-full items-center justify-center rounded-xl border border-border/80 bg-background px-4 py-2.5 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:w-auto"
+                  className="inline-flex w-full items-center justify-center rounded-xl border border-white/15 bg-white/[0.06] px-4 py-2.5 text-sm font-medium text-slate-100 shadow-sm transition-colors hover:bg-white/[0.1] focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:w-auto"
                 >
                   Close
                 </button>
@@ -1424,27 +1425,27 @@ export default function ProjectsPage() {
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div className="flex min-w-0 flex-1 items-start gap-4">
                   <div
-                    className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500/30 to-teal-500/20 shadow-md ring-1 ring-white/25 dark:ring-white/10"
+                    className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500/35 to-teal-500/25 shadow-md ring-1 ring-white/15"
                     aria-hidden
                   >
-                    <MessageCircle className="h-6 w-6 text-violet-800 dark:text-violet-200" />
+                    <MessageCircle className="h-6 w-6 text-violet-200" />
                   </div>
                   <div className="min-w-0 flex-1 space-y-1.5">
-                    <DialogTitle className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
+                    <DialogTitle className="text-xl font-semibold tracking-tight text-slate-50 sm:text-2xl">
                       Project assistant
                     </DialogTitle>
                     {assistantProject ? (
-                      <p className="truncate text-sm font-medium text-foreground/90">
+                      <p className="truncate text-sm font-medium text-slate-300">
                         {assistantProject.name}
                       </p>
                     ) : null}
-                    <DialogDescription className="!mt-2 max-w-2xl text-sm leading-relaxed text-muted-foreground">
+                    <DialogDescription className="!mt-2 max-w-2xl text-sm leading-relaxed text-slate-400">
                       A generated report on the project and tasks, then optional chat with the AI (Groq).
                     </DialogDescription>
                   </div>
                 </div>
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-border/70 bg-background/90 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground shadow-sm backdrop-blur-sm">
-                  <Sparkles className="size-3.5 shrink-0 text-amber-500" aria-hidden />
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/[0.06] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-slate-300 shadow-sm backdrop-blur-sm">
+                  <Sparkles className="size-3.5 shrink-0 text-amber-400" aria-hidden />
                   Groq
                 </span>
               </div>
@@ -1452,8 +1453,8 @@ export default function ProjectsPage() {
 
             <div
               className={cn(
-                'min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-4 sm:px-7 sm:py-5',
-                '[scrollbar-width:thin]',
+                'min-h-0 flex-1 overflow-y-auto overscroll-contain bg-slate-950/25 px-5 py-4 sm:px-7 sm:py-5',
+                '[scrollbar-width:thin] [scrollbar-color:rgba(148,163,184,0.35)_transparent]',
               )}
             >
               <section className="space-y-2.5 pb-4">
@@ -1464,7 +1465,7 @@ export default function ProjectsPage() {
                 <div
                   role="region"
                   aria-label="Generated project and task report"
-                  className="relative max-h-[min(36vh,360px)] overflow-y-auto rounded-2xl border border-border/50 bg-gradient-to-b from-muted/35 via-muted/15 to-transparent p-4 text-sm shadow-inner ring-1 ring-inset ring-black/[0.04] dark:from-muted/20 dark:via-muted/10 dark:ring-white/[0.06] [scrollbar-width:thin]"
+                  className="relative max-h-[min(36vh,360px)] overflow-y-auto rounded-2xl border border-white/10 bg-gradient-to-b from-slate-900/60 via-slate-950/40 to-transparent p-4 text-sm shadow-inner ring-1 ring-inset ring-white/[0.06] [scrollbar-width:thin] [scrollbar-color:rgba(148,163,184,0.35)_transparent]"
                 >
                   {assistantReportLoading ? (
                     <div className="space-y-4" role="status" aria-live="polite" aria-busy="true">
@@ -1505,7 +1506,7 @@ export default function ProjectsPage() {
                   role="log"
                   aria-label="Assistant conversation"
                   aria-live="polite"
-                  className="max-h-[min(36vh,320px)] min-h-[100px] space-y-4 overflow-y-auto rounded-2xl border border-border/50 bg-muted/10 p-3.5 dark:bg-muted/[0.08] [scrollbar-width:thin] sm:p-4"
+                  className="max-h-[min(36vh,320px)] min-h-[100px] space-y-4 overflow-y-auto rounded-2xl border border-white/10 bg-white/[0.04] p-3.5 [scrollbar-width:thin] [scrollbar-color:rgba(148,163,184,0.35)_transparent] sm:p-4"
                 >
                   {assistantMessages.length === 0 && !assistantLoading ? (
                     <div className="flex flex-col items-center justify-center gap-2 py-8 text-center">
@@ -1530,7 +1531,7 @@ export default function ProjectsPage() {
                           'flex h-9 w-9 shrink-0 items-center justify-center rounded-full shadow-sm ring-2 ring-background',
                           m.role === 'user'
                             ? 'bg-primary text-primary-foreground'
-                            : 'bg-gradient-to-br from-violet-500/20 to-teal-500/15 text-violet-800 dark:text-violet-200',
+                            : 'bg-gradient-to-br from-violet-500/25 to-teal-500/15 text-violet-200',
                         )}
                         aria-hidden
                       >
@@ -1545,7 +1546,7 @@ export default function ProjectsPage() {
                           'max-w-[min(100%,28rem)] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed shadow-sm sm:px-4 sm:py-3',
                           m.role === 'user'
                             ? 'rounded-br-md bg-primary text-primary-foreground'
-                            : 'rounded-bl-md border border-border/60 bg-card/95 text-foreground backdrop-blur-sm dark:bg-card/80',
+                            : 'rounded-bl-md border border-white/10 bg-card/90 text-slate-100 backdrop-blur-sm',
                         )}
                       >
                         <p className="whitespace-pre-wrap [text-wrap:pretty]">{m.content}</p>
@@ -1555,12 +1556,12 @@ export default function ProjectsPage() {
                   {assistantLoading ? (
                     <div className="flex gap-3" role="status" aria-live="polite">
                       <div
-                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-500/20 to-teal-500/15 text-violet-800 dark:text-violet-200"
+                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-500/25 to-teal-500/15 text-violet-200"
                         aria-hidden
                       >
                         <Bot className="size-4" strokeWidth={2.25} />
                       </div>
-                      <div className="flex items-center gap-1.5 rounded-2xl rounded-bl-md border border-border/50 bg-card/90 px-4 py-3 dark:bg-card/70">
+                      <div className="flex items-center gap-1.5 rounded-2xl rounded-bl-md border border-white/10 bg-card/85 px-4 py-3">
                         <span className="size-1.5 animate-bounce rounded-full bg-muted-foreground/70 [animation-duration:520ms]" />
                         <span
                           className="size-1.5 animate-bounce rounded-full bg-muted-foreground/70 [animation-duration:520ms]"
@@ -1582,8 +1583,8 @@ export default function ProjectsPage() {
               </section>
             </div>
 
-            <div className="shrink-0 border-t border-border/60 bg-muted/30 px-5 py-3 backdrop-blur-md dark:bg-muted/20 sm:px-7 sm:py-4">
-              <div className="rounded-2xl border border-border bg-background p-2 shadow-sm dark:bg-card">
+            <div className="shrink-0 border-t border-white/10 bg-slate-950/45 px-5 py-3 backdrop-blur-md sm:px-7 sm:py-4">
+              <div className="rounded-2xl border border-white/10 bg-card/80 p-2 shadow-lg backdrop-blur-sm">
                 <div className="flex items-end gap-2">
                   <textarea
                     id="project-assistant-followup"
@@ -1640,7 +1641,7 @@ export default function ProjectsPage() {
                 <button
                   type="button"
                   aria-label="Close project assistant"
-                  className="order-1 inline-flex w-full items-center justify-center rounded-xl border border-border/80 bg-background px-4 py-2.5 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:order-2 sm:w-auto"
+                  className="order-1 inline-flex w-full items-center justify-center rounded-xl border border-white/15 bg-white/[0.06] px-4 py-2.5 text-sm font-medium text-slate-100 shadow-sm transition-colors hover:bg-white/[0.1] focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:order-2 sm:w-auto"
                 >
                   Close
                 </button>

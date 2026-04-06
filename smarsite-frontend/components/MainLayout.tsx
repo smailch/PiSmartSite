@@ -7,7 +7,7 @@ import Topbar from './Topbar';
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex h-screen bg-background overflow-hidden">
+    <div className="flex h-screen min-h-0 overflow-hidden bg-transparent">
       {/* Sidebar */}
       <Sidebar />
 
@@ -18,7 +18,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
 
         {/* Page Content — scroll page (pas de zone de scroll interne imposée par le layout) */}
         <main className="min-h-0 min-w-0 flex-1 overflow-auto">
-          <div className="min-w-0 p-4 md:p-8">{children}</div>
+          <div className="min-w-0 p-6 md:p-10 lg:p-12">{children}</div>
         </main>
       </div>
     </div>

@@ -68,10 +68,10 @@ export default function HumanDetailsPage({
 
       {isLoading ? (
         <div className="flex justify-center items-center min-h-[70vh]">
-          <div className="h-14 w-14 animate-spin rounded-full border-4 border-[#0b4f6c] border-t-transparent" />
+          <div className="h-14 w-14 animate-spin rounded-full border-4 border-blue-100 border-t-blue-500" />
         </div>
       ) : error || !human ? (
-        <div className="bg-white rounded-3xl border border-red-200 shadow-lg p-20 text-center max-w-4xl mx-auto">
+        <div className="mx-auto max-w-4xl rounded-3xl border border-red-100 bg-red-50/50 p-20 text-center shadow-sm">
           <p className="text-2xl text-red-600 font-semibold">Employee not found</p>
         </div>
       ) : (
@@ -79,7 +79,7 @@ export default function HumanDetailsPage({
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
             <button
               onClick={() => router.back()}
-              className="inline-flex items-center gap-3 text-gray-700 hover:text-[#0b4f6c] text-lg font-medium transition"
+              className="inline-flex items-center gap-3 text-lg font-medium text-gray-700 transition-colors hover:text-blue-600"
             >
               <ArrowLeft size={24} />
               Back to list
@@ -87,20 +87,20 @@ export default function HumanDetailsPage({
 
             <Link
               href={`/humans/${human._id}/edit`}
-              className="inline-flex items-center gap-3 px-8 py-4 bg-[#0b4f6c] text-white text-lg font-medium rounded-2xl shadow-lg hover:bg-[#0b4f6c]/90 hover:shadow-xl transition-all duration-300"
+              className="inline-flex items-center gap-3 rounded-2xl bg-orange-500 px-8 py-4 text-lg font-medium text-white shadow-sm transition-all duration-300 hover:bg-orange-600"
             >
               <Pencil size={20} />
               Edit Profile
             </Link>
           </div>
 
-          <div className="bg-white border border-gray-200 rounded-3xl shadow-2xl overflow-hidden">
-            <div className="h-40 bg-gradient-to-r from-[#0b4f6c] via-[#0b4f6c]/90 to-[#f28c28]/40" />
+          <div className="overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-sm">
+            <div className="h-40 bg-gradient-to-r from-blue-100 via-blue-50 to-orange-50" />
 
             <div className="px-8 sm:px-12 lg:px-16 pb-12 lg:pb-16 -mt-20 relative">
               <div className="flex flex-col lg:flex-row lg:items-end gap-8 lg:gap-12">
                 <div className="relative group flex-shrink-0">
-                  <div className="h-40 w-40 lg:h-48 lg:w-48 rounded-3xl bg-[#0b4f6c] text-white flex items-center justify-center text-6xl lg:text-7xl font-bold shadow-2xl border-8 border-white ring-2 ring-gray-200/60 transition-all duration-300 group-hover:scale-105 group-hover:ring-[#f28c28]/40">
+                  <div className="flex h-40 w-40 items-center justify-center rounded-3xl border-8 border-white bg-blue-600 text-6xl font-bold text-white shadow-sm ring-2 ring-gray-100 transition-all duration-300 group-hover:scale-[1.02] group-hover:ring-orange-200 lg:h-48 lg:w-48 lg:text-7xl">
                     {human.imageUrl ? (
                       <img
                         src={`http://localhost:3200${human.imageUrl}`}
@@ -111,11 +111,11 @@ export default function HumanDetailsPage({
                       getInitials(human.firstName, human.lastName)
                     )}
                   </div>
-                  <div className="absolute -bottom-3 -right-3 h-8 w-8 bg-[#f28c28] rounded-full border-4 border-white shadow-lg" />
+                  <div className="absolute -bottom-3 -right-3 h-8 w-8 rounded-full border-4 border-white bg-orange-400 shadow-sm" />
                 </div>
 
                 <div className="flex-1">
-                  <h1 className="text-4xl lg:text-6xl font-extrabold text-[#0b4f6c] tracking-tight leading-tight">
+                  <h1 className="text-4xl font-semibold leading-tight tracking-tight text-gray-800 lg:text-6xl">
                     {human.firstName} {human.lastName}
                   </h1>
                   <p className="text-2xl lg:text-3xl text-gray-700 mt-3 font-semibold">
@@ -125,12 +125,12 @@ export default function HumanDetailsPage({
 
                 <div className="lg:self-end">
                   {human.availability ? (
-                    <div className="inline-flex items-center gap-3 px-8 py-4 bg-green-50 text-green-800 rounded-2xl text-xl font-semibold shadow-md border border-green-200">
+                    <div className="inline-flex items-center gap-3 rounded-2xl border border-green-100 bg-green-50 px-8 py-4 text-xl font-semibold text-green-800 shadow-sm">
                       <CheckCircle2 size={28} className="text-green-600" />
                       Available
                     </div>
                   ) : (
-                    <div className="inline-flex items-center gap-3 px-8 py-4 bg-red-50 text-red-800 rounded-2xl text-xl font-semibold shadow-md border border-red-200">
+                    <div className="inline-flex items-center gap-3 rounded-2xl border border-red-100 bg-red-50 px-8 py-4 text-xl font-semibold text-red-800 shadow-sm">
                       <XCircle size={28} className="text-red-600" />
                       Not Available
                     </div>
@@ -158,16 +158,16 @@ export default function HumanDetailsPage({
                 large
               />
               {human.cvUrl && (
-                <div className="mt-6 p-6 bg-gray-50 border border-gray-200 rounded-2xl hover:border-[#f28c28]/60 transition-all duration-200">
+                <div className="mt-6 rounded-2xl border border-gray-100 bg-slate-50 p-6 transition-all duration-200 hover:border-orange-200">
                   <div className="flex items-start gap-5">
-                    <FileText size={28} className="text-[#f28c28] mt-1 flex-shrink-0" />
+                    <FileText size={28} className="mt-1 flex-shrink-0 text-orange-500" />
                     <div>
                       <p className="text-base text-gray-600 mb-2 font-medium">Curriculum Vitae</p>
                       <a
                         href={`http://localhost:3200${human.cvUrl}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-3 text-[#0b4f6c] text-lg font-semibold hover:text-[#f28c28] transition"
+                        className="inline-flex items-center gap-3 text-lg font-semibold text-blue-600 transition-colors hover:text-orange-500"
                       >
                         View CV
                         <ExternalLink size={20} />
@@ -193,8 +193,8 @@ export default function HumanDetailsPage({
 /* InfoSection inchangé */
 function InfoSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="bg-white border border-gray-200 rounded-3xl shadow-xl p-8 lg:p-10">
-      <h2 className="text-xl lg:text-2xl font-bold text-[#0b4f6c] uppercase tracking-wide mb-6 lg:mb-8 border-b border-gray-100 pb-4">
+    <div className="rounded-2xl border border-gray-100 bg-white p-8 shadow-sm lg:p-10">
+      <h2 className="mb-6 border-b border-gray-100 pb-4 text-xl font-semibold tracking-tight text-gray-800 lg:mb-8 lg:text-2xl">
         {title}
       </h2>
       <div className="space-y-5 lg:space-y-6">{children}</div>
@@ -215,7 +215,7 @@ function InfoRow({
 }: any) {
   return (
     <div className="flex items-center gap-5 py-3 px-5 rounded-2xl hover:bg-gray-50/80 transition">
-      <div className={`text-[#f28c28] ${small ? "mt-0.5" : ""}`}>{icon}</div>
+      <div className={`text-orange-500 ${small ? "mt-0.5" : ""}`}>{icon}</div>
       <div className="flex-1 min-w-0">
         <p className={`text-gray-500 ${small ? "text-sm" : large ? "text-lg" : "text-base"}`}>
           {label}
@@ -223,7 +223,7 @@ function InfoRow({
         <p
           className={`font-semibold truncate leading-tight ${
             highlight
-              ? "text-[#0b4f6c] text-2xl lg:text-3xl"
+              ? "text-2xl text-blue-600 lg:text-3xl"
               : large
               ? "text-xl lg:text-2xl"
               : small

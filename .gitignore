@@ -77,8 +77,8 @@ smartsite-backend/uploads/
 .tmp/
 temp/
 
-# Dépôt privé équipe : clés API présentes dans le dépôt (exceptions après .env* / *.local)
-!smartsite-frontend/.env.local
-!smartsite-backend/.env
+# Ne pas versionner les fichiers d’env réels (push protection GitHub + bonnes pratiques).
+# Copier les modèles : cp smartsite-backend/.env.example smartsite-backend/.env
+# et cp smarsite-frontend/.env.example smarsite-frontend/.env.local
 !smarsite-frontend/.env.example
 !smartsite-backend/.env.example

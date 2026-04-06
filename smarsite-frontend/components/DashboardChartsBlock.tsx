@@ -25,7 +25,7 @@ export default function DashboardChartsBlock({ statusData, budgetData }: Props) 
 
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-      <div className="rounded-2xl border border-border/80 bg-card p-6 shadow-sm ring-1 ring-black/[0.04] dark:ring-white/[0.06]">
+      <div className="rounded-2xl border border-white/10 bg-card/80 p-6 shadow-lg shadow-black/25 backdrop-blur-xl ring-1 ring-white/[0.04]">
         <h3 className="mb-4 text-lg font-semibold tracking-tight text-foreground">
           Projets par statut
         </h3>
@@ -61,7 +61,7 @@ export default function DashboardChartsBlock({ statusData, budgetData }: Props) 
         </div>
       </div>
 
-      <div className="rounded-2xl border border-border/80 bg-card p-6 shadow-sm ring-1 ring-black/[0.04] dark:ring-white/[0.06]">
+      <div className="rounded-2xl border border-white/10 bg-card/80 p-6 shadow-lg shadow-black/25 backdrop-blur-xl ring-1 ring-white/[0.04]">
         <h3 className="mb-4 text-lg font-semibold tracking-tight text-foreground">
           Utilisation du budget (top projets)
         </h3>

@@ -6,6 +6,7 @@ import {
   HttpStatus,
   Injectable,
   Logger,
+  ServiceUnavailableException,
   UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -826,7 +827,12 @@ export class AnalysisAiService {
   }
 
   private async executeGroqRequest(body: Record<string, unknown>): Promise<Response> {
-    const primary = this.configService.getOrThrow<string>('GROQ_API_KEY').trim();
+    const primary = (this.configService.get<string>('GROQ_API_KEY') ?? '').trim();
+    if (!primary) {
+      throw new ServiceUnavailableException(
+        'Groq is not configured: set GROQ_API_KEY in smartsite-backend/.env',
+      );
+    }
     const fallbackRaw = this.configService.get<string>('GROQ_API_KEY_FALLBACK')?.trim() ?? '';
     const fallbackKey =
       fallbackRaw.length > 0 && fallbackRaw !== primary ? fallbackRaw : null;

@@ -10,12 +10,14 @@ import StatCard from "@/components/StatCard";
 import DataTable from "@/components/DataTable";
 import {
   AlertCircle,
+  AlertTriangle,
   ArrowRight,
   BarChart3,
   Building2,
   CalendarDays,
   CheckCircle2,
   ChevronRight,
+  CircleDashed,
   LayoutDashboard,
   ListTodo,
   Plus,
@@ -45,7 +47,7 @@ const DashboardChartsBlock = dynamic(
         {[0, 1].map((i) => (
           <div
             key={i}
-            className="h-[380px] animate-pulse rounded-2xl border border-border/60 bg-muted/40 motion-reduce:animate-none"
+            className="h-[380px] rounded-2xl border border-white/10 bg-card/50 shadow-lg shadow-black/20 backdrop-blur-xl skeleton-premium motion-reduce:animate-none"
           />
         ))}
       </div>
@@ -56,11 +58,11 @@ const DashboardChartsBlock = dynamic(
 function statusPillClass(status: Project["status"]): string {
   switch (status) {
     case "Terminé":
-      return "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300";
+      return "border-emerald-500/25 bg-emerald-500/15 text-emerald-300";
     case "En retard":
-      return "bg-amber-500/15 text-amber-800 dark:text-amber-200";
+      return "border-orange-500/25 bg-orange-500/15 text-orange-300";
     default:
-      return "bg-sky-500/15 text-sky-800 dark:text-sky-200";
+      return "border-blue-500/25 bg-blue-500/15 text-blue-300";
   }
 }
 
@@ -139,7 +141,7 @@ export default function Dashboard() {
     <MainLayout>
       <div className="relative overflow-hidden">
         <div
-          className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-primary/20 blur-3xl motion-safe:animate-pulse motion-reduce:animate-none"
+          className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-blue-500/20 blur-3xl motion-safe:animate-pulse motion-reduce:animate-none"
           aria-hidden
         />
         <div
@@ -154,7 +156,7 @@ export default function Dashboard() {
         >
           <Link
             href="/dashboard/clients"
-            className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-[#f28c28] px-4 py-2.5 text-sm font-semibold text-white shadow-md shadow-[#f28c28]/30 transition hover:brightness-110 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#f28c28] motion-reduce:transition-none"
+            className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-gradient-to-r from-orange-500 to-orange-400 px-4 py-2.5 text-sm font-semibold text-white shadow-md transition-all duration-300 ease-out hover:shadow-lg hover:brightness-[1.02] active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-400 motion-reduce:transition-none motion-reduce:active:scale-100"
           >
             <Users size={18} aria-hidden />
             Dashboard clients
@@ -164,7 +166,7 @@ export default function Dashboard() {
 
         {error ? (
           <div
-            className="mb-8 rounded-xl border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+            className="mb-10 rounded-2xl border border-red-500/30 bg-red-500/10 px-5 py-4 text-sm text-red-300 shadow-lg shadow-black/20 backdrop-blur-md"
             role="alert"
           >
             Impossible de charger les données. Vérifiez l’API et{" "}
@@ -173,13 +175,13 @@ export default function Dashboard() {
         ) : null}
 
         {/* KPI — Bento */}
-        <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="mb-10 grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
           {loading ? (
             <>
               {[0, 1, 2, 3].map((i) => (
                 <div
                   key={i}
-                  className="h-[120px] animate-pulse rounded-xl border border-border/60 bg-muted/40 motion-reduce:animate-none"
+                  className="h-[120px] rounded-2xl border border-white/10 bg-card/60 shadow-lg shadow-black/20 backdrop-blur-xl skeleton-premium motion-reduce:animate-none"
                 />
               ))}
             </>
@@ -222,44 +224,44 @@ export default function Dashboard() {
         </div>
 
         {/* Secondary KPI strip */}
-        <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-3">
-          <div className="rounded-2xl border border-border/80 bg-card p-5 shadow-sm ring-1 ring-black/[0.04] dark:ring-white/[0.06]">
-            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+        <div className="mb-10 grid grid-cols-1 gap-5 md:grid-cols-3">
+          <div className="rounded-2xl border border-white/10 bg-card/80 p-6 shadow-lg shadow-black/25 backdrop-blur-xl transition-all duration-300 ease-out hover:-translate-y-1 hover:border-white/[0.14] hover:shadow-xl">
+            <p className="text-xs font-medium uppercase tracking-wider text-slate-400">
               Dépenses cumulées
             </p>
-            <p className="mt-1 text-2xl font-bold tabular-nums text-foreground">
+            <p className="mt-1 text-2xl font-bold tabular-nums text-slate-50">
               {loading ? "…" : formatDh(stats.spentTotal)}
             </p>
             {stats.budgetTotal > 0 ? (
-              <p className="mt-1 text-xs text-muted-foreground">
+              <p className="mt-1 text-xs text-slate-400">
                 {Math.round((stats.spentTotal / stats.budgetTotal) * 100)} % du
                 budget total
               </p>
             ) : null}
           </div>
-          <div className="rounded-2xl border border-border/80 bg-card p-5 shadow-sm ring-1 ring-black/[0.04] dark:ring-white/[0.06]">
-            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+          <div className="rounded-2xl border border-white/10 bg-card/80 p-6 shadow-lg shadow-black/25 backdrop-blur-xl transition-all duration-300 ease-out hover:-translate-y-1 hover:border-white/[0.14] hover:shadow-xl">
+            <p className="text-xs font-medium uppercase tracking-wider text-slate-400">
               Total projets
             </p>
-            <p className="mt-1 text-2xl font-bold tabular-nums text-foreground">
+            <p className="mt-1 text-2xl font-bold tabular-nums text-slate-50">
               {loading ? "…" : stats.total}
             </p>
           </div>
-          <div className="rounded-2xl border border-border/80 bg-gradient-to-br from-primary/10 via-card to-card p-5 shadow-sm ring-1 ring-black/[0.04] dark:from-primary/20 dark:ring-white/[0.06]">
-            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+          <div className="rounded-2xl border border-white/10 bg-gradient-to-br from-blue-500/10 via-card/80 to-orange-500/10 p-6 shadow-lg shadow-black/25 backdrop-blur-xl transition-all duration-300 ease-out hover:-translate-y-1 hover:border-white/[0.14] hover:shadow-xl">
+            <p className="text-xs font-medium uppercase tracking-wider text-slate-400">
               Raccourcis
             </p>
             <div className="mt-2 flex flex-wrap gap-2">
               <Link
                 href="/projects"
-                className="inline-flex items-center gap-1 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:bg-primary/90"
+                className="inline-flex items-center gap-1 rounded-xl bg-gradient-to-r from-orange-500 to-orange-400 px-3 py-1.5 text-xs font-semibold text-white shadow-md transition-all duration-300 ease-out hover:shadow-lg active:scale-95"
               >
                 <LayoutDashboard size={14} />
                 Projets
               </Link>
               <Link
                 href="/tasks"
-                className="inline-flex items-center gap-1 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-semibold hover:bg-muted"
+                className="inline-flex items-center gap-1 rounded-xl border border-white/10 bg-white/[0.06] px-3 py-1.5 text-xs font-semibold text-slate-200 shadow-sm backdrop-blur-md transition-all duration-300 ease-out hover:bg-white/10 hover:shadow-md active:scale-95"
               >
                 <ListTodo size={14} />
                 Tâches
@@ -268,14 +270,14 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className="mb-8">
+        <div className="mb-10">
           <DashboardChartsBlock
             statusData={statusChartData}
             budgetData={budgetChartData}
           />
         </div>
 
-        <div className="mb-8">
+        <div className="mb-10">
           <DataTable
             title="Projets récents"
             columns={[
@@ -285,7 +287,7 @@ export default function Dashboard() {
                 render: (_, row) => (
                   <Link
                     href={`/projects/${row._id}/overview`}
-                    className="font-medium text-primary hover:underline"
+                    className="font-medium text-blue-400 transition-all duration-300 ease-out hover:text-blue-300 hover:underline decoration-blue-400/40 underline-offset-4"
                   >
                     {row.name}
                   </Link>
@@ -297,13 +299,20 @@ export default function Dashboard() {
                 label: "Statut",
                 render: (status) => {
                   const s = status as Project["status"];
+                  const Icon =
+                    s === "Terminé"
+                      ? CheckCircle2
+                      : s === "En retard"
+                        ? AlertTriangle
+                        : CircleDashed;
                   return (
                     <span
                       className={cn(
-                        "rounded-full px-2.5 py-1 text-xs font-semibold",
+                        "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold shadow-sm backdrop-blur-sm",
                         statusPillClass(s),
                       )}
                     >
+                      <Icon className="size-3.5 shrink-0 opacity-90" aria-hidden />
                       {projectStatusLabelEn(s)}
                     </span>
                   );
@@ -313,14 +322,14 @@ export default function Dashboard() {
                 key: "completion",
                 label: "Avancement",
                 render: (completion) => (
-                  <div className="flex items-center gap-2">
-                    <div className="h-2 w-24 overflow-hidden rounded-full bg-muted">
+                  <div className="flex items-center gap-3">
+                    <div className="h-2.5 w-28 overflow-hidden rounded-full border border-white/10 bg-slate-950/60 shadow-inner backdrop-blur-sm">
                       <div
-                        className="h-full rounded-full bg-primary transition-[width] motion-reduce:transition-none"
+                        className="h-full rounded-full bg-gradient-to-r from-orange-500 to-orange-400 shadow-sm transition-[width] duration-500 ease-out motion-reduce:transition-none"
                         style={{ width: `${completion}%` }}
                       />
                     </div>
-                    <span className="text-xs font-semibold tabular-nums text-foreground">
+                    <span className="text-xs font-semibold tabular-nums text-slate-200">
                       {completion}%
                     </span>
                   </div>
@@ -341,46 +350,64 @@ export default function Dashboard() {
           />
         </div>
 
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
           <div className="space-y-6 lg:col-span-2">
-            <div className="rounded-2xl border border-border/80 bg-card p-6 shadow-sm ring-1 ring-black/[0.04] dark:ring-white/[0.06]">
-              <div className="mb-4 flex items-center gap-2">
-                <AlertCircle size={20} className="text-accent" />
-                <h3 className="text-lg font-semibold tracking-tight text-foreground">
+            <div className="rounded-2xl border border-white/10 bg-card/80 p-7 shadow-lg shadow-black/25 backdrop-blur-xl transition-all duration-300 ease-out hover:-translate-y-1 hover:border-white/[0.14] hover:shadow-xl">
+              <div className="mb-5 flex items-center gap-2">
+                <AlertCircle size={20} className="text-orange-400" />
+                <h3 className="text-lg font-semibold tracking-tight text-slate-100">
                   Alertes
                 </h3>
               </div>
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {loading ? (
-                  <p className="text-sm text-muted-foreground">Chargement…</p>
+                  <div className="space-y-3">
+                    <div className="h-14 rounded-xl skeleton-premium" />
+                    <div className="h-14 rounded-xl skeleton-premium" />
+                  </div>
                 ) : alerts.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">Aucune alerte.</p>
+                  <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-white/15 bg-white/[0.03] px-6 py-10 text-center backdrop-blur-sm">
+                    <div className="rounded-2xl border border-white/10 bg-card/60 p-4 shadow-lg shadow-black/20">
+                      <CheckCircle2
+                        className="size-10 text-emerald-400"
+                        strokeWidth={1.25}
+                        aria-hidden
+                      />
+                    </div>
+                    <p className="text-sm font-medium text-slate-100">
+                      Aucune alerte
+                    </p>
+                    <p className="max-w-xs text-xs text-slate-400">
+                      Tout semble sous contrôle. Les anomalies
+                      apparaîtront ici.
+                    </p>
+                  </div>
                 ) : (
                   alerts.map((alert) => {
                     const body = (
                       <div
                         className={cn(
-                          "rounded-xl border p-4 transition-colors",
+                          "rounded-xl border p-4 transition-all duration-200",
                           alert.type === "danger" &&
-                            "border-destructive/30 bg-destructive/5",
+                            "border-red-500/25 bg-red-500/10",
                           alert.type === "warning" &&
-                            "border-amber-500/35 bg-amber-500/10",
+                            "border-orange-500/25 bg-orange-500/10",
                           alert.type === "info" &&
-                            "border-sky-500/30 bg-sky-500/10",
+                            "border-blue-500/25 bg-blue-500/10",
                           alert.type === "success" &&
-                            "border-emerald-500/35 bg-emerald-500/10",
+                            "border-emerald-500/25 bg-emerald-500/10",
                         )}
                       >
                         <div className="flex items-start justify-between gap-3">
                           <div>
-                            <p className="font-semibold text-foreground">
+                            <p className="font-semibold text-slate-100">
                               {alert.title}
                             </p>
-                            <p className="mt-1 text-sm text-muted-foreground">
+                            <p className="mt-1 text-sm text-slate-400">
                               {alert.message}
                             </p>
                             {alert.href ? (
-                              <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-primary">
+                              <span className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-blue-400">
                                 Ouvrir <ChevronRight size={14} />
                               </span>
                             ) : null}
@@ -400,39 +427,62 @@ export default function Dashboard() {
               </div>
             </div>
 
-            <div className="rounded-2xl border border-border/80 bg-card p-6 shadow-sm ring-1 ring-black/[0.04] dark:ring-white/[0.06]">
-              <div className="mb-4 flex items-center justify-between gap-2">
-                <h3 className="text-lg font-semibold tracking-tight text-foreground">
+            <div className="rounded-2xl border border-white/10 bg-card/80 p-7 shadow-lg shadow-black/25 backdrop-blur-xl transition-all duration-300 ease-out hover:-translate-y-1 hover:border-white/[0.14] hover:shadow-xl">
+              <div className="mb-5 flex items-center justify-between gap-2">
+                <h3 className="text-lg font-semibold tracking-tight text-slate-100">
                   À traiter
                 </h3>
                 <Link
                   href="/tasks"
-                  className="text-xs font-semibold text-primary hover:underline"
+                  className="text-xs font-semibold text-blue-400 transition-colors hover:text-blue-300 hover:underline"
                 >
                   Voir tout
                 </Link>
               </div>
-              <ul className="space-y-2">
+              <ul className="space-y-3">
                 {loading ? (
-                  <li className="text-sm text-muted-foreground">Chargement…</li>
+                  <li className="space-y-2">
+                    <div className="h-12 rounded-xl skeleton-premium" />
+                    <div className="h-12 rounded-xl skeleton-premium" />
+                  </li>
+                ) : todoItems.length === 0 ? (
+                  <li className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-white/15 bg-white/[0.03] px-6 py-10 text-center backdrop-blur-sm">
+                    <div className="rounded-2xl border border-white/10 bg-card/60 p-4 shadow-lg shadow-black/20">
+                      <ListTodo
+                        className="size-10 text-blue-400"
+                        strokeWidth={1.25}
+                        aria-hidden
+                      />
+                    </div>
+                    <p className="text-sm font-medium text-slate-100">
+                      Rien à traiter
+                    </p>
+                    <Link
+                      href="/tasks"
+                      className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-blue-400 transition-colors hover:text-blue-300 hover:underline"
+                    >
+                      Ouvrir les tâches
+                      <ChevronRight size={14} aria-hidden />
+                    </Link>
+                  </li>
                 ) : (
                   todoItems.map((item) => (
                     <li key={item.id}>
                       <Link
                         href={item.href}
-                        className="flex items-center justify-between gap-3 rounded-lg border border-border/60 bg-muted/20 px-3 py-2.5 text-sm transition-colors hover:bg-muted/40"
+                        className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-sm shadow-sm backdrop-blur-sm transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-white/[0.14] hover:bg-white/[0.07] hover:shadow-md"
                       >
                         <span className="min-w-0">
-                          <span className="block truncate font-medium text-foreground">
+                          <span className="block truncate font-medium text-slate-100">
                             {item.label}
                           </span>
-                          <span className="text-xs text-muted-foreground">
+                          <span className="text-xs text-slate-400">
                             {item.meta}
                           </span>
                         </span>
                         <ChevronRight
                           size={18}
-                          className="shrink-0 text-muted-foreground"
+                          className="shrink-0 text-slate-500"
                         />
                       </Link>
                     </li>
@@ -442,31 +492,31 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-border/80 bg-card p-6 shadow-sm ring-1 ring-black/[0.04] dark:ring-white/[0.06]">
-            <h3 className="mb-4 text-lg font-semibold tracking-tight text-foreground">
+          <div className="rounded-2xl border border-white/10 bg-card/80 p-7 shadow-lg shadow-black/25 backdrop-blur-xl transition-all duration-300 ease-out hover:-translate-y-1 hover:border-white/[0.14] hover:shadow-xl">
+            <h3 className="mb-5 text-lg font-semibold tracking-tight text-slate-100">
               Actions rapides
             </h3>
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-4">
               <Link
                 href="/projects"
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-orange-500 to-orange-400 px-4 py-3 text-sm font-semibold text-white shadow-md transition-all duration-300 ease-out hover:shadow-lg hover:brightness-[1.02] active:scale-95 motion-reduce:active:scale-100"
               >
                 <Plus size={18} />
                 Nouveau projet
               </Link>
               <Link
                 href="/tasks"
-                className="flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-background px-4 py-3 text-sm font-semibold transition-colors hover:bg-muted"
+                className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.06] px-4 py-3 text-sm font-semibold text-slate-200 shadow-sm backdrop-blur-md transition-all duration-300 ease-out hover:bg-white/10 hover:shadow-md active:scale-95 motion-reduce:active:scale-100"
               >
                 <BarChart3 size={18} />
                 Kanban des tâches
               </Link>
-              <p className="text-center text-[11px] text-muted-foreground">
+              <p className="text-center text-[11px] leading-relaxed text-slate-400">
                 Gantt et synthèse depuis chaque fiche projet ou la liste ci‑dessus.
               </p>
               <Link
                 href="/projects"
-                className="flex w-full items-center justify-center gap-2 rounded-xl border border-border px-4 py-3 text-sm font-medium transition-colors hover:bg-muted"
+                className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.06] px-4 py-3 text-sm font-medium text-slate-200 shadow-sm backdrop-blur-md transition-all duration-300 ease-out hover:bg-white/10 hover:shadow-md active:scale-95 motion-reduce:active:scale-100"
               >
                 <CalendarDays size={18} />
                 Liste des projets
