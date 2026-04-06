@@ -3,7 +3,10 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* Default app theme: premium dark (Linear / Vercel-style). Tokens keep contrast with glass cards. */
+/*
+ * Thème sombre premium (fond slate + glass) avec identité couleur PiSmartSite d’origine :
+ * primary teal #0B4F6C, accent orange #F28C28, accents UI #36a2d6.
+ */
 :root {
   --background: #0f172a;
   --foreground: #f8fafc;
@@ -11,36 +14,35 @@
   --card-foreground: #f8fafc;
   --popover: #1e293b;
   --popover-foreground: #f8fafc;
-  --primary: #fb923c;
-  --primary-foreground: #0f172a;
+  --primary: #0b4f6c;
+  --primary-foreground: #ffffff;
   --secondary: #334155;
   --secondary-foreground: #f8fafc;
   --muted: #334155;
   --muted-foreground: #94a3b8;
-  --accent: #431407;
-  --accent-foreground: #fdba74;
+  --accent: #f28c28;
+  --accent-foreground: #0f172a;
   --destructive: #f87171;
   --destructive-foreground: #0f172a;
   --border: #334155;
   --input: #1e293b;
-  --ring: #60a5fa;
-  --chart-1: #60a5fa;
-  --chart-2: #fb923c;
-  --chart-3: #93c5fd;
+  --ring: #36a2d6;
+  --chart-1: #36a2d6;
+  --chart-2: #f28c28;
+  --chart-3: #0b4f6c;
   --chart-4: #4ade80;
-  --chart-5: #fdba74;
+  --chart-5: #fb923c;
   --radius: 0.75rem;
-  --sidebar: #172554;
-  --sidebar-foreground: #e2e8f0;
-  --sidebar-primary: #1e3a8a;
-  --sidebar-primary-foreground: #dbeafe;
-  --sidebar-accent: #1e40af;
-  --sidebar-accent-foreground: #eff6ff;
-  --sidebar-border: #334155;
-  --sidebar-ring: #fb923c;
-  /* Canvas glows — blue-500 / orange-500 @ 15% */
-  --bg-glow-blue: rgb(59 130 246 / 0.15);
-  --bg-glow-orange: rgb(249 115 22 / 0.15);
+  --sidebar: #0a3d54;
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #f28c28;
+  --sidebar-primary-foreground: #0f172a;
+  --sidebar-accent: #36a2d6;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #0b4f6c;
+  --sidebar-ring: #f28c28;
+  --bg-glow-blue: rgb(54 162 214 / 0.14);
+  --bg-glow-orange: rgb(242 140 40 / 0.14);
 }
 
 .dark {
@@ -50,34 +52,34 @@
   --card-foreground: #f8fafc;
   --popover: #1e293b;
   --popover-foreground: #f8fafc;
-  --primary: #fb923c;
-  --primary-foreground: #0f172a;
+  --primary: #0b4f6c;
+  --primary-foreground: #ffffff;
   --secondary: #334155;
   --secondary-foreground: #f8fafc;
   --muted: #334155;
   --muted-foreground: #94a3b8;
-  --accent: #431407;
-  --accent-foreground: #fdba74;
+  --accent: #f28c28;
+  --accent-foreground: #0f172a;
   --destructive: #f87171;
   --destructive-foreground: #0f172a;
   --border: #334155;
   --input: #1e293b;
-  --ring: #60a5fa;
-  --chart-1: #60a5fa;
-  --chart-2: #fb923c;
-  --chart-3: #93c5fd;
+  --ring: #36a2d6;
+  --chart-1: #36a2d6;
+  --chart-2: #f28c28;
+  --chart-3: #0b4f6c;
   --chart-4: #4ade80;
   --chart-5: #fdba74;
-  --sidebar: #172554;
-  --sidebar-foreground: #e2e8f0;
-  --sidebar-primary: #1e3a8a;
-  --sidebar-primary-foreground: #dbeafe;
-  --sidebar-accent: #1e40af;
-  --sidebar-accent-foreground: #eff6ff;
-  --sidebar-border: #334155;
-  --sidebar-ring: #fb923c;
-  --bg-glow-blue: rgb(59 130 246 / 0.15);
-  --bg-glow-orange: rgb(249 115 22 / 0.15);
+  --sidebar: #0a3d54;
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #f28c28;
+  --sidebar-primary-foreground: #0f172a;
+  --sidebar-accent: #36a2d6;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #0b4f6c;
+  --sidebar-ring: #f28c28;
+  --bg-glow-blue: rgb(54 162 214 / 0.14);
+  --bg-glow-orange: rgb(242 140 40 / 0.14);
 }
 
 @theme inline {
