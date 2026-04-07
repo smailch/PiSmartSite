@@ -9,4 +9,10 @@ export class ReportsController {
   getProjectSummary(@Param('projectId') projectId: string) {
     return this.reportsService.getProjectFinancialSummary(projectId);
   }
+
+  // ✅ ADD THIS
+  @Get('project/:projectId/ai')
+  getAIReport(@Param('projectId') projectId: string) {
+    return this.reportsService.getAIReport(projectId);
+  }
 }

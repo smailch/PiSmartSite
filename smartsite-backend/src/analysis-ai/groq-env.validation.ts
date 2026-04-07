@@ -7,6 +7,7 @@ const envSchema = z.object({
 
   // ✅ ADD THIS (optional but clean)
   STRIPE_SECRET_KEY: z.string().optional(),
+  MISTTRAL_API_KEY: z.string().optional(),
 
 }).passthrough(); // ✅ THIS IS THE KEY FIX
 export type GroqEnvVars = z.infer<typeof envSchema>;

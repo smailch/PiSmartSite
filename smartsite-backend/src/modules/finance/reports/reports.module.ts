@@ -6,6 +6,7 @@ import { ReportsController } from './reports.controller';
 
 import { Invoice, InvoiceSchema } from '../invoices/schemas/invoice.schema';
 import { Payment, PaymentSchema } from '../payments/schemas/payment.schema';
+import { AnalysisAiModule } from './analysis-ai.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { Payment, PaymentSchema } from '../payments/schemas/payment.schema';
       { name: Invoice.name, schema: InvoiceSchema },
       { name: Payment.name, schema: PaymentSchema },
     ]),
+     AnalysisAiModule,
   ],
   controllers: [ReportsController],
   providers: [ReportsService],
