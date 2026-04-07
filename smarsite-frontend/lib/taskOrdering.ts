@@ -2,12 +2,12 @@ import type { BackendTask } from "./types";
 import { MS_PER_DAY, toDate } from "./ganttUtils";
 
 /**
- * BackendTask enrichi avec les dates planifiées.
+ * BackendTask enrichi avec les dates planifiées (dates résolues en `Date`, pas ISO string).
  */
-export interface ScheduledTask extends BackendTask {
+export type ScheduledTask = Omit<BackendTask, "startDate" | "endDate"> & {
   startDate: Date;
   endDate: Date;
-}
+};
 
 /**
  * Dépendance normalisée en identifiant string.

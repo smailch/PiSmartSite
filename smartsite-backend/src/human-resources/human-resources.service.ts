@@ -17,7 +17,11 @@ export class HumanResourcesService {
     return created.save();
   }
 
-  async findAll(): Promise<Human[]> {
+  async findAll(role?: string): Promise<Human[]> {
+    const q = role?.trim();
+    if (q) {
+      return this.humanModel.find({ role: q }).exec();
+    }
     return this.humanModel.find().exec();
   }
 

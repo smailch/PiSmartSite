@@ -4,9 +4,8 @@ import { use } from "react";
 import useSWR from "swr";
 import MainLayout from "@/components/MainLayout";
 import PageHeader from "@/components/PageHeader";
-import ResourceForm from "@/components/resourcesForm";
 import EquipmentForm from "@/components/EquipmentresourcesForm";
-import type { Resource,Equipment } from "@/lib/types";
+import type { Equipment } from "@/lib/types";
 import { fetcher, getEquipmentKey} from "@/lib/api";
 
 export default function EditequipmentResourcePage({ params }: { params: Promise<{ id: string }> }) {
@@ -20,8 +19,8 @@ export default function EditequipmentResourcePage({ params }: { params: Promise<
   return (
     <MainLayout>
       <PageHeader
-        title="Edit Resource"
-        description="Update resource information"
+        title="Modifier l’équipement"
+        description="Mettre à jour les informations de la ressource"
       />
 
       {isLoading ? (

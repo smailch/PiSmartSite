@@ -11,7 +11,7 @@ export class CreateHumanDto {
   cin: string;
 
   @IsDateString()
-  birthDate: Date;
+  birthDate: string;
 
   @IsString()
   phone: string;

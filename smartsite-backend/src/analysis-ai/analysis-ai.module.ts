@@ -9,5 +9,6 @@ import { TasksModule } from '../tasks/tasks.module';
   imports: [ConfigModule, ProjectsModule, TasksModule],
   controllers: [AnalysisAiController],
   providers: [AnalysisAiService],
+  exports: [AnalysisAiService],
 })
 export class AnalysisAiModule {}

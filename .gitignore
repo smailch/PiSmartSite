@@ -1,30 +1,65 @@
-# Node / Next.js / NestJS
+# ==================== Node / Next.js ====================
 node_modules/
 .next/
 out/
 dist/
 build/
 coverage/
+*.tsbuildinfo
+pnpm-lock.yaml          # non utilisé si équipe npm
+# package-lock.json est versionné pour que npm ci / installs soient reproductibles
 
-# Logs
+# ==================== NestJS / Backend ====================
+dist/
+coverage/
+
+# ==================== Python & IA ====================
+__pycache__/
+*.py[cod]
+*.pyc
+.venv/
+venv/
+env/
+ENV/
+smartsite-ai-service/weights/
+smarsite-frontend/IAdetectionsaftyrisque/weights/
+*.pt                    # Modèles YOLO (best.pt, last.pt, etc.)
+*.pth
+*.onnx
+
+# ==================== Uploads & Gros fichiers médias ====================
+smartsite-backend/uploads/
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.webp
+*.jfif
+*.pdf
+*.mp4
+*.zip
+
+# ==================== Logs & Debug ====================
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 logs/
-*.log
 
-# Env files : secrets locaux (ne pas versionner). Les gabarits .env.example restent suivis.
-.env*
-!.env.example
-!**/.env.example
+# ==================== Environment & Secrets ====================
+.env
+.env.*
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
-# TypeScript
-*.tsbuildinfo
-
-# Editors / OS
+# ==================== Editors & OS ====================
 .vscode/
 .idea/
+*.swp
+*.swo
 .DS_Store
 Thumbs.db
 
@@ -33,5 +68,17 @@ Thumbs.db
 __pycache__/
 *.py[cod]
 
+# Fichiers uploadés en local (photos avancement jobs, CV humains)
+smartsite-backend/uploads/
+
 # Misc
 *.local
+# Temporaire / cache
+.tmp/
+temp/
+
+# Ne pas versionner les fichiers d’env réels (push protection GitHub + bonnes pratiques).
+# Copier les modèles : cp smartsite-backend/.env.example smartsite-backend/.env
+# et cp smarsite-frontend/.env.example smarsite-frontend/.env.local
+!smarsite-frontend/.env.example
+!smartsite-backend/.env.example

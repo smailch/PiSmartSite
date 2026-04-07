@@ -2,6 +2,7 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
+  IsEnum,
   IsDate,
   IsMongoId,
   IsNumber,
@@ -15,13 +16,6 @@ export const PROJECT_TYPE_VALUES = [
   'Rénovation',
   'Maintenance',
   'Autre',
-] as const;
-
-/** Valeurs autorisées pour le statut projet (cohérent avec le schéma Mongo). */
-export const PROJECT_STATUS_VALUES = [
-  'En cours',
-  'Terminé',
-  'En retard',
 ] as const;
 
 export class CreateProjectDto {
@@ -44,9 +38,7 @@ export class CreateProjectDto {
   endDate?: Date;
 
   @IsOptional()
-  @IsIn([...PROJECT_STATUS_VALUES], {
-    message: 'status must be one of the following values: $constraint1',
-  })
+  @IsEnum(['En cours', 'Terminé', 'En retard'])
   status?: string;
 
   @IsNotEmpty()

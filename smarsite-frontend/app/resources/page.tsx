@@ -80,22 +80,14 @@ export default function ResourcesPage() {
         description="Manage human resources and equipment"
       >
         <div className="flex gap-2 mb-4">
-  <Link
-    href="/resources/humans"
-          className="px-4 py-2 rounded-lg bg-accent text-accent-foreground font-semibold hover:bg-accent/90 transition-colors flex items-center gap-2 shadow-sm">
-  
-    <Plus size={18} />
-    Add Human
-  </Link>
-
-  <Link
-    href="/resources/equipment"
-          className="px-4 py-2 rounded-lg bg-accent text-accent-foreground font-semibold hover:bg-accent/90 transition-colors flex items-center gap-2 shadow-sm">
-  
-    <Plus size={18} />
-    Add Equipment
-  </Link>
-</div>
+          <Link
+            href="/resources/create"
+            className="px-4 py-2 rounded-lg bg-accent text-accent-foreground font-semibold hover:bg-accent/90 transition-colors flex items-center gap-2 shadow-sm"
+          >
+            <Plus size={18} />
+            Add resource
+          </Link>
+        </div>
 
       </PageHeader>
 
@@ -180,8 +172,8 @@ export default function ResourcesPage() {
 
       {/* SIMPLE DELETE CONFIRM */}
       {deleteTarget && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-card rounded-xl p-6 w-full max-w-md shadow-lg">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/75 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-xl border border-white/10 bg-card/95 p-6 text-card-foreground shadow-2xl shadow-black/50 backdrop-blur-xl">
             <h3 className="text-lg font-semibold mb-2">
               Delete Resource
             </h3>

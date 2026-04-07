@@ -72,7 +72,7 @@ export default function EquipmentResourcesTable({
                   <td className="px-6 py-4">
                     <div className="flex items-center justify-end gap-2">
                       <Link
-                        href={`/equipment/${equipment._id}`}
+                        href={`/equipment/${equipment._id}/details`}
                         className="p-2 rounded-lg hover:bg-primary/10 text-primary transition-colors"
                         aria-label={`View ${equipment.name}`}
                       >

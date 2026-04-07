@@ -10,11 +10,16 @@ import { fetcher, getJobKey } from "@/lib/api";
 
 export default function EditJobPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
+
   const { data: job, isLoading, error } = useSWR<Job>(getJobKey(id), fetcher);
 
   return (
     <MainLayout>
-      <PageHeader title="Edit Job" description="Update job details and resource assignments" />
+      <PageHeader 
+        title="Edit Job" 
+        description="Update job details and resource assignments" 
+      />
+      
       {isLoading ? (
         <div className="bg-card rounded-xl border border-border shadow-sm p-12 flex items-center justify-center max-w-3xl">
           <div className="flex flex-col items-center gap-3">

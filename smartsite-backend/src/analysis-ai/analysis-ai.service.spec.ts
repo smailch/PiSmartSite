@@ -171,6 +171,77 @@ describe('AnalysisAiService', () => {
     expect((caught as HttpException).getStatus()).toBe(HttpStatus.TOO_MANY_REQUESTS);
   });
 
+  it('retries with GROQ_API_KEY_FALLBACK when primary returns 429', async () => {
+    mockConfig.get.mockImplementation(<T>(key: string, defaultValue?: T): T | string | number => {
+      if (key === 'GROQ_MODEL') return 'llama-3.1-8b-instant';
+      if (key === 'GROQ_TIMEOUT_MS') return 5000;
+      if (key === 'GROQ_API_KEY_FALLBACK') return 'fallback-key';
+      return defaultValue as T;
+    });
+    const valid = {
+      summary: 'Synthèse',
+      topRisks: [{ title: 'R', impact: 'high' as const, action: 'A' }],
+      nextActions: ['a', 'b', 'c'],
+      budgetDelayTradeoff: {
+        recommendedMode: 'equilibre' as const,
+        estimatedDelayDays: 0,
+        estimatedBudgetDeltaPercent: 0,
+        rationale: 'x',
+      },
+      confidence: 0.9,
+    };
+    fetchSpy
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 429,
+        json: async () => ({}),
+      } as unknown as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        json: async () => ({
+          choices: [{ message: { content: JSON.stringify(valid) } }],
+        }),
+      } as unknown as Response);
+
+    const r = await service.generateInsights('507f1f77bcf86cd799439099');
+    expect(r.source).toBe('groq');
+    expect(fetchSpy).toHaveBeenCalled();
+    const authHeaders = fetchSpy.mock.calls.map(
+      (c) => (c[1] as RequestInit)?.headers as Record<string, string>,
+    );
+    expect(authHeaders.some((h) => h?.Authorization === 'Bearer test-key')).toBe(true);
+    expect(authHeaders.some((h) => h?.Authorization === 'Bearer fallback-key')).toBe(true);
+    mockConfig.get.mockImplementation(<T>(key: string, defaultValue?: T): T | string | number => {
+      if (key === 'GROQ_MODEL') return 'llama-3.1-8b-instant';
+      if (key === 'GROQ_TIMEOUT_MS') return 5000;
+      return defaultValue as T;
+    });
+  });
+
+  it('throws 429 when primary and fallback are both rate limited', async () => {
+    mockConfig.get.mockImplementation(<T>(key: string, defaultValue?: T): T | string | number => {
+      if (key === 'GROQ_MODEL') return 'llama-3.1-8b-instant';
+      if (key === 'GROQ_TIMEOUT_MS') return 5000;
+      if (key === 'GROQ_API_KEY_FALLBACK') return 'fallback-key';
+      return defaultValue as T;
+    });
+    fetchSpy.mockResolvedValue({
+      ok: false,
+      status: 429,
+      json: async () => ({}),
+    } as unknown as Response);
+
+    await expect(service.generateInsights('507f1f77bcf86cd799439099')).rejects.toBeInstanceOf(
+      HttpException,
+    );
+    mockConfig.get.mockImplementation(<T>(key: string, defaultValue?: T): T | string | number => {
+      if (key === 'GROQ_MODEL') return 'llama-3.1-8b-instant';
+      if (key === 'GROQ_TIMEOUT_MS') return 5000;
+      return defaultValue as T;
+    });
+  });
+
   it('throws BadGatewayException after invalid JSON from Groq error responses handled', async () => {
     fetchSpy.mockResolvedValue({
       ok: false,

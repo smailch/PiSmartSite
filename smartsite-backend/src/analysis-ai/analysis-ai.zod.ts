@@ -31,12 +31,20 @@ const budgetDelayTradeoffSchema = z.object({
   rationale: z.string().min(1),
 });
 
+export const delayAnalysisSchema = z.object({
+  summary: z.string().min(1),
+  contributingFactors: z.array(z.string().min(1)).max(8),
+});
+
 export const aiAnalysisPayloadSchema = z.object({
   summary: z.string().min(1),
   topRisks: z.array(topRiskSchema),
   nextActions: z.array(z.string().min(1)),
   budgetDelayTradeoff: budgetDelayTradeoffSchema,
   confidence: z.number().min(0).max(1),
+  delayAnalysis: delayAnalysisSchema.optional(),
+  planningSuggestions: z.array(z.string().min(1)).max(10).optional(),
+  repetitiveWorkAndAutomation: z.array(z.string().min(1)).max(8).optional(),
 });
 
 export type AiAnalysisPayload = z.infer<typeof aiAnalysisPayloadSchema>;
@@ -47,6 +55,9 @@ export const aiAnalysisResponsePayloadSchema = z.object({
   nextActions: z.array(z.string().min(1)),
   budgetDelayTradeoff: budgetDelayTradeoffSchema,
   confidence: z.number().min(0).max(1),
+  delayAnalysis: delayAnalysisSchema,
+  planningSuggestions: z.array(z.string().min(1)).max(10),
+  repetitiveWorkAndAutomation: z.array(z.string().min(1)).max(8),
 });
 
 export type AiAnalysisResponsePayload = z.infer<typeof aiAnalysisResponsePayloadSchema>;
