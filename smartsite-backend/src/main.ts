@@ -1,6 +1,9 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
+import * as bodyParser from 'body-parser';
+
+
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
 import { existsSync, mkdirSync } from 'fs';
@@ -23,7 +26,10 @@ async function bootstrap() {
     mkdirSync(progressPhotosDir, { recursive: true });
   }
 
+  // ✅ Active CORS
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
+  app.use('/payments/webhook', bodyParser.raw({ type: 'application/json' }));
 
   app.useStaticAssets(uploadsRoot, { prefix: '/uploads/' });
 

@@ -34,7 +34,7 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts"
-  ],
+, "app/invoices/page.tsx", "components/PaymentModal.tsx"  ],
   "exclude": [
     "node_modules"
   ]
