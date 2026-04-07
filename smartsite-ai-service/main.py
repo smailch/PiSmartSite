@@ -2,7 +2,6 @@
 SmartSite AI — YOLO (detect.pt) + construction safety (helmet / vest / person)
 Run:
 pip install -r requirements.txt
-set YOLO_MODEL_PATH=weights\\detect.pt
 uvicorn main:app --host 0.0.0.0 --port 8001
 """
 

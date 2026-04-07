@@ -1,4 +1,3 @@
-
 "use client";
 // À remplacer par la vraie source d'authentification !
 const USER_ID = "65cfa1a7cf3f4e38dc1db123";
@@ -774,6 +773,20 @@ export default function ProjectsPage() {
             <BarChart3 size={16} className="shrink-0 text-primary" aria-hidden />
             <span className="hidden md:inline">Gantt</span>
           </button>
+          <button
+  type="button"
+  title="Generate financial report"
+  aria-label={`Open financial report for ${row.name}`}
+  onClick={() => {
+    if (!isValidObjectId(row._id)) return;
+    router.push(`/projects/${row._id}/reports`);
+  }}
+  className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-border bg-secondary px-2.5 py-2 text-xs font-semibold text-foreground shadow-sm transition-colors hover:bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 sm:px-3"
+  disabled={!isValidObjectId(row._id)}
+>
+  <FileText size={16} className="shrink-0 text-primary" aria-hidden />
+  <span className="hidden md:inline">Report</span>
+</button>
         </div>
       ),
     },
@@ -938,13 +951,14 @@ export default function ProjectsPage() {
         </div>
       </div>
 
-      <DataTable<ProjectTableRow>
-        columns={tableColumns}
-        data={filteredProjects}
-        title="All projects"
-        tableCaption="Construction projects: name, description, type, budgets, location, dates, status, and row actions. Above the table, the status filter uses a radio group: when focused, use Left and Right arrows to change the option. Scroll horizontally if the table is wider than the viewport."
-        pageLevelScroll
-      />
+      <div className="overflow-x-visible">
+        <DataTable<ProjectTableRow>
+          columns={tableColumns}
+          data={filteredProjects}
+          title="All projects"
+          tableCaption="Construction projects: name, description, type, budgets, location, dates, status, and row actions. Above the table, the status filter uses a radio group: when focused, use Left and Right arrows to change the option."
+        />
+      </div>
 
       <Dialog
         open={aiOpen}

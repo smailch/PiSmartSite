@@ -34,6 +34,8 @@ import { ProgressPhotosModule } from './progress-photos/progress-photos.module';
       envFilePath: [
         join(backendRoot, '.env.local'),
         join(backendRoot, '.env'),
+                join(backendRoot, '.env.example'),
+
       ],
       validate: validateGroqEnv,
       ignoreEnvFile: false,    
