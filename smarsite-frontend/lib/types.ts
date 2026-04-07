@@ -1,27 +1,4 @@
-// ---------- MongoDB-backed types (matching NestJS schema) ----------
-
-export interface AssignedResource {
-  resourceId: string;
-  type: "Human" | "Equipment";
-}
-
-export interface Job {
-  _id: string;
-  taskId: string;
-  title: string;
-  description: string;
-  startTime: string;
-  endTime: string;
-  status: "Planifié" | "En cours" | "Terminé";
-  assignedResources: AssignedResource[];
-  createdAt: string;
-  updatedAt: string;
-}
-
-export type CreateJobPayload = Omit<Job, "_id" | "createdAt" | "updatedAt">;
-export type UpdateJobPayload = Partial<CreateJobPayload>;
-
-// ---------- Auxiliary types (kept for resources/tasks pages) ----------
+// ---------- Types partagés frontend / NestJS ----------
 
 
 export interface Resource {
@@ -47,6 +24,45 @@ export interface UpdateResourcePayload {
   availability?: boolean;
 }
 
+/** Id seul (API normale) ou document peuplé / forme legacy. */
+export type AssignedResourceIdRef =
+  | string
+  | {
+      _id?: string;
+      name?: string;
+      firstName?: string;
+      lastName?: string;
+      role?: string;
+    }
+  | null
+  | undefined;
+
+export interface AssignedResource {
+  resourceId: AssignedResourceIdRef;
+  type: "Human" | "Equipment";
+  _id?: string;
+  /** Dénormalisé par le backend lors de la création / mise à jour du job */
+  name?: string;
+}
+
+export interface Job {
+  _id: string;
+  taskId: string;
+  title: string;
+  description: string;
+  startTime: string;
+  endTime: string;
+  status: "Planifié" | "En cours" | "Terminé";
+  assignedResources: AssignedResource[];
+  createdAt: string;
+  updatedAt: string;
+  /** Liste jobs : pourcentage de suivi renvoyé par l’API */
+  progressPercentage?: number;
+}
+
+export type CreateJobPayload = Omit<Job, "_id" | "createdAt" | "updatedAt">;
+export type UpdateJobPayload = Partial<CreateJobPayload>;
+
 export type TaskPriority = "HIGH" | "MEDIUM" | "LOW";
 
 export type TaskStatus = "À faire" | "En cours" | "Terminé";
@@ -63,10 +79,14 @@ export interface BackendTask {
   priority: TaskPriority;
   status: TaskStatus;
   progress: number;
-  /** Budget consommé par cette tâche (en DH). */
+  /** Budget consommé par cette tâche (en €). */
   spentBudget?: number;
-  /** Peut être peuplé par l’API (`name`) ou seulement l’id */
-  assignedTo?: ObjectId | { _id: ObjectId; name: string; email?: string } | null;
+  /** ObjectId seul, ou populate User (`name`) ou Human (`firstName` / `lastName`). */
+  assignedTo?:
+    | ObjectId
+    | { _id: ObjectId; name: string; email?: string }
+    | { _id: ObjectId; firstName: string; lastName: string; role?: string }
+    | null;
   /** Identifiants des tâches dont celle-ci dépend. */
   dependsOn?: ObjectId[];
   /** Dates optionnelles (peuvent être calculées côté frontend pour le Gantt). */
@@ -97,7 +117,7 @@ export interface Project {
   status: "En cours" | "Terminé" | "En retard";
   type: ProjectType;
   budget?: number;
-  /** Budget total consommé par les tâches du projet (en DH). */
+  /** Spend incurred (€ affiché côté UI); optional until backend sends it */
   spentBudget?: number;
   location?: string;
   createdBy: string;
@@ -130,6 +150,12 @@ export interface ProjectAiInsightsResponse {
       rationale: string;
     };
     confidence: number;
+    delayAnalysis: {
+      summary: string;
+      contributingFactors: string[];
+    };
+    planningSuggestions: string[];
+    repetitiveWorkAndAutomation: string[];
   };
 }
 
@@ -143,88 +169,34 @@ export interface ProjectAssistantInitialReportResponse {
   report: string;
 }
 
-// ---------- API error type ----------
 
 
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// ---------- MongoDB-backed types (matching NestJS schema) ----------
-
-export interface AssignedResource {
-  resourceId: string;
-  type: "Human" | "Equipment";
-  name:string;
-  role:string;
-}
-
-export interface Job {
-  _id: string;
-  taskId: string;
-  title: string;
-  description: string;
-  startTime: string;
-  endTime: string;
-  status: "Planifié" | "En cours" | "Terminé";
-  assignedResources: AssignedResource[];
-  createdAt: string;
-  updatedAt: string;
-}
-
-
-// ---------- Auxiliary types (kept for resources/tasks pages) ----------
+/** Équipement (collection `/equipment`, aligné NestJS). */
 export interface Equipment {
-  _id?: string;
+  _id: string;
   name: string;
-  category: string;
-  serialNumber: string;
-  model: string;
-  brand: string;
-  purchaseDate: string;        // ISO date string
-  lastMaintenanceDate: string; // ISO date string
-  location: string;
+  category?: string;
+  serialNumber?: string;
+  model?: string;
+  brand?: string;
+  purchaseDate?: string;
+  lastMaintenanceDate?: string;
+  location?: string;
   availability: boolean;
   createdAt?: string;
   updatedAt?: string;
 }
 
-export interface Resource {
-  _id: string;
-  type: "Human" | "Equipment";
-  name: string;
-  role: string;
-  availability: boolean;
-  createdAt: string;
-}
-
-export interface CreateResourcePayload {
-  type: "Human" | "Equipment";
-  name: string;
-  role: string;
-  availability: boolean;
-}
 export interface Human {
   _id: string;
   firstName: string;
   lastName: string;
   cin: string;
-  birthDate: string; // ISO date string
+  birthDate: string;
   phone: string;
   role: string;
   cvUrl?: string;
@@ -233,17 +205,12 @@ export interface Human {
   createdAt?: string;
   updatedAt?: string;
 }
-export interface UpdateResourcePayload {
-  type?: "Human" | "Equipment";
-  name?: string;
-  role?: string;
-  availability?: boolean;
-}
+
 export interface Task {
   _id: number;
   title: string;
   project: string;
-  description:string;
+  description: string;
 }
 
 // ---------- API error type ----------

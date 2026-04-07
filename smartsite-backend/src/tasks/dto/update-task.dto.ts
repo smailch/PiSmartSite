@@ -1,5 +1,5 @@
 import { PartialType } from '@nestjs/mapped-types';
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import {
   IsArray,
   IsDate,
@@ -8,6 +8,7 @@ import {
   IsNumber,
   IsOptional,
   Min,
+  ValidateIf,
 } from 'class-validator';
 import { CreateTaskDto } from './create-task.dto';
 
@@ -39,4 +40,14 @@ export class UpdateTaskDto extends PartialType(CreateTaskDto) {
 	@IsNumber()
 	@Min(0)
 	spentBudget?: number;
+
+	/**
+	 * Ré-explicité pour PUT : accepter un id Human ou `null` pour désassigner
+	 * (évite les soucis whitelist / PartialType sur assignedTo).
+	 */
+	@IsOptional()
+	@Transform(({ value }) => (value === '' ? null : value))
+	@ValidateIf((_, v) => v !== null && v !== undefined && v !== '')
+	@IsMongoId()
+	assignedTo?: string | null;
 }

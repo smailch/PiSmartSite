@@ -1,13 +1,21 @@
-import { IsString, IsNotEmpty, IsDateString, IsArray, ValidateNested } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsDateString,
+  IsArray,
+  ValidateNested,
+  IsIn,
+  IsOptional,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 
-class AssignedResourceDto {
+export class AssignedResourceDto {
   @IsNotEmpty()
   @IsString()
   resourceId: string;
 
   @IsNotEmpty()
-  @IsString()
+  @IsIn(['Human', 'Equipment'])
   type: 'Human' | 'Equipment';
 }
 
@@ -32,8 +40,9 @@ export class CreateJobDto {
   @IsString()
   status?: 'Planifié' | 'En cours' | 'Terminé';
 
+  @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => AssignedResourceDto)
-  assignedResources: AssignedResourceDto[];
+  assignedResources?: AssignedResourceDto[];
 }

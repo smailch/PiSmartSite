@@ -107,55 +107,118 @@ export default function EquipmentForm({
     validateField(name, value);
   };
 
+  const fieldLabelsFr: Record<string, string> = {
+    name: "Nom de l’équipement",
+    category: "Catégorie",
+    serialNumber: "Numéro de série",
+    model: "Modèle",
+    brand: "Marque",
+    location: "Localisation",
+    purchaseDate: "Date d’achat",
+    lastMaintenanceDate: "Dernière maintenance",
+  };
+
   const validateField = (name: string, value: string | boolean) => {
     let error = "";
+    const lbl = fieldLabelsFr[name] ?? name;
+    const s = String(value).trim();
+
     switch (name) {
       case "name":
       case "category":
-      case "serialNumber":
       case "model":
       case "brand":
       case "location":
-        if (!String(value).trim()) error = `${name.charAt(0).toUpperCase() + name.slice(1)} is required`;
+        if (!s) error = `${lbl} : champ obligatoire`;
+        else if (s.length < 2) error = `${lbl} : au moins 2 caractères`;
+        else if (s.length > 120) error = `${lbl} : maximum 120 caractères`;
+        break;
+      case "serialNumber":
+        if (!s) error = `${lbl} : champ obligatoire`;
+        else if (s.length < 2) error = `${lbl} : au moins 2 caractères`;
+        else if (s.length > 64) error = `${lbl} : maximum 64 caractères`;
         break;
       case "purchaseDate":
       case "lastMaintenanceDate":
-        if (!value) error = "Date is required";
+        if (!value) error = `${lbl} : date obligatoire`;
         break;
       default:
         break;
     }
-    setErrors(prev => ({ ...prev, [name]: error }));
+    setErrors((prev) => ({ ...prev, [name]: error }));
   };
 
   const validate = (): boolean => {
     const newErrors: FormErrors = {};
     let isValid = true;
+    const setErr = (k: keyof FormErrors, msg: string) => {
+      newErrors[k] = msg;
+      isValid = false;
+    };
 
-    ["name", "category", "serialNumber", "model", "brand", "location"].forEach(field => {
-      if (!formData[field as keyof Equipment]?.toString().trim()) {
-        newErrors[field as keyof FormErrors] = `${field.charAt(0).toUpperCase() + field.slice(1)} is required`;
-        isValid = false;
+    (
+      ["name", "category", "serialNumber", "model", "brand", "location"] as const
+    ).forEach((field) => {
+      const s = formData[field]?.toString().trim() ?? "";
+      const lbl = fieldLabelsFr[field];
+      if (!s) setErr(field, `${lbl} : champ obligatoire`);
+      else if (field === "serialNumber") {
+        if (s.length < 2) setErr(field, `${lbl} : au moins 2 caractères`);
+        else if (s.length > 64) setErr(field, `${lbl} : maximum 64 caractères`);
+      } else {
+        if (s.length < 2) setErr(field, `${lbl} : au moins 2 caractères`);
+        else if (s.length > 120) setErr(field, `${lbl} : maximum 120 caractères`);
       }
     });
 
     if (!formData.purchaseDate) {
-      newErrors.purchaseDate = "Purchase date is required";
-      isValid = false;
+      setErr("purchaseDate", "Date d’achat obligatoire");
     }
     if (!formData.lastMaintenanceDate) {
-      newErrors.lastMaintenanceDate = "Last maintenance date is required";
-      isValid = false;
+      setErr("lastMaintenanceDate", "Date de dernière maintenance obligatoire");
+    }
+
+    if (formData.purchaseDate && formData.lastMaintenanceDate) {
+      const p = new Date(formData.purchaseDate);
+      const m = new Date(formData.lastMaintenanceDate);
+      if (!Number.isNaN(p.getTime()) && !Number.isNaN(m.getTime()) && m < p) {
+        setErr(
+          "lastMaintenanceDate",
+          "La maintenance ne peut pas être antérieure à la date d’achat"
+        );
+      }
+    }
+
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
+    if (formData.purchaseDate) {
+      const p = new Date(formData.purchaseDate);
+      if (!Number.isNaN(p.getTime()) && p > today) {
+        setErr("purchaseDate", "La date d’achat ne peut pas être dans le futur");
+      }
     }
 
     setErrors(newErrors);
     return isValid;
   };
 
+  const markAllTouched = () => {
+    setTouched({
+      name: true,
+      category: true,
+      serialNumber: true,
+      model: true,
+      brand: true,
+      purchaseDate: true,
+      lastMaintenanceDate: true,
+      location: true,
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    markAllTouched();
     if (!validate()) {
-      // Scroll to first error
       const firstError = document.querySelector(".text-red-600");
       firstError?.scrollIntoView({ behavior: "smooth", block: "center" });
       return;
@@ -173,7 +236,8 @@ export default function EquipmentForm({
       router.push("/equipment");
     } catch (err) {
       setErrors({
-        general: err instanceof Error ? err.message : "Failed to save equipment",
+        general:
+          err instanceof Error ? err.message : "Impossible d’enregistrer l’équipement",
       });
     } finally {
       setIsSubmitting(false);
@@ -181,15 +245,15 @@ export default function EquipmentForm({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white py-12 px-4 sm:px-6 lg:px-8 xl:px-12">
+    <div className="w-full max-w-6xl mx-auto py-2 sm:py-4 text-foreground">
       <div className="max-w-6xl mx-auto">
         {/* Header Premium */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-12 gap-6">
           <div>
-            <h1 className="text-4xl lg:text-5xl font-extrabold text-[#0b4f6c] tracking-tight">
+            <h1 className="text-4xl lg:text-5xl font-semibold tracking-tight text-foreground">
               {mode === "create" ? "Register New Equipment" : "Update Equipment Details"}
             </h1>
-            <p className="mt-4 text-xl text-gray-600 max-w-2xl">
+            <p className="mt-4 text-xl text-muted-foreground max-w-2xl">
               {mode === "create"
                 ? "Add a new asset to your inventory with complete specifications and status."
                 : "Modify existing equipment information — all fields are pre-filled."}
@@ -199,7 +263,7 @@ export default function EquipmentForm({
           <div className="flex gap-4">
             <Link
               href="/equipment"
-              className="inline-flex items-center gap-3 px-7 py-4 bg-white border border-gray-300 text-gray-700 rounded-2xl font-medium hover:bg-gray-50 hover:border-gray-400 transition shadow-sm"
+              className="inline-flex items-center gap-3 px-7 py-4 bg-card border border-border text-foreground rounded-2xl font-medium hover:bg-muted transition shadow-sm"
             >
               <ArrowLeft size={20} />
               Cancel
@@ -209,10 +273,10 @@ export default function EquipmentForm({
 
         {/* Global Error */}
         {errors.general && (
-          <div className="mb-10 p-6 bg-red-50 border border-red-200 rounded-2xl flex items-start gap-4 text-red-800">
+          <div className="mb-10 p-6 bg-destructive/10 border border-destructive/30 rounded-2xl flex items-start gap-4 text-destructive">
             <AlertCircle size={28} className="mt-1 flex-shrink-0" />
             <div>
-              <p className="font-semibold text-lg">Error during save</p>
+              <p className="font-semibold text-lg">Erreur à l’enregistrement</p>
               <p className="mt-1">{errors.general}</p>
             </div>
           </div>
@@ -221,7 +285,8 @@ export default function EquipmentForm({
         {/* Form Card - Très spacieux & élégant */}
         <form
           onSubmit={handleSubmit}
-          className="bg-white border border-gray-200/80 rounded-3xl shadow-2xl overflow-hidden"
+          noValidate
+          className="overflow-hidden rounded-3xl border border-border bg-card shadow-sm"
         >
         
 
@@ -229,10 +294,10 @@ export default function EquipmentForm({
             {/* Section 1: Identification */}
             <div>
               <div className="flex items-center gap-4 mb-8">
-                <div className="h-14 w-14 rounded-2xl bg-[#0b4f6c]/10 flex items-center justify-center">
-                  <Package size={28} className="text-[#0b4f6c]" />
+                <div className="h-14 w-14 rounded-2xl bg-primary/15 flex items-center justify-center">
+                  <Package size={28} className="text-primary" />
                 </div>
-                <h2 className="text-3xl font-bold text-[#0b4f6c]">Equipment Identification</h2>
+                <h2 className="text-3xl font-bold text-foreground">Equipment Identification</h2>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-10">
@@ -246,12 +311,12 @@ export default function EquipmentForm({
                   <div key={field.name} className="space-y-2 relative">
                     <label
                       htmlFor={field.name}
-                      className="block text-lg font-semibold text-gray-700"
+                      className="block text-lg font-semibold text-foreground"
                     >
                       {field.label} {field.required && <span className="text-red-500">*</span>}
                     </label>
                     <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-500">
+                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-muted-foreground">
                         {field.icon}
                       </div>
                       <input
@@ -261,10 +326,10 @@ export default function EquipmentForm({
                         value={formData[field.name as keyof Equipment] as string}
                         onChange={handleChange}
                         onBlur={handleBlur}
-                        className={`w-full pl-12 pr-5 py-5 border-2 rounded-2xl text-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#f28c28]/40 focus:border-[#0b4f6c] transition-all duration-200 shadow-sm ${
+                        className={`w-full pl-12 pr-5 py-5 border-2 rounded-2xl text-lg bg-input text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/40 focus:border-ring transition-all duration-200 shadow-sm ${
                           errors[field.name as keyof FormErrors] && touched[field.name]
                             ? "border-red-500"
-                            : "border-gray-300"
+                            : "border-border"
                         }`}
                         placeholder={`Enter ${field.label.toLowerCase()}`}
                       />
@@ -281,17 +346,17 @@ export default function EquipmentForm({
             </div>
 
             {/* Section 2: Dates & Location */}
-            <div className="pt-10 border-t border-gray-100">
+            <div className="pt-10 border-t border-border">
               <div className="flex items-center gap-4 mb-8">
-                <div className="h-14 w-14 rounded-2xl bg-[#f28c28]/10 flex items-center justify-center">
-                  <Calendar size={28} className="text-[#f28c28]" />
+                <div className="h-14 w-14 rounded-2xl bg-accent/15 flex items-center justify-center">
+                  <Calendar size={28} className="text-accent" />
                 </div>
-                <h2 className="text-3xl font-bold text-[#0b4f6c]">Timeline & Location</h2>
+                <h2 className="text-3xl font-bold text-foreground">Timeline & Location</h2>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-10">
                 <div className="space-y-2">
-                  <label htmlFor="purchaseDate" className="block text-lg font-semibold text-gray-700">
+                  <label htmlFor="purchaseDate" className="block text-lg font-semibold text-foreground">
                     Purchase Date <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -301,8 +366,8 @@ export default function EquipmentForm({
                     value={formData.purchaseDate}
                     onChange={handleChange}
                     onBlur={handleBlur}
-                    className={`w-full px-5 py-5 border-2 rounded-2xl text-lg focus:outline-none focus:ring-2 focus:ring-[#f28c28]/40 focus:border-[#0b4f6c] transition-all duration-200 shadow-sm ${
-                      errors.purchaseDate && touched.purchaseDate ? "border-red-500" : "border-gray-300"
+                    className={`w-full px-5 py-5 border-2 rounded-2xl text-lg bg-input text-foreground focus:outline-none focus:ring-2 focus:ring-ring/40 focus:border-ring transition-all duration-200 shadow-sm ${
+                      errors.purchaseDate && touched.purchaseDate ? "border-red-500" : "border-border"
                     }`}
                   />
                   {errors.purchaseDate && touched.purchaseDate && (
@@ -314,7 +379,7 @@ export default function EquipmentForm({
                 </div>
 
                 <div className="space-y-2">
-                  <label htmlFor="lastMaintenanceDate" className="block text-lg font-semibold text-gray-700">
+                  <label htmlFor="lastMaintenanceDate" className="block text-lg font-semibold text-foreground">
                     Last Maintenance <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -324,8 +389,8 @@ export default function EquipmentForm({
                     value={formData.lastMaintenanceDate}
                     onChange={handleChange}
                     onBlur={handleBlur}
-                    className={`w-full px-5 py-5 border-2 rounded-2xl text-lg focus:outline-none focus:ring-2 focus:ring-[#f28c28]/40 focus:border-[#0b4f6c] transition-all duration-200 shadow-sm ${
-                      errors.lastMaintenanceDate && touched.lastMaintenanceDate ? "border-red-500" : "border-gray-300"
+                    className={`w-full px-5 py-5 border-2 rounded-2xl text-lg bg-input text-foreground focus:outline-none focus:ring-2 focus:ring-ring/40 focus:border-ring transition-all duration-200 shadow-sm ${
+                      errors.lastMaintenanceDate && touched.lastMaintenanceDate ? "border-red-500" : "border-border"
                     }`}
                   />
                   {errors.lastMaintenanceDate && touched.lastMaintenanceDate && (
@@ -337,11 +402,11 @@ export default function EquipmentForm({
                 </div>
 
                 <div className="space-y-2 md:col-span-2 lg:col-span-1">
-                  <label htmlFor="location" className="block text-lg font-semibold text-gray-700">
+                  <label htmlFor="location" className="block text-lg font-semibold text-foreground">
                     Current Location <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-500">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-muted-foreground">
                       <MapPin size={20} />
                     </div>
                     <input
@@ -351,8 +416,8 @@ export default function EquipmentForm({
                       value={formData.location}
                       onChange={handleChange}
                       onBlur={handleBlur}
-                      className={`w-full pl-12 pr-5 py-5 border-2 rounded-2xl text-lg focus:outline-none focus:ring-2 focus:ring-[#f28c28]/40 focus:border-[#0b4f6c] transition-all duration-200 shadow-sm ${
-                        errors.location && touched.location ? "border-red-500" : "border-gray-300"
+                      className={`w-full pl-12 pr-5 py-5 border-2 rounded-2xl text-lg bg-input text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/40 focus:border-ring transition-all duration-200 shadow-sm ${
+                        errors.location && touched.location ? "border-red-500" : "border-border"
                       }`}
                       placeholder="Building A - Floor 3 - Room 312"
                     />
@@ -368,21 +433,21 @@ export default function EquipmentForm({
             </div>
 
             {/* Availability Toggle - Hero style */}
-            <div className="pt-10 border-t border-gray-100">
-              <div className="flex items-center justify-between bg-gray-50/70 p-8 rounded-2xl border border-gray-200">
+            <div className="pt-10 border-t border-border">
+              <div className="flex items-center justify-between bg-muted/40 p-8 rounded-2xl border border-border">
                 <div className="flex items-center gap-5">
-                  <div className={`h-16 w-16 rounded-2xl flex items-center justify-center ${formData.availability ? "bg-green-100" : "bg-red-100"}`}>
+                  <div className={`h-16 w-16 rounded-2xl flex items-center justify-center ${formData.availability ? "bg-emerald-500/20" : "bg-destructive/20"}`}>
                     {formData.availability ? (
-                      <CheckCircle2 size={32} className="text-green-600" />
+                      <CheckCircle2 size={32} className="text-emerald-400" />
                     ) : (
-                      <X size={32} className="text-red-600" />
+                      <X size={32} className="text-destructive" />
                     )}
                   </div>
                   <div>
-                    <h3 className="text-2xl font-bold text-gray-800">
+                    <h3 className="text-2xl font-bold text-foreground">
                       Availability Status
                     </h3>
-                    <p className="text-lg text-gray-600 mt-1">
+                    <p className="text-lg text-muted-foreground mt-1">
                       Mark whether this equipment is currently ready for use
                     </p>
                   </div>
@@ -396,16 +461,16 @@ export default function EquipmentForm({
                     onChange={handleChange}
                     className="sr-only peer"
                   />
-                  <div className="w-20 h-10 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#f28c28]/30 rounded-full peer peer-checked:after:translate-x-10 peer-checked:after:border-white after:content-[''] after:absolute after:top-1 after:left-1 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-8 after:w-8 after:transition-all peer-checked:bg-[#0b4f6c]"></div>
+                  <div className="w-20 h-10 bg-muted peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-ring/40 rounded-full peer peer-checked:after:translate-x-10 peer-checked:after:border-white after:content-[''] after:absolute after:top-1 after:left-1 after:bg-card after:border-border after:border after:rounded-full after:h-8 after:w-8 after:transition-all peer-checked:bg-primary"></div>
                 </label>
               </div>
             </div>
 
             {/* Actions Footer */}
-            <div className="pt-12 flex flex-col sm:flex-row gap-6 justify-end border-t border-gray-100">
+            <div className="pt-12 flex flex-col sm:flex-row gap-6 justify-end border-t border-border">
               <Link
                 href="/equipment"
-                className="px-10 py-5 bg-white border-2 border-gray-300 text-gray-700 text-xl font-semibold rounded-2xl hover:bg-gray-50 transition flex items-center justify-center gap-3 shadow-sm"
+                className="px-10 py-5 bg-card border-2 border-border text-foreground text-xl font-semibold rounded-2xl hover:bg-muted transition flex items-center justify-center gap-3 shadow-sm"
               >
                 <X size={22} />
                 Cancel
@@ -414,7 +479,7 @@ export default function EquipmentForm({
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className={`px-12 py-5 bg-[#0b4f6c] text-white text-xl font-bold rounded-2xl shadow-xl hover:bg-[#0b4f6c]/95 hover:shadow-2xl focus:outline-none focus:ring-4 focus:ring-[#f28c28]/50 transition-all duration-300 flex items-center justify-center gap-4 min-w-[280px] ${
+                className={`px-12 py-5 bg-accent text-accent-foreground text-xl font-bold rounded-2xl shadow-sm hover:brightness-110 hover:shadow-md focus:outline-none focus:ring-4 focus:ring-ring/40 transition-all duration-300 flex items-center justify-center gap-4 min-w-[280px] ${
                   isSubmitting ? "opacity-80 cursor-not-allowed" : ""
                 }`}
               >

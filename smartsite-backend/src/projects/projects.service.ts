@@ -40,8 +40,6 @@ export class ProjectsService {
     if (!project) {
       throw new NotFoundException(`Project with ID ${id} not found`);
     }
-    // toObject() garantit que spentBudget (default: 0) est toujours inclus,
-    // même sur des documents antérieurs à l'ajout du champ.
     return {
       ...project.toObject(),
       spentBudget: project.spentBudget ?? 0,
@@ -50,7 +48,6 @@ export class ProjectsService {
 
   async update(id: string, updateProjectDto: UpdateProjectDto): Promise<Project> {
     this.assertValidObjectId(id, 'id');
-    // $set explicite : ne jamais écraser spentBudget (calculé côté TasksService).
     const updatedProject = await this.projectModel
       .findByIdAndUpdate(id, { $set: updateProjectDto }, { new: true })
       .exec();

@@ -54,11 +54,11 @@ export default function JobsPage() {
   return (
     <MainLayout>
     <PageHeader title="Jobs" description="Manage all jobs linked to project tasks">
-  <div className="flex gap-2 mb-4">
+  <div className="mb-4 flex flex-wrap gap-3">
     {/* Bouton Create Job */}
     <Link
       href="/jobs/create"
-      className="px-4 py-2 rounded-lg bg-accent text-accent-foreground font-semibold hover:bg-accent/90 transition-colors flex items-center gap-2 shadow-sm"
+      className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-orange-500 to-orange-400 px-4 py-2.5 text-sm font-semibold text-white shadow-md transition-all duration-300 ease-out hover:shadow-lg active:scale-95 motion-reduce:active:scale-100"
     >
       <Plus size={18} />
       Create Job
@@ -67,14 +67,14 @@ export default function JobsPage() {
     {/* Bouton View Resources */}
     <Link
       href="/humans"
-      className="px-4 py-2 rounded-lg bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-colors flex items-center gap-2 shadow-sm"
+      className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.06] px-4 py-2.5 text-sm font-semibold text-slate-200 shadow-sm backdrop-blur-md transition-all duration-300 ease-out hover:bg-white/10 hover:shadow-md active:scale-95 motion-reduce:active:scale-100"
     >
       <Plus size={18} />
       View humans Resources
     </Link>
     <Link
       href="/equipment"
-      className="px-4 py-2 rounded-lg bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-colors flex items-center gap-2 shadow-sm"
+      className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.06] px-4 py-2.5 text-sm font-semibold text-slate-200 shadow-sm backdrop-blur-md transition-all duration-300 ease-out hover:bg-white/10 hover:shadow-md active:scale-95 motion-reduce:active:scale-100"
     >
       <Plus size={18} />
       View equipment Resources
@@ -84,21 +84,21 @@ export default function JobsPage() {
 
 
       {/* Search & Filter */}
-      <div className="flex flex-col md:flex-row items-start md:items-center gap-4 mb-6">
-        <div className="relative flex-1 w-full md:max-w-sm">
-          <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+      <div className="mb-8 flex flex-col items-start gap-5 md:flex-row md:items-center">
+        <div className="relative w-full flex-1 md:max-w-sm">
+          <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
           <input type="text" placeholder="Search jobs..." value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-border bg-input text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition-shadow" />
+            className="w-full rounded-xl border border-white/10 bg-card/60 py-2.5 pl-10 pr-4 text-slate-100 shadow-sm backdrop-blur-md placeholder:text-slate-500 transition-all duration-300 ease-out focus:outline-none focus:ring-2 focus:ring-blue-500/30" />
         </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          <Filter size={18} className="text-muted-foreground" />
+        <div className="flex flex-wrap items-center gap-2">
+          <Filter size={18} className="text-slate-500" />
           {statusOptions.map((status) => (
             <button key={status} onClick={() => setStatusFilter(status)}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors text-sm ${
+              className={`rounded-xl px-4 py-2 text-sm font-medium transition-all duration-300 ease-out ${
                 statusFilter === status
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "bg-secondary text-foreground hover:bg-muted"
+                  ? "border border-primary/40 bg-primary/25 text-foreground shadow-sm ring-1 ring-primary/30"
+                  : "border border-border bg-muted/50 text-muted-foreground shadow-sm hover:bg-muted/80 hover:text-foreground"
               }`}>
               {status}
             </button>
@@ -107,28 +107,31 @@ export default function JobsPage() {
       </div>
 
       <div className="mb-4">
-        <p className="text-sm text-muted-foreground">
-          Showing <span className="font-semibold text-foreground">{filteredJobs.length}</span> of{" "}
-          <span className="font-semibold text-foreground">{jobs.length}</span> jobs
+        <p className="text-sm text-slate-400">
+          Showing <span className="font-semibold text-slate-100">{filteredJobs.length}</span> of{" "}
+          <span className="font-semibold text-slate-100">{jobs.length}</span> jobs
         </p>
       </div>
 
       {error && (
-        <div className="bg-destructive/10 border border-destructive/30 rounded-xl p-6 mb-6">
-          <p className="text-destructive font-medium">
+        <div className="mb-8 rounded-2xl border border-red-500/30 bg-red-500/10 p-6 shadow-lg shadow-black/20 backdrop-blur-md">
+          <p className="text-red-300 font-medium">
             Failed to load jobs. Make sure the backend is running on port 3200.
           </p>
-          <p className="text-sm text-destructive/80 mt-1">
+          <p className="text-sm text-red-300/80 mt-1">
             {error instanceof Error ? error.message : "Unknown error"}
           </p>
         </div>
       )}
 
       {jobsLoading ? (
-        <div className="bg-card rounded-xl border border-border shadow-sm p-12 flex items-center justify-center">
-          <div className="flex flex-col items-center gap-3">
-            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-            <p className="text-muted-foreground">Loading jobs...</p>
+        <div className="flex flex-col items-center justify-center gap-5 rounded-2xl border border-white/10 bg-card/70 p-12 shadow-lg shadow-black/25 backdrop-blur-xl">
+          <div className="h-10 w-full max-w-md rounded-xl skeleton-premium" />
+          <div className="h-10 w-full max-w-md rounded-xl skeleton-premium" />
+          <div className="h-10 w-full max-w-md rounded-xl skeleton-premium" />
+          <div className="flex items-center gap-3 pt-2">
+            <div className="h-8 w-8 animate-spin rounded-full border-4 border-orange-200 border-t-orange-500 motion-reduce:hidden" />
+            <p className="text-sm font-medium text-slate-400">Loading jobs...</p>
           </div>
         </div>
       ) : (

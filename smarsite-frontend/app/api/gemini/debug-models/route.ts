@@ -21,17 +21,22 @@ export async function GET() {
       const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
       const response = await model.generateContent("Hello");
       return Response.json({ success: "✅ Connection OK", response });
-    } catch (err) {
-      return Response.json({ 
-        error: err.message,
-        code: err.code,
-        details: err.toString()
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      const code =
+        err && typeof err === "object" && "code" in err
+          ? (err as { code?: unknown }).code
+          : undefined;
+      return Response.json({
+        error: msg,
+        code,
+        details: String(err),
       });
     }
-  } catch (error) {
-    return Response.json({ 
-      error: error.message,
-      stack: error.toString()
+  } catch (error: unknown) {
+    return Response.json({
+      error: error instanceof Error ? error.message : String(error),
+      stack: String(error),
     });
   }
 }

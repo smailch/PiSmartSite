@@ -13,13 +13,13 @@ interface ZoomConfig {
 function getZoomConfig(zoomLevel: GanttZoomLevel): ZoomConfig {
   switch (zoomLevel) {
     case "day":
-      return { daysPerCell: 1, cellWidth: 40 };
+      return { daysPerCell: 1, cellWidth: 56 };
     case "week":
-      return { daysPerCell: 7, cellWidth: 80 };
+      return { daysPerCell: 7, cellWidth: 108 };
     case "month":
-      return { daysPerCell: 30, cellWidth: 120 };
+      return { daysPerCell: 30, cellWidth: 160 };
     default:
-      return { daysPerCell: 7, cellWidth: 80 };
+      return { daysPerCell: 7, cellWidth: 108 };
   }
 }
 
@@ -42,9 +42,9 @@ export interface GanttGridLayout {
   endDate: Date;
 }
 
-/** Base vertical sizing for rows. */
-export const GANTT_ROW_HEIGHT = 32;
-export const GANTT_ROW_GAP = 8;
+/** Base vertical sizing for rows (bar + labels lisibles). */
+export const GANTT_ROW_HEIGHT = 50;
+export const GANTT_ROW_GAP = 14;
 
 /**
  * Normalise a date-like value into a valid Date instance.
@@ -271,10 +271,12 @@ export function formatDate(dateInput: Date | string, zoomLevel: GanttZoomLevel):
   const d = toDate(dateInput);
 
   if (zoomLevel === "day") {
-    return d.toLocaleDateString("fr-FR", {
-      day: "2-digit",
-      month: "2-digit",
+    const dow = d.toLocaleDateString("fr-FR", { weekday: "short" });
+    const dm = d.toLocaleDateString("fr-FR", {
+      day: "numeric",
+      month: "short",
     });
+    return `${dow.replace(/\.$/, "")} ${dm}`;
   }
 
   if (zoomLevel === "week") {
@@ -283,8 +285,8 @@ export function formatDate(dateInput: Date | string, zoomLevel: GanttZoomLevel):
     const diffToMonday = (day + 6) % 7; // 0 => Monday, 6 => Sunday
     const monday = new Date(d.getTime() - diffToMonday * MS_PER_DAY);
     const weekLabel = monday.toLocaleDateString("fr-FR", {
-      day: "2-digit",
-      month: "2-digit",
+      day: "numeric",
+      month: "short",
     });
     return `Sem. ${weekLabel}`;
   }
@@ -292,7 +294,7 @@ export function formatDate(dateInput: Date | string, zoomLevel: GanttZoomLevel):
   // month
   return d.toLocaleDateString("fr-FR", {
     month: "short",
-    year: "2-digit",
+    year: "numeric",
   });
 }
 
@@ -341,6 +343,13 @@ export function progressToColor(progress: number): string {
 
   const toHex = (v: number) => v.toString(16).padStart(2, "0");
   return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+}
+
+/** Tronque un titre long pour la colonne gauche du Gantt. */
+export function truncateGanttTitle(title: string, maxChars: number): string {
+  const t = title.trim();
+  if (t.length <= maxChars) return t;
+  return `${t.slice(0, Math.max(1, maxChars - 1))}…`;
 }
 
 /**

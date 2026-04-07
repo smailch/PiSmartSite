@@ -5,6 +5,7 @@ import {
   Briefcase,
   CheckCircle2,
   CircleDashed,
+  ClipboardList,
   GripVertical,
   Loader2,
   Pencil,
@@ -13,6 +14,13 @@ import {
 } from 'lucide-react';
 import type { TaskPriority, TaskStatus } from '@/lib/types';
 import { formatDh } from '@/lib/formatMoney';
+
+/** Statuts affichés dans le sélecteur clavier (alternative au glisser-déposer, WCAG 2.5.7). */
+const KANBAN_STATUS_OPTIONS: { value: TaskStatus; label: string }[] = [
+  { value: 'À faire', label: 'To do' },
+  { value: 'En cours', label: 'In progress' },
+  { value: 'Terminé', label: 'Done' },
+];
 
 const KANBAN_COLUMNS: {
   status: TaskStatus;
@@ -65,6 +73,10 @@ export interface KanbanUiTask {
   spentBudget: number;
   status: TaskStatus;
   priority: TaskPriority;
+  /** Nombre de jobs liés à la tâche (API /jobs). */
+  jobCount?: number;
+  /** Indicateur calculé (optionnel si non fourni). */
+  isLate?: boolean;
 }
 
 interface TaskKanbanBoardProps {
@@ -74,6 +86,10 @@ interface TaskKanbanBoardProps {
   savingTaskId: string | null;
   getPriorityStyle: (priority: TaskPriority) => string;
   priorityCellLabel: (p: TaskPriority) => string;
+  /** Ouvre le panneau listant les jobs de la tâche. */
+  onShowJobs?: (taskId: string) => void;
+  /** Affiche le badge « Late » quand `task.isLate` est true. */
+  showLateBadge?: boolean;
 }
 
 export default function TaskKanbanBoard({
@@ -83,6 +99,8 @@ export default function TaskKanbanBoard({
   savingTaskId,
   getPriorityStyle,
   priorityCellLabel,
+  onShowJobs,
+  showLateBadge = false,
 }: TaskKanbanBoardProps) {
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dropTargetStatus, setDropTargetStatus] = useState<TaskStatus | null>(null);
@@ -137,9 +155,13 @@ export default function TaskKanbanBoard({
           const isDropTarget = dropTargetStatus === col.status;
           const Icon = col.icon;
 
+          const columnLabel = `${col.title}. ${columnTasks.length} task${columnTasks.length === 1 ? '' : 's'}. Drop a card here to set status to ${col.title}, or use Move task on each card for keyboard control.`;
+
           return (
             <div
               key={col.status}
+              role="region"
+              aria-label={columnLabel}
               className={`group/column flex flex-col overflow-hidden rounded-2xl border bg-card/90 shadow-sm backdrop-blur-sm transition-all duration-300 dark:bg-card/95 dark:shadow-black/20 ${
                 isDropTarget
                   ? 'scale-[1.02] border-primary shadow-lg shadow-primary/10 ring-2 ring-primary/30 dark:shadow-primary/20'
@@ -187,6 +209,7 @@ export default function TaskKanbanBoard({
                       draggable={!isSaving}
                       onDragStart={(e) => handleDragStart(e, task.id)}
                       onDragEnd={handleDragEnd}
+                      aria-busy={isSaving}
                       className={`relative overflow-hidden rounded-2xl border bg-gradient-to-br from-card to-card/80 p-4 shadow-sm transition-all duration-200 dark:from-card dark:to-card/90 dark:shadow-black/25 ${
                         isDragging
                           ? 'scale-95 opacity-40 shadow-none'
@@ -195,22 +218,32 @@ export default function TaskKanbanBoard({
                     >
                       <div className="pointer-events-none absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-primary/50 via-accent/40 to-primary/30 opacity-80" />
                       <div className="relative flex gap-3 pl-1">
-                        <div className="flex shrink-0 flex-col items-center pt-0.5 text-muted-foreground/70">
+                        <div className="flex shrink-0 flex-col items-center pt-0.5 text-muted-foreground/70" aria-hidden>
                           <GripVertical className="h-4 w-4" aria-hidden />
                         </div>
                         <div className="min-w-0 flex-1 space-y-3">
                           <div className="flex items-start justify-between gap-2">
-                            <p className="text-sm font-semibold leading-snug tracking-tight text-foreground line-clamp-4">
-                              {task.title}
-                            </p>
+                            {onShowJobs ? (
+                              <button
+                                type="button"
+                                onClick={() => onShowJobs(task.id)}
+                                className="text-left text-sm font-semibold leading-snug tracking-tight text-foreground line-clamp-4 rounded-md ring-offset-background transition-colors hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                              >
+                                {task.title}
+                              </button>
+                            ) : (
+                              <h4 className="text-sm font-semibold leading-snug tracking-tight text-foreground line-clamp-4">
+                                {task.title}
+                              </h4>
+                            )}
                             <button
                               type="button"
                               onClick={(ev) => {
                                 ev.stopPropagation();
                                 onEdit(task.id);
                               }}
-                              className="shrink-0 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary"
-                              aria-label="Edit task"
+                              className="shrink-0 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                              aria-label={`Edit task: ${task.title}`}
                               title="Edit"
                             >
                               {isSaving ? (
@@ -222,16 +255,36 @@ export default function TaskKanbanBoard({
                           </div>
 
                           <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            <span className="flex h-6 w-6 items-center justify-center rounded-md bg-muted/80 dark:bg-muted/50">
+                            <span
+                              className="flex h-6 w-6 items-center justify-center rounded-md bg-muted/80 dark:bg-muted/50"
+                              aria-hidden
+                            >
                               <Briefcase className="h-3.5 w-3.5" aria-hidden />
                             </span>
-                            <span className="truncate font-medium text-foreground/85">{task.project}</span>
+                            <span className="truncate font-medium text-foreground">{task.project}</span>
                           </div>
 
                           <div className="flex flex-wrap items-center gap-2">
                             <span className={`text-xs font-medium ${getPriorityStyle(task.priority)}`}>
                               {priorityCellLabel(task.priority)}
                             </span>
+                            {showLateBadge && task.isLate ? (
+                              <span className="rounded-md bg-amber-500/15 px-2 py-0.5 text-[11px] font-semibold text-amber-900 ring-1 ring-amber-500/25 dark:text-amber-100 dark:ring-amber-400/30">
+                                Late
+                              </span>
+                            ) : null}
+                            {onShowJobs ? (
+                              <button
+                                type="button"
+                                onClick={() => onShowJobs(task.id)}
+                                className="inline-flex items-center gap-1 rounded-lg border border-primary/25 bg-primary/8 px-2 py-0.5 text-[11px] font-bold tabular-nums text-primary shadow-sm ring-1 ring-primary/10 transition-colors hover:bg-primary/15 hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:bg-primary/12 dark:ring-primary/20"
+                                title="View jobs for this task"
+                              >
+                                <ClipboardList className="h-3 w-3 opacity-90" aria-hidden />
+                                {task.jobCount ?? 0}{' '}
+                                {(task.jobCount ?? 0) === 1 ? 'job' : 'jobs'}
+                              </button>
+                            ) : null}
                             <span className="rounded-md bg-muted/60 px-2 py-0.5 text-[11px] font-semibold tabular-nums text-muted-foreground dark:bg-muted/40">
                               {task.progress}%
                             </span>
@@ -245,12 +298,47 @@ export default function TaskKanbanBoard({
                               <span>Progress</span>
                               <span className="tabular-nums">{task.progress}%</span>
                             </div>
-                            <div className="h-2 overflow-hidden rounded-full bg-muted/80 dark:bg-muted/50">
+                            <div
+                              role="progressbar"
+                              aria-valuemin={0}
+                              aria-valuemax={100}
+                              aria-valuenow={Math.min(100, Math.max(0, task.progress))}
+                              aria-label={`Progress for ${task.title}`}
+                              className="h-2 overflow-hidden rounded-full bg-muted/80 dark:bg-muted/50"
+                            >
                               <div
                                 className="h-full rounded-full bg-gradient-to-r from-primary via-primary to-accent transition-[width] duration-500 ease-out"
                                 style={{ width: `${Math.min(100, Math.max(0, task.progress))}%` }}
+                                aria-hidden
                               />
                             </div>
+                          </div>
+
+                          <div className="pt-1">
+                            <label
+                              htmlFor={`kanban-move-${task.id}`}
+                              className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-muted-foreground"
+                            >
+                              Move task (keyboard)
+                            </label>
+                            <select
+                              id={`kanban-move-${task.id}`}
+                              value={task.status}
+                              disabled={isSaving}
+                              onChange={(e) => {
+                                const next = e.target.value as TaskStatus;
+                                if (next !== task.status) {
+                                  void onStatusChange(task.id, next);
+                                }
+                              }}
+                              className="w-full rounded-lg border border-border/80 bg-background px-2 py-1.5 text-xs font-medium text-foreground shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-card"
+                            >
+                              {KANBAN_STATUS_OPTIONS.map((opt) => (
+                                <option key={opt.value} value={opt.value}>
+                                  {opt.label}
+                                </option>
+                              ))}
+                            </select>
                           </div>
                         </div>
                       </div>

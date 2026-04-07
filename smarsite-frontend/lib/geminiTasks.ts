@@ -7,6 +7,10 @@ export type GeminiTaskProposal = {
   priority: TaskPriority;
   status: TaskStatus;
   progress: number;
+  /** YYYY-MM-DD (API / normalisation). */
+  startDate?: string;
+  /** YYYY-MM-DD (API / normalisation). */
+  endDate?: string;
   /**
    * Indices 0-based of prerequisite tasks in the same `tasks` array (filled by the model).
    * Resolved to Mongo IDs after tasks are created.
@@ -68,15 +72,27 @@ export async function generateTasksFromProject(
     throw new Error(data.error ?? "Aucune tâche proposée");
   }
 
-  const tasks: GeminiTaskProposal[] = data.tasks.map((t) => ({
-    title: t.title,
-    description: t.description ?? "",
-    duration: t.duration,
-    priority: t.priority,
-    status: t.status,
-    progress: t.progress ?? 0,
-    dependsOnIndices: Array.isArray(t.dependsOnIndices) ? t.dependsOnIndices : [],
-  }));
+  const tasks: GeminiTaskProposal[] = data.tasks.map((t) => {
+    const start =
+      typeof t.startDate === "string" && t.startDate.trim().length >= 8
+        ? t.startDate.trim().slice(0, 10)
+        : undefined;
+    const end =
+      typeof t.endDate === "string" && t.endDate.trim().length >= 8
+        ? t.endDate.trim().slice(0, 10)
+        : undefined;
+    return {
+      title: t.title,
+      description: t.description ?? "",
+      duration: t.duration,
+      priority: t.priority,
+      status: t.status,
+      progress: t.progress ?? 0,
+      ...(start ? { startDate: start } : {}),
+      ...(end ? { endDate: end } : {}),
+      dependsOnIndices: Array.isArray(t.dependsOnIndices) ? t.dependsOnIndices : [],
+    };
+  });
 
   return { tasks, meta: data.meta };
 }

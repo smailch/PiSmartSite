@@ -1,14 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { mutate } from "swr";
 import Link from "next/link";
-import {
-  createHuman,
-  updateHuman,
-  getHumansKey,
-} from "@/lib/api";
+import { createHuman, updateHuman, getHumansKey } from "@/lib/api";
 import {
   Loader2,
   ArrowLeft,
@@ -17,16 +13,21 @@ import {
   User,
   Users,
   Hash,
-  Calendar,
   Phone,
   Briefcase,
   FileText,
   Image as ImageIcon,
   CheckCircle2,
   AlertCircle,
+  Upload,
 } from "lucide-react";
 
-interface Human {
+const API_ORIGIN =
+  typeof process.env.NEXT_PUBLIC_API_URL === "string"
+    ? process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, "")
+    : "";
+
+interface HumanModel {
   _id?: string;
   firstName: string;
   lastName: string;
@@ -41,7 +42,7 @@ interface Human {
 
 interface HumanFormProps {
   mode: "create" | "edit";
-  initialData?: Human;
+  initialData?: HumanModel;
 }
 
 interface FormErrors {
@@ -54,10 +55,16 @@ interface FormErrors {
   general?: string;
 }
 
+const CV_ACCEPT =
+  ".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+const IMAGE_ACCEPT = "image/jpeg,image/png,image/webp,image/gif";
+
 export default function HumanForm({ mode, initialData }: HumanFormProps) {
   const router = useRouter();
+  const cvInputRef = useRef<HTMLInputElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
-  const [formData, setFormData] = useState<Human>({
+  const [formData, setFormData] = useState<HumanModel>({
     firstName: "",
     lastName: "",
     cin: "",
@@ -68,18 +75,10 @@ export default function HumanForm({ mode, initialData }: HumanFormProps) {
     imageUrl: undefined,
     availability: true,
   });
-const [human, setHuman] = useState<Human>({
-    _id: undefined,
-    firstName: "",
-    lastName: "",
-    cin: "",
-    birthDate: "",
-    phone: "",
-    role: "",
-    cvUrl: undefined,
-    imageUrl: undefined,
-    availability: true,
-  });
+  const [cvFile, setCvFile] = useState<File | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [touched, setTouched] = useState<Record<string, boolean>>({});
@@ -93,12 +92,32 @@ const [human, setHuman] = useState<Human>({
         birthDate: initialData.birthDate?.split("T")[0] || "",
         phone: initialData.phone || "",
         role: initialData.role || "",
-        cvUrl: initialData.cvUrl || "",
-        imageUrl: initialData.imageUrl || "",
+        cvUrl: initialData.cvUrl || undefined,
+        imageUrl: initialData.imageUrl || undefined,
         availability: initialData.availability ?? true,
       });
+      setCvFile(null);
+      setImageFile(null);
     }
   }, [initialData]);
+
+  useEffect(() => {
+    if (imageFile) {
+      const url = URL.createObjectURL(imageFile);
+      setImagePreview(url);
+      return () => URL.revokeObjectURL(url);
+    }
+    if (mode === "edit" && formData.imageUrl) {
+      const path = formData.imageUrl.startsWith("http")
+        ? formData.imageUrl
+        : API_ORIGIN
+          ? `${API_ORIGIN}${formData.imageUrl}`
+          : formData.imageUrl;
+      setImagePreview(path);
+      return;
+    }
+    setImagePreview(null);
+  }, [imageFile, formData.imageUrl, mode]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -106,7 +125,7 @@ const [human, setHuman] = useState<Human>({
       ...prev,
       [name]: type === "checkbox" ? checked : value,
     }));
-    if (touched[name]) validateField(name, value);
+    if (touched[name]) validateField(name, type === "checkbox" ? checked : value);
   };
 
   const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
@@ -117,16 +136,41 @@ const [human, setHuman] = useState<Human>({
 
   const validateField = (name: string, value: string | boolean) => {
     let error = "";
+    const s = String(value).trim();
     switch (name) {
       case "firstName":
       case "lastName":
+        if (!s) error = "Champ obligatoire";
+        else if (s.length < 2) error = "Au moins 2 caractères";
+        else if (s.length > 80) error = "Maximum 80 caractères";
+        break;
       case "cin":
+        if (!s) error = "CIN obligatoire";
+        else if (s.length < 3) error = "Au moins 3 caractères";
+        else if (s.length > 32) error = "Maximum 32 caractères";
+        else if (!/^[a-zA-Z0-9\s\-]+$/.test(s)) error = "Caractères autorisés : lettres, chiffres, espaces, tiret";
+        break;
       case "phone":
+        if (!s) error = "Téléphone obligatoire";
+        else if (!/^[\d\s+().\-]{8,24}$/.test(s)) error = "Numéro de téléphone invalide";
+        break;
       case "role":
-        if (!String(value).trim()) error = `${name.charAt(0).toUpperCase() + name.slice(1)} is required`;
+        if (!s) error = "Rôle obligatoire";
+        else if (s.length < 2) error = "Au moins 2 caractères";
+        else if (s.length > 120) error = "Maximum 120 caractères";
         break;
       case "birthDate":
-        if (!value) error = "Birth date is required";
+        if (!value) error = "Date de naissance obligatoire";
+        else {
+          const d = new Date(String(value));
+          if (Number.isNaN(d.getTime())) error = "Date invalide";
+          else {
+            const today = new Date();
+            today.setHours(23, 59, 59, 999);
+            if (d > today) error = "La date ne peut pas être dans le futur";
+            if (d.getFullYear() < 1900) error = "Date trop ancienne";
+          }
+        }
         break;
       default:
         break;
@@ -137,104 +181,132 @@ const [human, setHuman] = useState<Human>({
   const validate = (): boolean => {
     const newErrors: FormErrors = {};
     let isValid = true;
-
-    ["firstName", "lastName", "cin", "phone", "role"].forEach((field) => {
-      if (!formData[field as keyof Human]?.toString().trim()) {
-        newErrors[field as keyof FormErrors] = `${field.charAt(0).toUpperCase() + field.slice(1)} is required`;
-        isValid = false;
-      }
-    });
-
-    if (!formData.birthDate) {
-      newErrors.birthDate = "Birth date is required";
+    const setE = (k: keyof FormErrors, msg: string) => {
+      newErrors[k] = msg;
       isValid = false;
+    };
+
+    if (!formData.firstName.trim()) setE("firstName", "Prénom obligatoire");
+    else if (formData.firstName.trim().length < 2) setE("firstName", "Au moins 2 caractères");
+
+    if (!formData.lastName.trim()) setE("lastName", "Nom obligatoire");
+    else if (formData.lastName.trim().length < 2) setE("lastName", "Au moins 2 caractères");
+
+    const cin = formData.cin.trim();
+    if (!cin) setE("cin", "CIN obligatoire");
+    else if (cin.length < 3 || cin.length > 32) setE("cin", "Le CIN doit contenir entre 3 et 32 caractères");
+    else if (!/^[a-zA-Z0-9\s\-]+$/.test(cin)) setE("cin", "CIN invalide (lettres, chiffres, espaces, tiret)");
+
+    const phone = formData.phone.trim();
+    if (!phone) setE("phone", "Téléphone obligatoire");
+    else if (!/^[\d\s+().\-]{8,24}$/.test(phone)) setE("phone", "Numéro de téléphone invalide");
+
+    const role = formData.role.trim();
+    if (!role) setE("role", "Rôle obligatoire");
+    else if (role.length < 2) setE("role", "Au moins 2 caractères");
+
+    if (!formData.birthDate) setE("birthDate", "Date de naissance obligatoire");
+    else {
+      const d = new Date(formData.birthDate);
+      if (Number.isNaN(d.getTime())) setE("birthDate", "Date invalide");
+      else {
+        const today = new Date();
+        today.setHours(23, 59, 59, 999);
+        if (d > today) setE("birthDate", "La date ne peut pas être dans le futur");
+        if (d.getFullYear() < 1900) setE("birthDate", "Date trop ancienne");
+      }
     }
 
     setErrors(newErrors);
     return isValid;
   };
 
+  const markAllTouched = () => {
+    setTouched({
+      firstName: true,
+      lastName: true,
+      cin: true,
+      birthDate: true,
+      phone: true,
+      role: true,
+    });
+  };
+
+  const buildFormData = (): FormData => {
+    const fd = new FormData();
+    fd.append("firstName", formData.firstName.trim());
+    fd.append("lastName", formData.lastName.trim());
+    fd.append("cin", formData.cin.trim());
+    fd.append("birthDate", formData.birthDate);
+    fd.append("phone", formData.phone.trim());
+    fd.append("role", formData.role.trim());
+    fd.append("availability", formData.availability ? "true" : "false");
+
+    if (cvFile) fd.append("cv", cvFile);
+    else if (mode === "edit") fd.append("cvUrl", formData.cvUrl ?? "");
+
+    if (imageFile) fd.append("image", imageFile);
+    else if (mode === "edit") fd.append("imageUrl", formData.imageUrl ?? "");
+
+    return fd;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    markAllTouched();
     if (!validate()) {
-      const firstError = document.querySelector(".text-red-600");
-      firstError?.scrollIntoView({ behavior: "smooth", block: "center" });
+      document.querySelector(".text-red-600")?.scrollIntoView({ behavior: "smooth", block: "center" });
       return;
     }
 
     setIsSubmitting(true);
-
     try {
+      const fd = buildFormData();
       if (mode === "create") {
-        await createHuman(formData);
+        await createHuman(fd);
       } else {
-        await updateHuman(initialData!._id!, formData);
+        await updateHuman(initialData!._id!, fd);
       }
       mutate(getHumansKey());
       router.push("/humans");
     } catch (err) {
       setErrors({
-        general: err instanceof Error ? err.message : "Failed to save human",
+        general: err instanceof Error ? err.message : "Impossible d’enregistrer la personne",
       });
     } finally {
       setIsSubmitting(false);
     }
-
-
-
-  };
-   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setHuman({
-        ...human,
-        imageUrl: URL.createObjectURL(file),
-      });
-    }
-  };
-
-  // Sélection du CV local
-  const handleCVChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setHuman({
-        ...human,
-        cvUrl: URL.createObjectURL(file),
-      });
-    }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white py-12 px-4 sm:px-6 lg:px-8 xl:px-12">
+    <div className="w-full max-w-5xl mx-auto py-2 sm:py-4 text-foreground">
       <div className="max-w-5xl mx-auto">
-        {/* Header */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-12 gap-6">
           <div>
-            <h1 className="text-4xl lg:text-5xl font-extrabold text-[#0b4f6c] tracking-tight">
+            <h1 className="text-4xl lg:text-5xl font-semibold tracking-tight text-foreground">
               {mode === "create" ? "Register New Person" : "Update Person Details"}
             </h1>
-            <p className="mt-4 text-xl text-gray-600 max-w-2xl">
+            <p className="mt-4 text-xl text-muted-foreground max-w-2xl">
               {mode === "create"
-                ? "Add a new human resource with complete profile information."
-                : "Modify existing person record — all fields are pre-filled."}
+                ? "Add a new human resource. Upload CV and profile photo from your computer."
+                : "Update the record. Choose new files only if you want to replace CV or photo."}
             </p>
           </div>
 
           <Link
             href="/humans"
-            className="inline-flex items-center gap-3 px-7 py-4 bg-white border border-gray-300 text-gray-700 rounded-2xl font-medium hover:bg-gray-50 hover:border-gray-400 transition shadow-sm"
+            className="inline-flex items-center gap-3 px-7 py-4 bg-card border border-border text-foreground rounded-2xl font-medium hover:bg-muted transition shadow-sm"
           >
             <ArrowLeft size={20} />
             Cancel
           </Link>
         </div>
 
-        {/* Global error */}
         {errors.general && (
-          <div className="mb-10 p-6 bg-red-50 border border-red-200 rounded-2xl flex items-start gap-4 text-red-800">
+          <div className="mb-10 p-6 bg-destructive/10 border border-destructive/30 rounded-2xl flex items-start gap-4 text-destructive">
             <AlertCircle size={28} className="mt-1 flex-shrink-0" />
             <div>
-              <p className="font-semibold text-lg">Error during save</p>
+              <p className="font-semibold text-lg">Erreur à l’enregistrement</p>
               <p className="mt-1">{errors.general}</p>
             </div>
           </div>
@@ -242,17 +314,16 @@ const [human, setHuman] = useState<Human>({
 
         <form
           onSubmit={handleSubmit}
-          className="bg-white border border-gray-200/80 rounded-3xl shadow-2xl overflow-hidden"
+          noValidate
+          className="overflow-hidden rounded-3xl border border-border bg-card shadow-sm"
         >
-
           <div className="p-8 lg:p-12 xl:p-16 space-y-14">
-            {/* Section Identification */}
             <div>
               <div className="flex items-center gap-4 mb-8">
-                <div className="h-14 w-14 rounded-2xl bg-[#0b4f6c]/10 flex items-center justify-center">
-                  <Users size={28} className="text-[#0b4f6c]" />
+                <div className="h-14 w-14 rounded-2xl bg-primary/15 flex items-center justify-center">
+                  <Users size={28} className="text-primary" />
                 </div>
-                <h2 className="text-3xl font-bold text-[#0b4f6c]">Personal Information</h2>
+                <h2 className="text-3xl font-bold text-foreground">Personal Information</h2>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-10">
@@ -264,24 +335,24 @@ const [human, setHuman] = useState<Human>({
                   { name: "role", label: "Role / Position", icon: <Briefcase size={20} />, required: true },
                 ].map((field) => (
                   <div key={field.name} className="space-y-2 relative">
-                    <label htmlFor={field.name} className="block text-lg font-semibold text-gray-700">
+                    <label htmlFor={field.name} className="block text-lg font-semibold text-foreground">
                       {field.label} {field.required && <span className="text-red-500">*</span>}
                     </label>
                     <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-500">
+                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-muted-foreground">
                         {field.icon}
                       </div>
                       <input
                         id={field.name}
                         name={field.name}
                         type="text"
-                        value={formData[field.name as keyof Human] as string}
+                        value={formData[field.name as keyof HumanModel] as string}
                         onChange={handleChange}
                         onBlur={handleBlur}
-                        className={`w-full pl-12 pr-5 py-5 border-2 rounded-2xl text-lg bg-white focus:outline-none focus:ring-2 focus:ring-[#f28c28]/40 focus:border-[#0b4f6c] transition-all duration-200 shadow-sm ${
+                        className={`w-full pl-12 pr-5 py-5 border-2 rounded-2xl text-lg bg-input text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/40 focus:border-ring transition-all duration-200 shadow-sm ${
                           errors[field.name as keyof FormErrors] && touched[field.name]
                             ? "border-red-500"
-                            : "border-gray-300"
+                            : "border-border"
                         }`}
                         placeholder={`Enter ${field.label.toLowerCase()}`}
                       />
@@ -295,9 +366,8 @@ const [human, setHuman] = useState<Human>({
                   </div>
                 ))}
 
-                {/* Birth Date */}
                 <div className="space-y-2">
-                  <label htmlFor="birthDate" className="block text-lg font-semibold text-gray-700">
+                  <label htmlFor="birthDate" className="block text-lg font-semibold text-foreground">
                     Birth Date <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -307,8 +377,8 @@ const [human, setHuman] = useState<Human>({
                     value={formData.birthDate}
                     onChange={handleChange}
                     onBlur={handleBlur}
-                    className={`w-full px-5 py-5 border-2 rounded-2xl text-lg focus:outline-none focus:ring-2 focus:ring-[#f28c28]/40 focus:border-[#0b4f6c] transition-all duration-200 shadow-sm ${
-                      errors.birthDate && touched.birthDate ? "border-red-500" : "border-gray-300"
+                    className={`w-full px-5 py-5 border-2 rounded-2xl text-lg bg-input text-foreground focus:outline-none focus:ring-2 focus:ring-ring/40 focus:border-ring transition-all duration-200 shadow-sm ${
+                      errors.birthDate && touched.birthDate ? "border-red-500" : "border-border"
                     }`}
                   />
                   {errors.birthDate && touched.birthDate && (
@@ -321,25 +391,118 @@ const [human, setHuman] = useState<Human>({
               </div>
             </div>
 
-            {/* Section Documents & Status */} <div className="pt-10 border-t border-gray-100"> <div className="flex items-center gap-4 mb-8"> <div className="h-14 w-14 rounded-2xl bg-[#f28c28]/10 flex items-center justify-center"> <FileText size={28} className="text-[#f28c28]" /> </div> <h2 className="text-3xl font-bold text-[#0b4f6c]">Documents & Status</h2> </div> <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-10"> <div className="space-y-2"> <label htmlFor="cvUrl" className="block text-lg font-semibold text-gray-700"> CV URL </label> <div className="relative"> <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-500"> <FileText size={20} /> </div> <input id="cvUrl" name="cvUrl" type="url" value={formData.cvUrl} onChange={handleChange} className="w-full pl-12 pr-5 py-5 border-2 rounded-2xl text-lg border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#f28c28]/40 focus:border-[#0b4f6c] transition-all duration-200 shadow-sm" placeholder="https://..." /> </div> </div> <div className="space-y-2"> <label htmlFor="imageUrl" className="block text-lg font-semibold text-gray-700"> Profile Image URL </label> <div className="relative"> <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-500"> <ImageIcon size={20} /> </div> <input id="imageUrl" name="imageUrl" type="url" value={formData.imageUrl} onChange={handleChange} className="w-full pl-12 pr-5 py-5 border-2 rounded-2xl text-lg border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#f28c28]/40 focus:border-[#0b4f6c] transition-all duration-200 shadow-sm" placeholder="https://..." /> </div> </div> </div> </div>
-            {/* Availability Toggle */}
-            <div className="pt-10 border-t border-gray-100">
-              <div className="flex items-center justify-between bg-gray-50/70 p-8 rounded-2xl border border-gray-200">
+            <div className="pt-10 border-t border-border">
+              <div className="flex items-center gap-4 mb-8">
+                <div className="h-14 w-14 rounded-2xl bg-accent/15 flex items-center justify-center">
+                  <FileText size={28} className="text-accent" />
+                </div>
+                <h2 className="text-3xl font-bold text-foreground">Documents & Status</h2>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-10">
+                <div className="space-y-3">
+                  <span className="block text-lg font-semibold text-foreground">CV (file from your PC)</span>
+                  <p className="text-sm text-muted-foreground">PDF or Word — max. 12 MB</p>
+                  <input
+                    ref={cvInputRef}
+                    type="file"
+                    accept={CV_ACCEPT}
+                    className="sr-only"
+                    onChange={(e) => {
+                      setCvFile(e.target.files?.[0] ?? null);
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => cvInputRef.current?.click()}
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-border bg-muted/50 px-5 py-4 text-lg font-medium text-foreground hover:border-ring/50 hover:bg-muted transition shadow-sm"
+                  >
+                    <Upload size={22} className="text-primary" />
+                    Choose CV file
+                  </button>
+                  <p className="text-sm text-muted-foreground break-all">
+                    {cvFile?.name ??
+                      (formData.cvUrl
+                        ? `Current: ${formData.cvUrl.split("/").pop() ?? formData.cvUrl}`
+                        : "No file selected (optional)")}
+                  </p>
+                  {(cvFile || formData.cvUrl) && (
+                    <button
+                      type="button"
+                      className="text-sm text-red-600 hover:underline"
+                      onClick={() => {
+                        setCvFile(null);
+                        if (cvInputRef.current) cvInputRef.current.value = "";
+                        setFormData((p) => ({ ...p, cvUrl: undefined }));
+                      }}
+                    >
+                      Remove CV
+                    </button>
+                  )}
+                </div>
+
+                <div className="space-y-3">
+                  <span className="block text-lg font-semibold text-foreground">
+                    Profile photo (file from your PC)
+                  </span>
+                  <p className="text-sm text-muted-foreground">JPEG, PNG, WebP or GIF — max. 12 MB</p>
+                  <input
+                    ref={imageInputRef}
+                    type="file"
+                    accept={IMAGE_ACCEPT}
+                    className="sr-only"
+                    onChange={(e) => {
+                      setImageFile(e.target.files?.[0] ?? null);
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => imageInputRef.current?.click()}
+                    className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border-2 border-border bg-muted/50 px-5 py-4 text-lg font-medium text-foreground hover:border-ring/50 hover:bg-muted transition shadow-sm"
+                  >
+                    <ImageIcon size={22} className="text-primary" />
+                    Choose image
+                  </button>
+                  {imagePreview && (
+                    <div className="mt-3 h-40 w-40 overflow-hidden rounded-2xl border-2 border-border">
+                      <img src={imagePreview} alt="Preview" className="h-full w-full object-cover" />
+                    </div>
+                  )}
+                  {(imageFile || (mode === "edit" && formData.imageUrl)) && (
+                    <button
+                      type="button"
+                      className="text-sm text-red-600 hover:underline"
+                      onClick={() => {
+                        setImageFile(null);
+                        if (imageInputRef.current) imageInputRef.current.value = "";
+                        setFormData((p) => ({ ...p, imageUrl: undefined }));
+                        setImagePreview(null);
+                      }}
+                    >
+                      Remove photo
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-10 border-t border-border">
+              <div className="flex items-center justify-between bg-muted/40 p-8 rounded-2xl border border-border">
                 <div className="flex items-center gap-5">
                   <div
                     className={`h-16 w-16 rounded-2xl flex items-center justify-center ${
-                      formData.availability ? "bg-green-100" : "bg-red-100"
+                      formData.availability ? "bg-emerald-500/20" : "bg-destructive/20"
                     }`}
                   >
                     {formData.availability ? (
-                      <CheckCircle2 size={32} className="text-green-600" />
+                      <CheckCircle2 size={32} className="text-emerald-400" />
                     ) : (
-                      <X size={32} className="text-red-600" />
+                      <X size={32} className="text-destructive" />
                     )}
                   </div>
                   <div>
-                    <h3 className="text-2xl font-bold text-gray-800">Availability Status</h3>
-                    <p className="text-lg text-gray-600 mt-1">
+                    <h3 className="text-2xl font-bold text-foreground">Availability Status</h3>
+                    <p className="text-lg text-muted-foreground mt-1">
                       Indicate if this person is currently available
                     </p>
                   </div>
@@ -353,16 +516,15 @@ const [human, setHuman] = useState<Human>({
                     onChange={handleChange}
                     className="sr-only peer"
                   />
-                  <div className="w-20 h-10 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-[#f28c28]/30 rounded-full peer peer-checked:after:translate-x-10 peer-checked:after:border-white after:content-[''] after:absolute after:top-1 after:left-1 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-8 after:w-8 after:transition-all peer-checked:bg-[#0b4f6c]"></div>
+                  <div className="w-20 h-10 bg-muted peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-ring/40 rounded-full peer peer-checked:after:translate-x-10 peer-checked:after:border-white after:content-[''] after:absolute after:top-1 after:left-1 after:bg-card after:border-border after:border after:rounded-full after:h-8 after:w-8 after:transition-all peer-checked:bg-primary" />
                 </label>
               </div>
             </div>
 
-            {/* Actions */}
-            <div className="pt-12 flex flex-col sm:flex-row gap-6 justify-end border-t border-gray-100">
+            <div className="pt-12 flex flex-col sm:flex-row gap-6 justify-end border-t border-border">
               <Link
                 href="/humans"
-                className="px-10 py-5 bg-white border-2 border-gray-300 text-gray-700 text-xl font-semibold rounded-2xl hover:bg-gray-50 transition flex items-center justify-center gap-3 shadow-sm"
+                className="px-10 py-5 bg-card border-2 border-border text-foreground text-xl font-semibold rounded-2xl hover:bg-muted transition flex items-center justify-center gap-3 shadow-sm"
               >
                 <X size={22} />
                 Cancel
@@ -371,7 +533,7 @@ const [human, setHuman] = useState<Human>({
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className={`px-12 py-5 bg-[#0b4f6c] text-white text-xl font-bold rounded-2xl shadow-xl hover:bg-[#0b4f6c]/95 hover:shadow-2xl focus:outline-none focus:ring-4 focus:ring-[#f28c28]/50 transition-all duration-300 flex items-center justify-center gap-4 min-w-[280px] ${
+                className={`px-12 py-5 bg-accent text-accent-foreground text-xl font-bold rounded-2xl shadow-sm hover:brightness-110 hover:shadow-md focus:outline-none focus:ring-4 focus:ring-ring/40 transition-all duration-300 flex items-center justify-center gap-4 min-w-[280px] ${
                   isSubmitting ? "opacity-80 cursor-not-allowed" : ""
                 }`}
               >
