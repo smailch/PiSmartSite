@@ -22,7 +22,7 @@ const navigationItems = [
   { id: 'projects', label: 'Projects', icon: Building2, href: '/projects' },
   { id: 'jobs', label: 'Jobs', icon: Briefcase, href: '/jobs' },
   { id: 'tasks', label: 'Tasks', icon: Clipboard, href: '/tasks' },
-  { id: 'reports', label: 'Reports', icon: BarChart3, href: '/reports' },
+  { id: 'invoices', label: 'Invoices', icon: BarChart3, href: '/invoices' },
   { id: 'team', label: 'Team', icon: Users, href: '/team' },
   { id: 'budget', label: 'Budget', icon: Wallet, href: '/budget' },
   { id: 'alerts', label: 'Alerts', icon: AlertCircle, href: '/alerts' },

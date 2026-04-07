@@ -9,7 +9,7 @@ import { FileText, Upload, Download, Trash2, FolderOpen, Search, MoreVertical } 
 import { useState } from 'react';
 
 const documentTypeIcons: { [key: string]: React.ReactNode } = {
-  PDF: '📄',
+  PDF: 'Waliiid',
   Document: '📝',
   Spreadsheet: '📊',
   Archive: '📦',
