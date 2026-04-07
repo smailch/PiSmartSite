@@ -45,9 +45,10 @@ ChartJS.register(
   Filler
 );
 
-/** SmartSite palette — soft brand */
-const PRIMARY = "#2563eb";
-const ACCENT = "#f97316";
+/** PiSmartSite brand (aligné sur globals.css) */
+const PRIMARY = "#0b4f6c";
+const ACCENT = "#f28c28";
+const CHART_TICK = "#94a3b8";
 
 type StepFilter = "all" | "dangerous" | "safe";
 
@@ -58,15 +59,15 @@ function isDangerousLevel(level: string | undefined): boolean {
 function dangerBadgeClass(level: string | undefined): string {
   switch (level) {
     case "CRITICAL":
-      return "border border-red-200 bg-red-50 text-red-800";
+      return "border border-red-500/40 bg-red-500/15 text-red-200";
     case "HIGH":
-      return "border border-orange-200 bg-orange-50 text-orange-800";
+      return "border border-orange-500/40 bg-orange-500/15 text-orange-200";
     case "MEDIUM":
-      return "border border-amber-200 bg-amber-50 text-amber-900";
+      return "border border-amber-500/40 bg-amber-500/20 text-amber-100";
     case "LOW":
-      return "border border-green-200 bg-green-50 text-green-800";
+      return "border border-emerald-500/40 bg-emerald-500/15 text-emerald-200";
     default:
-      return "border border-gray-200 bg-gray-100 text-gray-700";
+      return "border border-border bg-muted text-muted-foreground";
   }
 }
 
@@ -106,7 +107,7 @@ function CircularProgress({ value }: { value: number }) {
           fill="none"
           stroke="currentColor"
           strokeWidth="10"
-          className="text-blue-100"
+          className="text-primary/25"
         />
         <circle
           cx="60"
@@ -211,7 +212,7 @@ export default function JobProgressPage() {
           tension: 0.45,
           pointRadius: 4,
           pointBackgroundColor: ACCENT,
-          pointBorderColor: "#fff",
+          pointBorderColor: "#1e293b",
         },
       ],
     };
@@ -238,13 +239,14 @@ export default function JobProgressPage() {
       scales: {
         x: {
           grid: { display: false },
-          ticks: { maxRotation: 45, minRotation: 0, color: PRIMARY },
+          ticks: { maxRotation: 45, minRotation: 0, color: CHART_TICK },
         },
         y: {
           min: 0,
           max: 100,
           ticks: {
             stepSize: 20,
+            color: CHART_TICK,
             callback: (value: number | string) => `${value}%`,
           },
         },
@@ -365,45 +367,32 @@ export default function JobProgressPage() {
       />
 
       {loading ? (
-        <div
-          className="rounded-2xl border border-gray-100 bg-white p-16 shadow-sm dark:bg-gray-900/80"
-          style={{ borderColor: `${PRIMARY}33` }}
-        >
+        <div className="rounded-2xl border border-border bg-card p-16 shadow-sm">
           <div className="flex flex-col items-center gap-4">
-            <div
-              className="h-10 w-10 animate-spin rounded-full border-4 border-t-transparent"
-              style={{ borderColor: `${PRIMARY}66`, borderTopColor: "transparent" }}
-            />
+            <div className="h-10 w-10 animate-spin rounded-full border-4 border-muted border-t-primary" />
             <p className="text-sm text-muted-foreground">Loading progress…</p>
           </div>
         </div>
       ) : error ? (
-        <div className="rounded-2xl border border-red-200 bg-red-50/80 p-8 dark:border-red-900 dark:bg-red-950/40">
-          <p className="font-medium text-red-800 dark:text-red-200">{error}</p>
+        <div className="rounded-2xl border border-destructive/30 bg-destructive/10 p-8">
+          <p className="font-medium text-destructive">{error}</p>
           <button
             type="button"
             onClick={() => void reload()}
-            className="mt-4 rounded-xl px-4 py-2 text-sm font-semibold text-white shadow"
-            style={{ backgroundColor: PRIMARY }}
+            className="mt-4 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow transition hover:brightness-110"
           >
             Retry
           </button>
         </div>
       ) : !safeSteps.length ? (
-        <div
-          className="rounded-2xl border border-dashed p-16 text-center"
-          style={{ borderColor: `${PRIMARY}44` }}
-        >
+        <div className="rounded-2xl border border-dashed border-border/80 bg-card/50 p-16 text-center">
           <p className="text-muted-foreground">No steps available.</p>
         </div>
       ) : (
-        <div className="mx-auto max-w-6xl space-y-8 pb-12">
+        <div className="mx-auto max-w-6xl space-y-8 pb-12 text-foreground">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div>
-              <h2
-                className="text-xl font-semibold tracking-tight text-gray-900 dark:text-gray-50"
-                style={{ color: PRIMARY }}
-              >
+              <h2 className="text-xl font-semibold tracking-tight text-primary">
                 Overview
               </h2>
               <p className="text-sm text-muted-foreground">
@@ -414,10 +403,7 @@ export default function JobProgressPage() {
               type="button"
               onClick={() => void handleSaveAll()}
               disabled={saving}
-              className="rounded-xl px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all duration-200 hover:opacity-90 disabled:opacity-50"
-              style={{
-                background: `linear-gradient(135deg, ${PRIMARY} 0%, ${ACCENT} 100%)`,
-              }}
+              className="rounded-xl bg-accent px-5 py-2.5 text-sm font-semibold text-accent-foreground shadow-sm transition-all duration-200 hover:brightness-110 disabled:opacity-50"
             >
               {saving ? "Saving…" : "Save changes"}
             </button>
@@ -432,16 +418,12 @@ export default function JobProgressPage() {
             ].map((card) => (
               <div
                 key={card.label}
-                className="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition-all duration-200 hover:border-gray-200 dark:bg-gray-900/90"
-                style={{ borderColor: `${PRIMARY}22` }}
+                className="rounded-2xl border border-border bg-card p-5 shadow-sm transition-all duration-200 hover:border-primary/30"
               >
-                <p
-                  className="text-xs font-medium uppercase tracking-wider opacity-90"
-                  style={{ color: PRIMARY }}
-                >
+                <p className="text-xs font-medium uppercase tracking-wider text-primary">
                   {card.label}
                 </p>
-                <p className="mt-2 text-3xl font-bold tabular-nums text-gray-900 dark:text-white">
+                <p className="mt-2 text-3xl font-bold tabular-nums text-foreground">
                   {card.value}
                 </p>
                 <p className="text-xs text-muted-foreground">{card.sub}</p>
@@ -450,11 +432,8 @@ export default function JobProgressPage() {
           </div>
 
           <div className="grid gap-6 lg:grid-cols-[1fr_minmax(200px,280px)] lg:items-start">
-            <div
-              className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm dark:bg-gray-900/90"
-              style={{ borderColor: `${PRIMARY}22` }}
-            >
-              <h3 className="mb-4 text-sm font-semibold" style={{ color: PRIMARY }}>
+            <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+              <h3 className="mb-4 text-sm font-semibold text-primary">
                 Progress bar
               </h3>
               <div
@@ -473,20 +452,14 @@ export default function JobProgressPage() {
                 {percentage}% complete
               </p>
             </div>
-            <div
-              className="flex justify-center rounded-2xl border border-gray-100 bg-gradient-to-br from-white to-slate-50 p-6 shadow-sm dark:from-gray-900 dark:to-slate-900/80"
-              style={{ borderColor: `${PRIMARY}22` }}
-            >
+            <div className="flex justify-center rounded-2xl border border-border bg-gradient-to-br from-card to-muted/30 p-6 shadow-sm">
               <CircularProgress value={percentage} />
             </div>
           </div>
 
-          <div
-            className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm dark:bg-gray-900/90"
-            style={{ borderColor: `${PRIMARY}22` }}
-          >
-            <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold" style={{ color: PRIMARY }}>
-              <Shield className="h-4 w-4" style={{ color: ACCENT }} />
+          <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+            <h3 className="mb-4 flex items-center gap-2 text-sm font-semibold text-primary">
+              <Shield className="h-4 w-4 text-accent" />
               Cumulative progress (%)
             </h3>
             <div className="h-72 md:h-80">
@@ -495,7 +468,7 @@ export default function JobProgressPage() {
           </div>
 
           <div className="flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100" style={{ color: PRIMARY }}>
+            <h3 className="text-lg font-semibold text-primary">
               Steps
             </h3>
             <div className="flex flex-wrap items-center gap-2">
@@ -514,12 +487,11 @@ export default function JobProgressPage() {
                   key={value}
                   type="button"
                   onClick={() => setStepFilter(value)}
-                  className="rounded-full border px-3 py-1 text-xs font-semibold transition"
-                  style={{
-                    borderColor: stepFilter === value ? ACCENT : `${PRIMARY}33`,
-                    backgroundColor: stepFilter === value ? `${ACCENT}22` : "transparent",
-                    color: stepFilter === value ? PRIMARY : "inherit",
-                  }}
+                  className={`rounded-full border px-3 py-1 text-xs font-semibold transition ${
+                    stepFilter === value
+                      ? "border-primary/50 bg-primary/20 text-foreground"
+                      : "border-border bg-transparent text-muted-foreground hover:border-primary/30 hover:text-foreground"
+                  }`}
                 >
                   {label}
                 </button>
@@ -528,7 +500,7 @@ export default function JobProgressPage() {
           </div>
 
           {showFilteredEmpty && (
-            <p className="rounded-xl border border-dashed px-4 py-3 text-sm text-muted-foreground" style={{ borderColor: `${PRIMARY}44` }}>
+            <p className="rounded-xl border border-dashed border-border px-4 py-3 text-sm text-muted-foreground">
               No steps match this filter. Try &quot;All steps&quot; or upload photos for AI analysis.
             </p>
           )}
@@ -538,8 +510,7 @@ export default function JobProgressPage() {
               return (
                 <li
                   key={`${step.step}-${i}-${step.date ?? ""}`}
-                  className="group rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition-all duration-200 hover:border-gray-200 dark:bg-gray-900/95"
-                  style={{ borderColor: `${PRIMARY}18` }}
+                  className="group rounded-2xl border border-border bg-card p-5 shadow-sm transition-all duration-200 hover:border-primary/25"
                 >
                   <div className="flex flex-col gap-5 lg:flex-row lg:items-start">
                     <button
@@ -550,9 +521,9 @@ export default function JobProgressPage() {
                     >
                       <span className="mt-0.5 shrink-0 transition group-hover:scale-110">
                         {step.completed ? (
-                          <CheckCircle2 className="h-8 w-8" style={{ color: ACCENT }} />
+                          <CheckCircle2 className="h-8 w-8 text-accent" />
                         ) : (
-                          <Circle className="h-8 w-8 opacity-40" style={{ color: PRIMARY }} />
+                          <Circle className="h-8 w-8 text-primary opacity-50" />
                         )}
                       </span>
                       <span className="min-w-0">
@@ -560,7 +531,7 @@ export default function JobProgressPage() {
                           className={`block text-lg font-semibold ${
                             step.completed
                               ? "text-muted-foreground line-through"
-                              : "text-gray-900 dark:text-gray-50"
+                              : "text-foreground"
                           }`}
                         >
                           {step.step}
@@ -581,11 +552,6 @@ export default function JobProgressPage() {
                       {step.photoUrl && step.aiAnalysis && (
                         <div
                           className={`rounded-xl border px-4 py-3 text-sm shadow-sm ${dangerBadgeClass(step.aiAnalysis.dangerLevel)}`}
-                          style={
-                            step.aiAnalysis.dangerLevel === "MEDIUM"
-                              ? { backgroundColor: ACCENT, borderColor: ACCENT }
-                              : undefined
-                          }
                         >
                           <div className="flex items-center gap-2 font-bold">
                             <Shield className="h-4 w-4 shrink-0" />
@@ -614,27 +580,21 @@ export default function JobProgressPage() {
                         }}
                         onDragLeave={() => setDragIndex(null)}
                         onDrop={(e) => onDrop(i, e)}
-                        className={`relative flex min-h-[140px] flex-col items-center justify-center rounded-xl border-2 border-dashed px-4 py-6 transition ${
-                          dragIndex === i ? "bg-orange-50 dark:bg-orange-950/30" : ""
+                        className={`relative flex min-h-[140px] flex-col items-center justify-center rounded-xl border-2 border-dashed border-primary/30 bg-primary/[0.04] px-4 py-6 transition dark:bg-primary/[0.08] ${
+                          dragIndex === i ? "border-accent bg-accent/10" : ""
                         }`}
-                        style={{
-                          borderColor:
-                            dragIndex === i ? ACCENT : `${PRIMARY}33`,
-                          backgroundColor: dragIndex === i ? undefined : `${PRIMARY}06`,
-                        }}
                       >
                         {step.photoUrl ? (
                           <div className="relative w-full max-w-xs">
                             <img
                               src={resolveProgressPhotoUrl(step.photoUrl)}
                               alt="Step evidence"
-                              className="mx-auto max-h-48 w-auto rounded-lg border object-contain shadow-md"
-                              style={{ borderColor: `${PRIMARY}22` }}
+                              className="mx-auto max-h-48 w-auto rounded-lg border border-border object-contain shadow-md"
                             />
                             <button
                               type="button"
                               onClick={() => void removePhoto(i)}
-                              className="absolute right-2 top-2 rounded-lg bg-red-600 p-2 text-white shadow-md transition hover:bg-red-700"
+                              className="absolute right-2 top-2 rounded-lg bg-destructive p-2 text-destructive-foreground shadow-md transition hover:brightness-110"
                               aria-label="Delete photo"
                             >
                               <Trash2 className="h-4 w-4" />
@@ -642,7 +602,7 @@ export default function JobProgressPage() {
                           </div>
                         ) : (
                           <div className="flex flex-col items-center gap-2 text-center">
-                            <Upload className="h-8 w-8" style={{ color: ACCENT }} />
+                            <Upload className="h-8 w-8 text-accent" />
                             <p className="text-sm text-muted-foreground">
                               Drag & drop an image or browse
                             </p>
@@ -656,10 +616,7 @@ export default function JobProgressPage() {
                             disabled={uploadingIndex === i || saving}
                             onChange={(e) => handlePhotoInput(i, e)}
                           />
-                          <span
-                            className="inline-flex items-center gap-2 rounded-lg px-3 py-1.5 text-xs font-semibold text-white shadow"
-                            style={{ backgroundColor: PRIMARY }}
-                          >
+                          <span className="inline-flex items-center gap-2 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground shadow transition hover:brightness-110">
                             {uploadingIndex === i ? "Uploading…" : "Choose file"}
                           </span>
                         </label>

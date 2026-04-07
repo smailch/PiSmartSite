@@ -293,3 +293,17 @@
     border-width: 0;
   }
 }
+
+/* Optional site accessibility toggles (set on <html> from Accessibility menu) */
+html[data-a11y-reduced-motion='true'] *,
+html[data-a11y-reduced-motion='true'] *::before,
+html[data-a11y-reduced-motion='true'] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+html[data-a11y-large-text='true'] {
+  font-size: 112.5%;
+}

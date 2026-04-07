@@ -57,6 +57,7 @@ import type {
   TaskStatus,
 } from '@/lib/types';
 import { isTaskLate } from '@/lib/taskLate';
+import { useRadioGroupKeyboard } from '@/hooks/useRadioGroupKeyboard';
 
 type StatusFilter = 'All' | TaskStatus;
 type PriorityFilter = 'All' | TaskPriority;
@@ -175,7 +176,16 @@ const TASK_STATUS_FILTERS: { label: string; value: StatusFilter }[] = [
   { label: 'Done', value: 'Terminé' },
 ];
 
+const TASK_STATUS_FILTER_VALUES: StatusFilter[] = TASK_STATUS_FILTERS.map((row) => row.value);
+
+const TASK_VIEW_MODES = ['board', 'table'] as const;
+
+const PRIORITY_FILTER_VALUES: PriorityFilter[] = ['All', 'HIGH', 'MEDIUM', 'LOW'];
+
 const OBJECT_ID_RE = /^[a-fA-F0-9]{24}$/;
+
+const RADIO_FOCUS =
+  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2';
 
 function scopedProjectIdFromSearchKey(searchKey: string): string | null {
   const p = new URLSearchParams(searchKey).get('project');
@@ -224,6 +234,24 @@ function TasksPageContent() {
   /** Filtre board par projet (ignoré si URL ?project= définit un périmètre). */
   const [boardProjectFilterId, setBoardProjectFilterId] = useState<'all' | string>('all');
   const [taskJobsPanelId, setTaskJobsPanelId] = useState<string | null>(null);
+
+  const {
+    getTabIndex: getTaskStatusFilterTabIndex,
+    handleKeyDown: onTaskStatusFilterKeyDown,
+    setItemRef: setTaskStatusFilterRef,
+  } = useRadioGroupKeyboard(TASK_STATUS_FILTER_VALUES, statusFilter, setStatusFilter);
+
+  const {
+    getTabIndex: getPriorityFilterTabIndex,
+    handleKeyDown: onPriorityFilterKeyDown,
+    setItemRef: setPriorityFilterRef,
+  } = useRadioGroupKeyboard(PRIORITY_FILTER_VALUES, priorityFilter, setPriorityFilter);
+
+  const {
+    getTabIndex: getViewModeTabIndex,
+    handleKeyDown: onViewModeKeyDown,
+    setItemRef: setViewModeRef,
+  } = useRadioGroupKeyboard(TASK_VIEW_MODES, viewMode, setViewMode);
 
   const {
     data: tasks = [],
@@ -567,8 +595,6 @@ function TasksPageContent() {
     }
   };
 
-  const priorityFilterOptions: PriorityFilter[] = ['All', 'HIGH', 'MEDIUM', 'LOW'];
-
   return (
     <MainLayout>
       <PageHeader
@@ -578,7 +604,7 @@ function TasksPageContent() {
         <button
           type="button"
           onClick={openCreateModal}
-          className="px-4 py-2 rounded-lg bg-accent text-accent-foreground font-semibold hover:bg-accent/90 transition-colors flex items-center gap-2 shadow-sm focus-visible:outline-none"
+          className={`px-4 py-2 rounded-lg bg-accent text-accent-foreground font-semibold hover:bg-accent/90 transition-colors flex items-center gap-2 shadow-sm ${RADIO_FOCUS}`}
         >
           <Plus size={18} aria-hidden />
           New Task
@@ -606,14 +632,19 @@ function TasksPageContent() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div
             className="inline-flex rounded-lg border border-border bg-muted/40 p-0.5"
-            role="group"
+            role="radiogroup"
             aria-label="Choose task layout"
+            aria-orientation="horizontal"
           >
             <button
               type="button"
+              role="radio"
+              aria-checked={viewMode === 'board'}
+              tabIndex={getViewModeTabIndex('board')}
+              ref={setViewModeRef(0)}
+              onKeyDown={(e) => onViewModeKeyDown(e, 0)}
               onClick={() => setViewMode('board')}
-              aria-pressed={viewMode === 'board'}
-              className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none ${
+              className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${RADIO_FOCUS} ${
                 viewMode === 'board'
                   ? 'bg-background text-foreground shadow-sm'
                   : 'text-muted-foreground hover:text-foreground'
@@ -624,9 +655,13 @@ function TasksPageContent() {
             </button>
             <button
               type="button"
+              role="radio"
+              aria-checked={viewMode === 'table'}
+              tabIndex={getViewModeTabIndex('table')}
+              ref={setViewModeRef(1)}
+              onKeyDown={(e) => onViewModeKeyDown(e, 1)}
               onClick={() => setViewMode('table')}
-              aria-pressed={viewMode === 'table'}
-              className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none ${
+              className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${RADIO_FOCUS} ${
                 viewMode === 'table'
                   ? 'bg-background text-foreground shadow-sm'
                   : 'text-muted-foreground hover:text-foreground'
@@ -657,15 +692,23 @@ function TasksPageContent() {
             className="m-0 min-w-0 flex flex-1 flex-wrap items-center gap-2 border-0 p-0"
           >
             <legend className="sr-only">Filter tasks by status</legend>
-            <div role="radiogroup" aria-labelledby="tasks-status-heading" className="flex flex-wrap gap-2">
-              {TASK_STATUS_FILTERS.map((row) => (
+            <div
+              role="radiogroup"
+              aria-labelledby="tasks-status-heading"
+              aria-orientation="horizontal"
+              className="flex flex-wrap gap-2"
+            >
+              {TASK_STATUS_FILTERS.map((row, index) => (
                 <button
                   key={row.value}
                   type="button"
                   role="radio"
                   aria-checked={statusFilter === row.value}
+                  tabIndex={getTaskStatusFilterTabIndex(row.value)}
+                  ref={setTaskStatusFilterRef(index)}
+                  onKeyDown={(e) => onTaskStatusFilterKeyDown(e, index)}
                   onClick={() => setStatusFilter(row.value)}
-                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-60 ${
+                  className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-60 ${RADIO_FOCUS} ${
                     statusFilter === row.value
                       ? 'bg-primary text-primary-foreground shadow-sm'
                       : 'bg-secondary text-secondary-foreground hover:bg-muted'
@@ -681,15 +724,23 @@ function TasksPageContent() {
           <span id="tasks-priority-heading" className="text-sm font-medium text-muted-foreground ml-0 sm:ml-6">
             Priority
           </span>
-          <div role="radiogroup" aria-labelledby="tasks-priority-heading" className="flex flex-wrap gap-2">
-            {priorityFilterOptions.map((p) => (
+          <div
+            role="radiogroup"
+            aria-labelledby="tasks-priority-heading"
+            aria-orientation="horizontal"
+            className="flex flex-wrap gap-2"
+          >
+            {PRIORITY_FILTER_VALUES.map((p, index) => (
               <button
                 key={p}
                 type="button"
                 role="radio"
                 aria-checked={priorityFilter === p}
+                tabIndex={getPriorityFilterTabIndex(p)}
+                ref={setPriorityFilterRef(index)}
+                onKeyDown={(e) => onPriorityFilterKeyDown(e, index)}
                 onClick={() => setPriorityFilter(p)}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors focus-visible:outline-none ${
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${RADIO_FOCUS} ${
                   priorityFilter === p
                     ? 'bg-primary text-primary-foreground shadow-sm'
                     : 'bg-secondary text-secondary-foreground hover:bg-muted'
@@ -709,7 +760,7 @@ function TasksPageContent() {
             id="tasks-progress-sort"
             value={progressSort}
             onChange={(e) => setProgressSort(e.target.value as ProgressSort)}
-            className="rounded-lg border border-border bg-input px-3 py-1.5 text-sm text-foreground"
+            className={`rounded-lg border border-border bg-input px-3 py-1.5 text-sm text-foreground ${RADIO_FOCUS}`}
           >
             <option value="none">None</option>
             <option value="asc">Ascending</option>
@@ -728,7 +779,7 @@ function TasksPageContent() {
               onChange={(e) =>
                 setBoardProjectFilterId(e.target.value === 'all' ? 'all' : e.target.value)
               }
-              className="rounded-lg border border-border bg-input px-3 py-1.5 text-sm text-foreground min-w-[12rem]"
+              className={`rounded-lg border border-border bg-input px-3 py-1.5 text-sm text-foreground min-w-[12rem] ${RADIO_FOCUS}`}
             >
               <option value="all">All projects</option>
               {projectsSortedByName.map((p) => (
@@ -782,109 +833,118 @@ function TasksPageContent() {
           viewMode === 'board' ? 'hidden' : ''
         }`}
       >
-        <div className="w-full">
-          <table className="w-full min-w-0 table-auto border-collapse text-sm">
+        <div className="w-full overflow-x-auto overscroll-x-contain">
+          <table className="w-full min-w-[64rem] table-auto border-separate border-spacing-0 text-sm leading-relaxed">
             <caption className="sr-only">
               Task list. Rows correspond to tasks; columns include title, project, assignment, progress,
-              and actions.
+              and actions. Use Tab to move between filters, table selects, task title links, and action
+              buttons. When a status, priority, or Board or Table layout control is focused, use Left,
+              Right, Home, and End to change the option. In Board view, use the Move task menu on each card
+              to change status without dragging. Widen the window or scroll horizontally to reach all
+              columns.
             </caption>
             <thead>
-              <tr className="border-b border-border bg-muted/40">
+              <tr className="bg-muted/55 dark:bg-muted/40">
                 <th
                   scope="col"
-                  className="px-2 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground first:pl-3 sm:px-3 whitespace-normal break-words"
+                  className="border-b border-border px-3 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground first:pl-4 sm:px-4"
                 >
                   Task
                 </th>
                 <th
                   scope="col"
-                  className="px-2 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground sm:px-3 whitespace-normal break-words"
+                  className="border-b border-border px-3 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground sm:px-4"
                 >
                   Project
                 </th>
                 <th
                   scope="col"
-                  className="px-2 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground sm:px-3 whitespace-normal break-words"
+                  className="border-b border-border px-3 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground sm:px-4"
                 >
                   Dependencies
                 </th>
                 <th
                   scope="col"
-                  className="px-2 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground sm:px-3 whitespace-normal break-words"
+                  className="border-b border-border px-3 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground sm:px-4"
                 >
                   Jobs
                 </th>
                 <th
                   scope="col"
-                  className="px-2 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground sm:px-3 whitespace-normal break-words"
+                  className="border-b border-border px-3 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground sm:px-4"
                 >
                   Assigned to
                 </th>
                 <th
                   scope="col"
-                  className="px-2 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground sm:px-3 whitespace-normal break-words"
+                  className="border-b border-border px-3 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground sm:px-4"
                 >
                   Progress
                 </th>
                 <th
                   scope="col"
-                  className="px-2 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-muted-foreground sm:px-3 tabular-nums whitespace-normal break-words"
+                  className="border-b border-border px-3 py-3.5 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground sm:px-4 tabular-nums"
                 >
                   Spent budget
                 </th>
                 <th
                   scope="col"
-                  className="px-2 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground sm:px-3 whitespace-normal break-words"
+                  className="border-b border-border px-3 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground sm:px-4"
                 >
                   Status
                 </th>
                 <th
                   scope="col"
-                  className="px-2 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground sm:px-3 whitespace-normal break-words"
+                  className="border-b border-border px-3 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground sm:px-4"
                 >
                   Priority
                 </th>
                 <th
                   scope="col"
-                  className="px-2 py-3 text-center text-[11px] font-semibold uppercase tracking-wider text-muted-foreground last:pr-3 sm:px-3 whitespace-normal break-words"
+                  className="border-b border-border px-3 py-3.5 text-center text-xs font-semibold uppercase tracking-wide text-muted-foreground last:pr-4 sm:px-4"
                 >
                   Actions
                 </th>
               </tr>
             </thead>
             <tbody>
-              {filteredTasks.map((task) => (
-                    <tr key={task.id} className="border-b border-border/60 transition-colors odd:bg-background even:bg-muted/[0.35] hover:bg-primary/[0.04]">
-                      <td className="px-2 py-3 align-top break-words first:pl-3 sm:px-3">
-                        <div className="flex items-start gap-2.5 min-w-0">
-                          <Clipboard size={17} className="mt-0.5 shrink-0 text-primary" aria-hidden />
+              {filteredTasks.map((task, rowIndex) => (
+                    <tr
+                      key={task.id}
+                      className={`border-b border-border/50 transition-colors hover:bg-primary/[0.06] dark:hover:bg-primary/[0.08] ${
+                        rowIndex % 2 === 0 ? 'bg-card' : 'bg-muted/25'
+                      }`}
+                    >
+                      <td className="border-b border-border/35 px-3 py-4 align-top break-words first:pl-4 min-w-[12rem] sm:px-4">
+                        <div className="flex items-start gap-3 min-w-0">
+                          <Clipboard size={18} className="mt-0.5 shrink-0 text-primary" aria-hidden />
                           <button
                             type="button"
                             onClick={() => setTaskJobsPanelId(task.id)}
-                            className="text-left font-semibold text-foreground rounded-md ring-offset-background transition-colors hover:text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                            className="text-left text-[15px] font-semibold leading-snug text-foreground rounded-md ring-offset-background transition-colors hover:text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                           >
                             {task.title}
                           </button>
                         </div>
                       </td>
-                      <td className="px-2 py-3 align-top break-words sm:px-3">
-                        <div className="flex items-start gap-2 min-w-0">
-                          <Briefcase size={15} className="mt-0.5 shrink-0 text-primary/70" aria-hidden />
-                          <span className="text-sm font-medium text-foreground">{task.project}</span>
+                      <td className="border-b border-border/35 px-3 py-4 align-top break-words min-w-[10rem] sm:px-4">
+                        <div className="flex items-start gap-2.5 min-w-0">
+                          <Briefcase size={16} className="mt-0.5 shrink-0 text-primary/70" aria-hidden />
+                          <span className="text-[15px] font-medium leading-snug text-foreground">{task.project}</span>
                         </div>
                       </td>
-                      <td className="px-2 py-3 align-top break-words sm:px-3">
+                      <td className="border-b border-border/35 px-3 py-4 align-top break-words sm:px-4">
                         {task.dependencyCount > 0 ? (
-                          <span className="inline-flex max-w-full items-center justify-center whitespace-normal rounded-full bg-blue-100 px-2 py-0.5 text-center text-xs font-medium leading-snug text-blue-900 dark:bg-blue-950/55 dark:text-blue-100">
+                          <span className="inline-flex max-w-full items-center justify-center whitespace-normal rounded-md bg-blue-100 px-2.5 py-1 text-center text-xs font-medium leading-snug text-blue-900 dark:bg-blue-950/55 dark:text-blue-100">
                             Depends on {task.dependencyCount} task(s)
                           </span>
                         ) : (
-                          <span className="inline-flex max-w-full items-center justify-center whitespace-normal rounded-full bg-muted px-2 py-0.5 text-center text-xs font-medium leading-snug text-foreground">
+                          <span className="inline-flex max-w-full items-center justify-center whitespace-normal rounded-md bg-muted/80 px-2.5 py-1 text-center text-xs font-medium leading-snug text-muted-foreground">
                             No dependencies
                           </span>
                         )}
                       </td>
-                      <td className="px-2 py-3 align-top sm:px-3">
+                      <td className="border-b border-border/35 px-3 py-4 align-top sm:px-4">
                         <button
                           type="button"
                           onClick={() => setTaskJobsPanelId(task.id)}
@@ -896,15 +956,15 @@ function TasksPageContent() {
                           {isJobsLoading ? '…' : task.jobCount}
                         </button>
                       </td>
-                      <td className="px-2 py-3 align-top break-words sm:px-3">
-                        <div className="flex items-start gap-2 min-w-0">
-                          <Users size={15} className="mt-0.5 shrink-0 text-primary/80" aria-hidden />
-                          <span className="text-sm font-medium text-foreground">{task.assignedToLabel}</span>
+                      <td className="border-b border-border/35 px-3 py-4 align-top break-words min-w-[9rem] sm:px-4">
+                        <div className="flex items-start gap-2.5 min-w-0">
+                          <Users size={16} className="mt-0.5 shrink-0 text-primary/80" aria-hidden />
+                          <span className="text-[15px] font-medium leading-snug text-foreground">{task.assignedToLabel}</span>
                         </div>
                       </td>
-                      <td className="px-2 py-3 align-top sm:px-3">
-                        <div className="w-full max-w-[5.5rem]">
-                          <div className="mb-1 flex items-center justify-between gap-2">
+                      <td className="border-b border-border/35 px-3 py-4 align-top sm:px-4">
+                        <div className="w-full max-w-[6.25rem]">
+                          <div className="mb-1.5 flex items-center justify-between gap-2">
                             <span className="text-xs font-semibold tabular-nums text-foreground">{task.progress}%</span>
                           </div>
                           <div
@@ -913,7 +973,7 @@ function TasksPageContent() {
                             aria-valuemax={100}
                             aria-valuenow={task.progress}
                             aria-label={`Progress for ${task.title}: ${task.progress} percent`}
-                            className="h-2 w-full overflow-hidden rounded-full bg-muted"
+                            className="h-2.5 w-full overflow-hidden rounded-full bg-muted"
                           >
                             <div
                               className="h-full rounded-full bg-accent transition-[width] duration-300"
@@ -923,11 +983,11 @@ function TasksPageContent() {
                           </div>
                         </div>
                       </td>
-                      <td className="px-2 py-3 text-right align-top sm:px-3">
-                        <span className="tabular-nums text-sm font-semibold text-foreground">{formatDh(task.spentBudget)}</span>
+                      <td className="border-b border-border/35 px-3 py-4 text-right align-top tabular-nums sm:px-4">
+                        <span className="text-[15px] font-semibold text-foreground">{formatDh(task.spentBudget)}</span>
                       </td>
-                      <td className="px-2 py-3 align-top sm:px-3">
-                        <div className="flex flex-wrap items-center gap-1.5">
+                      <td className="border-b border-border/35 px-3 py-4 align-top sm:px-4">
+                        <div className="flex flex-wrap items-center gap-2">
                           <span className={getTaskStatusStyle(task.status)}>
                             {taskStatusLabel(task.status)}
                           </span>
@@ -938,15 +998,15 @@ function TasksPageContent() {
                           ) : null}
                         </div>
                       </td>
-                      <td className="px-2 py-3 align-top sm:px-3">
+                      <td className="border-b border-border/35 px-3 py-4 align-top sm:px-4">
                         <span className={getPriorityStyle(task.priority)}>{priorityCellLabel(task.priority)}</span>
                       </td>
-                      <td className="px-2 py-3 align-top break-words last:pr-3 sm:px-3">
-                        <div className="flex flex-wrap items-center justify-center gap-1.5">
+                      <td className="border-b border-border/35 px-3 py-4 align-top break-words last:pr-4 sm:px-4">
+                        <div className="flex flex-wrap items-center justify-center gap-2">
                           <button
                             type="button"
                             onClick={() => openEditModal(task.id)}
-                            className="inline-flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm transition-[filter] hover:brightness-110 focus-visible:outline-none"
+                            className={`inline-flex size-9 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm transition-[filter] hover:brightness-110 ${RADIO_FOCUS}`}
                             aria-label={`Edit task: ${task.title}`}
                             title="Edit"
                           >
@@ -956,7 +1016,7 @@ function TasksPageContent() {
                             type="button"
                             onClick={() => setTaskPendingDelete({ id: task.id, title: task.title })}
                             disabled={isDeleteSubmitting && taskPendingDelete?.id === task.id}
-                            className="inline-flex size-9 items-center justify-center rounded-lg border border-destructive/35 bg-background text-destructive shadow-sm transition-colors hover:bg-destructive/10 disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-none"
+                            className={`inline-flex size-9 items-center justify-center rounded-lg border border-destructive/35 bg-background text-destructive shadow-sm transition-colors hover:bg-destructive/10 disabled:pointer-events-none disabled:opacity-50 ${RADIO_FOCUS}`}
                             aria-label={`Delete task: ${task.title}`}
                             title="Delete"
                           >

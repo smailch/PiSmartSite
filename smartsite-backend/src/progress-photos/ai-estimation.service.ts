@@ -3,6 +3,9 @@ import { ConfigService } from '@nestjs/config';
 import * as fs from 'fs';
 import * as path from 'path';
 
+/** Modèle vision Groq pour ce service uniquement (ne pas lire GROQ_VISION_MODEL : souvent réutilisé ailleurs dans .env). */
+const DEFAULT_GROQ_PROGRESS_PHOTO_MODEL = 'meta-llama/llama-4-scout-17b-16e-instruct';
+
 @Injectable()
 export class AiEstimationService {
   constructor(private readonly config: ConfigService) {}
@@ -47,10 +50,9 @@ Consider these stages:
 
 Respond with ONLY a number between 0 and 100. No explanation.`;
 
-      const visionModel = this.config.get<string>(
-        'GROQ_VISION_MODEL',
-        'meta-llama/llama-3.2-11b-vision-preview',
-      );
+      const visionModel =
+        this.config.get<string>('GROQ_PROGRESS_PHOTO_MODEL')?.trim() ||
+        DEFAULT_GROQ_PROGRESS_PHOTO_MODEL;
 
       const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',

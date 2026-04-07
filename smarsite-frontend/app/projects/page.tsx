@@ -58,6 +58,7 @@ import DeleteProjectDialog from '@/components/DeleteProjectDialog';
 import { toast } from '@/hooks/use-toast';
 import { formatDh } from '@/lib/formatMoney';
 import { cn } from '@/lib/utils';
+import { useRadioGroupKeyboard } from '@/hooks/useRadioGroupKeyboard';
 
 const DESCRIPTION_PREVIEW_LEN = 20;
 
@@ -187,6 +188,17 @@ function InsightsConfidenceBar({ value }: { value: number }) {
 
 type ProjectStatusFilter = 'All' | Project['status'];
 
+const PROJECT_STATUS_FILTER_BUTTONS: { label: string; value: ProjectStatusFilter }[] = [
+  { label: 'All', value: 'All' },
+  { label: 'In progress', value: 'En cours' },
+  { label: 'Completed', value: 'Terminé' },
+  { label: 'Behind schedule', value: 'En retard' },
+];
+
+const PROJECT_STATUS_FILTER_VALUES: ProjectStatusFilter[] = PROJECT_STATUS_FILTER_BUTTONS.map(
+  (b) => b.value,
+);
+
 /** Row type for the projects table — virtual `actions` column is not on the API model */
 type ProjectTableRow = Project & { actions?: undefined };
 
@@ -233,6 +245,12 @@ export default function ProjectsPage() {
   const [assistantReportError, setAssistantReportError] = useState<string | null>(null);
 
   const assistantChatScrollRef = useRef<HTMLDivElement>(null);
+
+  const {
+    getTabIndex: getProjectStatusFilterTabIndex,
+    handleKeyDown: onProjectStatusFilterKeyDown,
+    setItemRef: setProjectStatusFilterRef,
+  } = useRadioGroupKeyboard(PROJECT_STATUS_FILTER_VALUES, filter, setFilter);
 
   function isValidObjectId(id: string | undefined): boolean {
     return typeof id === 'string' && /^[a-fA-F0-9]{24}$/.test(id);
@@ -295,13 +313,6 @@ export default function ProjectsPage() {
     ? projects
     : projects.filter((p) => p.status === filter)
   ).filter((p) => isValidObjectId(p._id));
-
-  const statusFilterButtons: { label: string; value: ProjectStatusFilter }[] = [
-    { label: 'All', value: 'All' },
-    { label: 'In progress', value: 'En cours' },
-    { label: 'Completed', value: 'Terminé' },
-    { label: 'Behind schedule', value: 'En retard' },
-  ];
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -891,41 +902,47 @@ export default function ProjectsPage() {
         </Dialog>
       </PageHeader>
 
-      <div
-        className="mb-6 flex flex-wrap items-center gap-2"
-        role="radiogroup"
-        aria-labelledby="projects-status-filter-label"
-      >
+      <div className="mb-6 flex flex-wrap items-center gap-2">
         <div className="flex items-center gap-2 text-muted-foreground">
           <Filter size={18} className="shrink-0" aria-hidden />
           <span id="projects-status-filter-label" className="text-sm font-semibold text-foreground">
             Status
           </span>
         </div>
-        {statusFilterButtons.map((btn) => (
-          <button
-            key={btn.label}
-            type="button"
-            role="radio"
-            aria-checked={filter === btn.value}
-            onClick={() => setFilter(btn.value)}
-            className={cn(
-              'rounded-lg px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
-              filter === btn.value
-                ? 'bg-primary text-primary-foreground shadow-sm'
-                : 'bg-secondary text-foreground hover:bg-muted',
-            )}
-          >
-            {btn.label}
-          </button>
-        ))}
+        <div
+          role="radiogroup"
+          aria-labelledby="projects-status-filter-label"
+          aria-orientation="horizontal"
+          className="flex flex-wrap gap-2"
+        >
+          {PROJECT_STATUS_FILTER_BUTTONS.map((btn, index) => (
+            <button
+              key={btn.label}
+              type="button"
+              role="radio"
+              aria-checked={filter === btn.value}
+              tabIndex={getProjectStatusFilterTabIndex(btn.value)}
+              ref={setProjectStatusFilterRef(index)}
+              onKeyDown={(e) => onProjectStatusFilterKeyDown(e, index)}
+              onClick={() => setFilter(btn.value)}
+              className={cn(
+                'rounded-lg px-4 py-2 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
+                filter === btn.value
+                  ? 'bg-primary text-primary-foreground shadow-sm'
+                  : 'bg-secondary text-foreground hover:bg-muted',
+              )}
+            >
+              {btn.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       <DataTable<ProjectTableRow>
         columns={tableColumns}
         data={filteredProjects}
         title="All projects"
-        tableCaption="Construction projects: name, description, type, budgets, location, dates, status, and row actions."
+        tableCaption="Construction projects: name, description, type, budgets, location, dates, status, and row actions. Above the table, the status filter uses a radio group: when focused, use Left and Right arrows to change the option. Scroll horizontally if the table is wider than the viewport."
         pageLevelScroll
       />
 

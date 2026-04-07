@@ -3,6 +3,8 @@
 import { Bell, Settings, User, LogOut } from 'lucide-react';
 import { useState } from 'react';
 
+import AccessibilityMenu from '@/components/AccessibilityMenu';
+
 export default function Topbar() {
   const [showUserMenu, setShowUserMenu] = useState(false);
 
@@ -14,6 +16,7 @@ export default function Topbar() {
 
         {/* Right: Actions */}
         <div className="ml-auto flex items-center gap-2 md:gap-3">
+          <AccessibilityMenu />
           <button
             type="button"
             aria-label="Notifications"

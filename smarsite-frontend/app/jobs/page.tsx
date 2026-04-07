@@ -97,8 +97,8 @@ export default function JobsPage() {
             <button key={status} onClick={() => setStatusFilter(status)}
               className={`rounded-xl px-4 py-2 text-sm font-medium transition-all duration-300 ease-out ${
                 statusFilter === status
-                  ? "bg-gradient-to-r from-blue-50 to-transparent text-blue-600 shadow-sm ring-1 ring-blue-200/50"
-                  : "border border-white/40 bg-white/50 text-gray-700 shadow-sm backdrop-blur-sm hover:bg-white/80 hover:shadow-md"
+                  ? "border border-primary/40 bg-primary/25 text-foreground shadow-sm ring-1 ring-primary/30"
+                  : "border border-border bg-muted/50 text-muted-foreground shadow-sm hover:bg-muted/80 hover:text-foreground"
               }`}>
               {status}
             </button>

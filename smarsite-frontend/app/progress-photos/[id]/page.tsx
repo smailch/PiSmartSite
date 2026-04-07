@@ -37,9 +37,23 @@ interface ProgressPhoto {
 }
 
 const statusConfig = {
-  pending: { label: 'Pending', color: 'bg-yellow-100 text-yellow-700', icon: Clock, borderColor: 'border-yellow-200' },
-  approved: { label: 'Approved', color: 'bg-green-100 text-green-700', icon: CheckCircle, borderColor: 'border-green-200' },
-  rejected: { label: 'Rejected', color: 'bg-red-100 text-red-700', icon: XCircle, borderColor: 'border-red-200' },
+  pending: {
+    label: 'Pending',
+    color:
+      'border border-amber-500/35 bg-amber-500/15 text-amber-100 shadow-sm backdrop-blur-sm',
+    icon: Clock,
+  },
+  approved: {
+    label: 'Approved',
+    color:
+      'border border-emerald-500/35 bg-emerald-500/15 text-emerald-100 shadow-sm backdrop-blur-sm',
+    icon: CheckCircle,
+  },
+  rejected: {
+    label: 'Rejected',
+    color: 'border border-red-500/35 bg-red-500/15 text-red-100 shadow-sm backdrop-blur-sm',
+    icon: XCircle,
+  },
 };
 
 export default function ProgressPhotoDetailPage() {
@@ -168,8 +182,11 @@ export default function ProgressPhotoDetailPage() {
   if (loading) {
     return (
       <MainLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
+        <div className="flex min-h-[40vh] items-center justify-center rounded-2xl border border-border bg-card/80 shadow-sm">
+          <div className="flex flex-col items-center gap-4">
+            <div className="h-12 w-12 animate-spin rounded-full border-4 border-muted border-t-primary" />
+            <p className="text-sm text-muted-foreground">Chargement de la photo…</p>
+          </div>
         </div>
       </MainLayout>
     );
@@ -178,13 +195,14 @@ export default function ProgressPhotoDetailPage() {
   if (error || !photo) {
     return (
       <MainLayout>
-        <div className="flex flex-col items-center justify-center h-64 text-center">
-          <AlertCircle size={64} className="text-destructive mb-4" />
-          <h2 className="text-xl font-semibold mb-2">Error</h2>
-          <p className="text-muted-foreground mb-6">{error || 'Photo not found'}</p>
-          <button 
-            onClick={() => router.push('/progress-photos')} 
-            className="px-6 py-2 bg-primary text-white rounded-lg"
+        <div className="flex flex-col items-center justify-center rounded-2xl border border-destructive/30 bg-destructive/10 px-8 py-16 text-center">
+          <AlertCircle size={56} className="mb-4 text-destructive" aria-hidden />
+          <h2 className="mb-2 text-xl font-semibold text-foreground">Erreur</h2>
+          <p className="mb-6 max-w-md text-muted-foreground">{error || 'Photo not found'}</p>
+          <button
+            type="button"
+            onClick={() => router.push('/progress-photos')}
+            className="rounded-xl bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm transition hover:brightness-110"
           >
             Back to Photos
           </button>
@@ -202,99 +220,108 @@ export default function ProgressPhotoDetailPage() {
         title="Progress Photo Details"
         description={`Project: ${photo.projectId}`}
       >
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-2 sm:gap-3">
           <button
+            type="button"
             onClick={() => router.back()}
-            className="px-4 py-2 border border-border hover:bg-secondary rounded-lg flex items-center gap-2"
+            className="flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2 text-sm font-medium text-foreground shadow-sm transition hover:bg-muted"
           >
-            <ArrowLeft size={18} /> Back
+            <ArrowLeft size={18} aria-hidden /> Back
           </button>
           {photo.validationStatus === 'pending' && (
             <button
+              type="button"
               onClick={() => setShowValidateModal(true)}
-              className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 flex items-center gap-2"
+              className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm transition hover:brightness-110"
             >
-              <CheckCircle size={18} /> Validate
+              <CheckCircle size={18} aria-hidden /> Validate
             </button>
           )}
           <button
+            type="button"
             onClick={() => setShowEditModal(true)}
-            className="px-4 py-2 border border-accent text-accent rounded-lg hover:bg-accent/5 flex items-center gap-2"
+            className="flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2 text-sm font-medium text-foreground shadow-sm transition hover:border-accent/50 hover:bg-muted"
           >
-            <Edit size={18} /> Edit
+            <Edit size={18} className="text-accent" aria-hidden /> Edit
           </button>
           <button
+            type="button"
             onClick={handleDelete}
-            className="px-4 py-2 border border-destructive text-destructive rounded-lg hover:bg-destructive/5 flex items-center gap-2"
+            className="flex items-center gap-2 rounded-xl border border-destructive/50 bg-destructive/10 px-4 py-2 text-sm font-medium text-destructive transition hover:bg-destructive/20"
           >
-            <XCircle size={18} /> Delete
+            <XCircle size={18} aria-hidden /> Delete
           </button>
         </div>
       </PageHeader>
 
       {/* Photo and Info Grid */}
-      <div className="grid lg:grid-cols-2 gap-8 mb-8">
-        {/* Photo Section */}
-        <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
-          <div className="relative bg-secondary">
+      <div className="mb-8 grid gap-8 lg:grid-cols-2">
+        <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-lg shadow-black/20">
+          <div className="relative bg-muted/50">
             <img
               src={`${API_BASE}${photo.photoUrl.startsWith('/') ? '' : '/'}${photo.photoUrl}`}
               alt={photo.caption || 'Progress photo'}
-              className="w-full h-auto object-contain max-h-[500px]"
+              className="max-h-[500px] h-auto w-full object-contain"
               onError={(e) => {
-                e.currentTarget.src = 'https://placehold.co/800x600/eee/ccc?text=Photo+Not+Available';
-                e.currentTarget.className += ' opacity-60';
+                e.currentTarget.src =
+                  'https://placehold.co/800x600/1e293b/94a3b8?text=Photo+Not+Available';
+                e.currentTarget.className +=
+                  ' opacity-80 grayscale-[0.15]';
               }}
             />
-            <div className="absolute top-4 right-4">
-              <span className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-semibold ${StatusInfo.color}`}>
-                <StatusIcon size={16} />
+            <div className="absolute right-4 top-4">
+              <span
+                className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-semibold ${StatusInfo.color}`}
+              >
+                <StatusIcon size={16} aria-hidden />
                 {StatusInfo.label}
               </span>
             </div>
           </div>
-          
-          <div className="p-6">
+
+          <div className="border-t border-border p-6">
             <a
               href={`${API_BASE}${photo.photoUrl.startsWith('/') ? '' : '/'}${photo.photoUrl}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90"
+              className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm transition hover:brightness-110"
             >
-              <Download size={18} />
+              <Download size={18} aria-hidden />
               Download Full Resolution
             </a>
           </div>
         </div>
 
-        {/* Details Section */}
-        <div className="bg-white rounded-xl border shadow-sm p-6">
-          <h3 className="text-lg font-semibold mb-6">Photo Information</h3>
-          
+        <div className="rounded-2xl border border-border bg-card p-6 shadow-lg shadow-black/20 lg:p-8">
+          <h3 className="mb-6 flex items-center gap-2 text-lg font-semibold text-foreground">
+            <Camera className="h-5 w-5 text-accent" aria-hidden />
+            Photo Information
+          </h3>
+
           <div className="space-y-6">
             <div>
-              <label className="text-sm font-medium text-muted-foreground mb-1 block">Caption</label>
-              <p className="text-gray-900">{photo.caption || 'No caption provided'}</p>
+              <label className="mb-1 block text-sm font-medium text-muted-foreground">Caption</label>
+              <p className="text-foreground">{photo.caption || 'No caption provided'}</p>
             </div>
 
             <div>
-              <label className="text-sm font-medium text-muted-foreground mb-1 block">Project ID</label>
-              <p className="text-gray-900 font-mono">{photo.projectId}</p>
+              <label className="mb-1 block text-sm font-medium text-muted-foreground">Project ID</label>
+              <p className="font-mono text-sm text-foreground">{photo.projectId}</p>
             </div>
 
             <div>
-              <label className="text-sm font-medium text-muted-foreground mb-1 block">Uploaded By</label>
+              <label className="mb-1 block text-sm font-medium text-muted-foreground">Uploaded By</label>
               <div className="flex items-center gap-2">
-                <User size={16} className="text-muted-foreground" />
-                <span className="text-gray-900">{photo.uploadedBy}</span>
+                <User size={16} className="text-accent" aria-hidden />
+                <span className="text-foreground">{photo.uploadedBy}</span>
               </div>
             </div>
 
             <div>
-              <label className="text-sm font-medium text-muted-foreground mb-1 block">Taken At</label>
+              <label className="mb-1 block text-sm font-medium text-muted-foreground">Taken At</label>
               <div className="flex items-center gap-2">
-                <Calendar size={16} className="text-muted-foreground" />
-                <span className="text-gray-900">
+                <Calendar size={16} className="text-muted-foreground" aria-hidden />
+                <span className="text-foreground">
                   {new Date(photo.takenAt).toLocaleString('en-US', {
                     dateStyle: 'full',
                     timeStyle: 'medium',
@@ -304,10 +331,10 @@ export default function ProgressPhotoDetailPage() {
             </div>
 
             <div>
-              <label className="text-sm font-medium text-muted-foreground mb-1 block">Uploaded At</label>
+              <label className="mb-1 block text-sm font-medium text-muted-foreground">Uploaded At</label>
               <div className="flex items-center gap-2">
-                <Clock size={16} className="text-muted-foreground" />
-                <span className="text-gray-900">
+                <Clock size={16} className="text-muted-foreground" aria-hidden />
+                <span className="text-foreground">
                   {new Date(photo.createdAt).toLocaleString('en-US', {
                     dateStyle: 'full',
                     timeStyle: 'medium',
@@ -318,15 +345,17 @@ export default function ProgressPhotoDetailPage() {
 
             {photo.estimatedProgress !== undefined && (
               <div>
-                <label className="text-sm font-medium text-muted-foreground mb-1 block">Estimated Progress</label>
+                <label className="mb-1 block text-sm font-medium text-muted-foreground">
+                  Estimated Progress
+                </label>
                 <div className="flex items-center gap-3">
-                  <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-primary rounded-full"
+                  <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-primary to-accent"
                       style={{ width: `${photo.estimatedProgress}%` }}
                     />
                   </div>
-                  <span className="font-semibold text-primary">{photo.estimatedProgress}%</span>
+                  <span className="font-semibold tabular-nums text-accent">{photo.estimatedProgress}%</span>
                 </div>
               </div>
             )}
@@ -334,15 +363,17 @@ export default function ProgressPhotoDetailPage() {
             {photo.validationStatus !== 'pending' && (
               <>
                 <div>
-                  <label className="text-sm font-medium text-muted-foreground mb-1 block">Validated By</label>
-                  <p className="text-gray-900">{photo.validatedBy || 'N/A'}</p>
+                  <label className="mb-1 block text-sm font-medium text-muted-foreground">Validated By</label>
+                  <p className="text-foreground">{photo.validatedBy || 'N/A'}</p>
                 </div>
-                
+
                 {photo.validationNote && (
                   <div>
-                    <label className="text-sm font-medium text-muted-foreground mb-1 block">Validation Note</label>
-                    <div className="bg-gray-50 p-3 rounded-lg">
-                      <p className="text-gray-900">{photo.validationNote}</p>
+                    <label className="mb-1 block text-sm font-medium text-muted-foreground">
+                      Validation Note
+                    </label>
+                    <div className="rounded-xl border border-border bg-muted/40 p-4">
+                      <p className="text-sm leading-relaxed text-foreground">{photo.validationNote}</p>
                     </div>
                   </div>
                 )}
@@ -354,64 +385,66 @@ export default function ProgressPhotoDetailPage() {
 
       {/* Validate Modal */}
       {showValidateModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/75 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-xl border border-white/10 bg-card/95 p-8 text-card-foreground shadow-2xl shadow-black/50 backdrop-blur-xl">
-            <h2 className="mb-6 text-2xl font-bold text-card-foreground">Validate Photo</h2>
-            
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-4 backdrop-blur-md">
+          <div className="w-full max-w-md rounded-2xl border border-border bg-card p-8 text-card-foreground shadow-2xl shadow-black/40">
+            <h2 className="mb-6 text-2xl font-bold text-foreground">Validate Photo</h2>
+
             <form onSubmit={handleValidate} className="space-y-5">
               <div>
-                <label className="block text-sm font-medium mb-2">Decision *</label>
-                <div className="flex gap-4">
+                <label className="mb-2 block text-sm font-medium text-foreground">Decision *</label>
+                <div className="flex gap-3">
                   <button
                     type="button"
                     onClick={() => setValidationStatus('approved')}
-                    className={`flex-1 rounded-lg border px-4 py-2 ${
+                    className={`flex flex-1 items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-semibold transition ${
                       validationStatus === 'approved'
-                        ? 'border-emerald-500 bg-emerald-500/15 text-emerald-200'
-                        : 'border-white/15 bg-white/[0.04] text-slate-200 hover:bg-white/[0.08]'
+                        ? 'border-emerald-500/50 bg-emerald-500/15 text-emerald-100'
+                        : 'border-border bg-muted/30 text-muted-foreground hover:bg-muted/50 hover:text-foreground'
                     }`}
                   >
-                    <CheckCircle size={18} className="inline mr-2" />
+                    <CheckCircle size={18} aria-hidden />
                     Approve
                   </button>
                   <button
                     type="button"
                     onClick={() => setValidationStatus('rejected')}
-                    className={`flex-1 rounded-lg border px-4 py-2 ${
+                    className={`flex flex-1 items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-semibold transition ${
                       validationStatus === 'rejected'
-                        ? 'border-red-500 bg-red-500/15 text-red-200'
-                        : 'border-white/15 bg-white/[0.04] text-slate-200 hover:bg-white/[0.08]'
+                        ? 'border-red-500/50 bg-red-500/15 text-red-100'
+                        : 'border-border bg-muted/30 text-muted-foreground hover:bg-muted/50 hover:text-foreground'
                     }`}
                   >
-                    <XCircle size={18} className="inline mr-2" />
+                    <XCircle size={18} aria-hidden />
                     Reject
                   </button>
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1">Validation Note (optional)</label>
+                <label className="mb-1 block text-sm font-medium text-foreground">
+                  Validation Note (optional)
+                </label>
                 <textarea
                   value={validationNote}
                   onChange={(e) => setValidationNote(e.target.value)}
-                  className="w-full rounded-lg border border-white/10 bg-slate-900/50 px-4 py-2 text-slate-100 placeholder:text-slate-500 focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/25"
+                  className="w-full rounded-xl border border-border bg-input px-4 py-3 text-foreground placeholder:text-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/40"
                   rows={3}
                   placeholder="Add a comment about this photo..."
                 />
               </div>
 
-              <div className="flex gap-4 mt-8">
+              <div className="mt-8 flex gap-3">
                 <button
                   type="button"
                   onClick={() => setShowValidateModal(false)}
-                  className="flex-1 rounded-xl border border-white/15 py-3 text-slate-200 hover:bg-white/[0.06]"
+                  className="flex-1 rounded-xl border border-border bg-muted/40 py-3 text-sm font-semibold text-foreground transition hover:bg-muted"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={validating}
-                  className="flex-1 py-3 bg-primary text-white rounded-xl font-medium hover:bg-primary/90 disabled:opacity-50"
+                  className="flex-1 rounded-xl bg-accent py-3 text-sm font-semibold text-accent-foreground transition hover:brightness-110 disabled:opacity-50"
                 >
                   {validating ? 'Validating...' : 'Submit Validation'}
                 </button>
@@ -423,17 +456,17 @@ export default function ProgressPhotoDetailPage() {
 
       {/* Edit Modal */}
       {showEditModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/75 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-xl border border-white/10 bg-card/95 p-8 text-card-foreground shadow-2xl shadow-black/50 backdrop-blur-xl">
-            <h2 className="mb-6 text-2xl font-bold text-card-foreground">Edit Photo Details</h2>
-            
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 p-4 backdrop-blur-md">
+          <div className="w-full max-w-md rounded-2xl border border-border bg-card p-8 text-card-foreground shadow-2xl shadow-black/40">
+            <h2 className="mb-6 text-2xl font-bold text-foreground">Edit Photo Details</h2>
+
             <form onSubmit={handleUpdate} className="space-y-5">
               <div>
-                <label className="block text-sm font-medium mb-1">Caption</label>
+                <label className="mb-1 block text-sm font-medium text-foreground">Caption</label>
                 <textarea
                   value={editCaption}
                   onChange={(e) => setEditCaption(e.target.value)}
-                  className="w-full rounded-lg border border-white/10 bg-slate-900/50 px-4 py-2 text-slate-100 placeholder:text-slate-500 focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/25"
+                  className="w-full rounded-xl border border-border bg-input px-4 py-3 text-foreground placeholder:text-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/40"
                   rows={3}
                   placeholder="Add a caption..."
                 />
@@ -451,27 +484,24 @@ export default function ProgressPhotoDetailPage() {
                   placeholder="0-100"
                 />
               </div> */}
-{photo.estimatedProgress !== undefined && (
-  <div className="flex items-center justify-between text-xs">
-    <span className="text-muted-foreground flex items-center gap-1">
-      🤖 AI Progress
-    </span>
-    <span className="font-semibold text-primary">{photo.estimatedProgress}%</span>
-  </div>
-)}
+              {photo.estimatedProgress !== undefined && (
+                <div className="flex items-center justify-between rounded-xl border border-border bg-muted/30 px-3 py-2 text-xs">
+                  <span className="text-muted-foreground">AI Progress (read-only)</span>
+                  <span className="font-semibold tabular-nums text-accent">{photo.estimatedProgress}%</span>
+                </div>
+              )}
 
-
-              <div className="flex gap-4 mt-8">
+              <div className="mt-8 flex gap-3">
                 <button
                   type="button"
                   onClick={() => setShowEditModal(false)}
-                  className="flex-1 rounded-xl border border-white/15 py-3 text-slate-200 hover:bg-white/[0.06]"
+                  className="flex-1 rounded-xl border border-border bg-muted/40 py-3 text-sm font-semibold text-foreground transition hover:bg-muted"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-3 bg-primary text-white rounded-xl font-medium hover:bg-primary/90"
+                  className="flex-1 rounded-xl bg-primary py-3 text-sm font-semibold text-primary-foreground transition hover:brightness-110"
                 >
                   Save Changes
                 </button>

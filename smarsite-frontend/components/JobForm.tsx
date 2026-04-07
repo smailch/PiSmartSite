@@ -333,15 +333,15 @@ export default function JobForm({ mode, initialData }: JobFormProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white dark:from-gray-950 dark:to-gray-900 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="w-full max-w-5xl mx-auto py-2 sm:py-4 text-foreground">
       <div className="max-w-5xl mx-auto">
         {/* Header */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between mb-12 gap-6">
           <div>
-            <h1 className="text-4xl lg:text-5xl font-semibold tracking-tight text-blue-600">
+            <h1 className="text-4xl lg:text-5xl font-semibold tracking-tight text-foreground">
               {mode === "create" ? "Plan New Job" : "Edit Job"}
             </h1>
-            <p className="mt-4 text-xl text-gray-600 dark:text-gray-400 max-w-2xl">
+            <p className="mt-4 text-xl text-muted-foreground max-w-2xl">
               {mode === "create"
                 ? "Schedule a new job, assign resources and define timeline."
                 : "Update job details, resources and schedule."}
@@ -349,7 +349,7 @@ export default function JobForm({ mode, initialData }: JobFormProps) {
           </div>
           <Link
             href="/jobs"
-            className="inline-flex items-center gap-3 px-7 py-4 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 rounded-2xl font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition shadow-sm"
+            className="inline-flex items-center gap-3 px-7 py-4 bg-card border border-border text-foreground rounded-2xl font-medium hover:bg-muted transition shadow-sm"
           >
             <ArrowLeft size={20} />
             Cancel
@@ -357,7 +357,7 @@ export default function JobForm({ mode, initialData }: JobFormProps) {
         </div>
 
         {errors.general && (
-          <div className="mb-10 p-6 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-2xl flex items-start gap-4 text-red-800 dark:text-red-300">
+          <div className="mb-10 p-6 bg-destructive/10 border border-destructive/30 rounded-2xl flex items-start gap-4 text-destructive">
             <AlertCircle size={28} className="mt-1 flex-shrink-0" />
             <div>
               <p className="font-semibold text-lg">Error</p>
@@ -369,22 +369,22 @@ export default function JobForm({ mode, initialData }: JobFormProps) {
         <form
           onSubmit={handleSubmit}
           noValidate
-          className="overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-sm dark:border-gray-800 dark:bg-gray-900"
+          className="overflow-hidden rounded-3xl border border-border bg-card shadow-sm"
         >
           <div className="p-8 lg:p-12 xl:p-16 space-y-14">
             {/* Job Details */}
             <div>
               <div className="flex items-center gap-4 mb-8">
-                <div className="h-14 w-14 rounded-2xl bg-blue-50 dark:bg-blue-950/30 flex items-center justify-center">
-                  <Briefcase size={28} className="text-blue-600 dark:text-blue-400" />
+                <div className="h-14 w-14 rounded-2xl bg-primary/15 flex items-center justify-center">
+                  <Briefcase size={28} className="text-primary" />
                 </div>
-                <h2 className="text-3xl font-bold text-blue-600 dark:text-gray-100">Job Details</h2>
+                <h2 className="text-3xl font-bold text-foreground">Job Details</h2>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-10">
                 {/* Title */}
                 <div className="space-y-2">
-                  <label className="block text-lg font-semibold text-gray-700 dark:text-gray-300">
+                  <label className="block text-lg font-semibold text-foreground">
                     Title <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -392,8 +392,8 @@ export default function JobForm({ mode, initialData }: JobFormProps) {
                     value={formData.title}
                     onChange={handleChange}
                     onBlur={handleBlur}
-                    className={`w-full px-5 py-5 border-2 rounded-2xl text-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-blue-400 transition-all shadow-sm ${
-                      errors.title && touched.title ? "border-red-500" : "border-gray-300 dark:border-gray-700"
+                    className={`w-full px-5 py-5 border-2 rounded-2xl text-lg bg-input text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/40 focus:border-ring transition-all shadow-sm ${
+                      errors.title && touched.title ? "border-red-500" : "border-border"
                     }`}
                     placeholder="Enter job title"
                   />
@@ -406,11 +406,11 @@ export default function JobForm({ mode, initialData }: JobFormProps) {
 
                 {/* Task Selection */}
                 <div className="space-y-2">
-                  <label className="block text-lg font-semibold text-gray-700 dark:text-gray-300">
+                  <label className="block text-lg font-semibold text-foreground">
                     Associated Task <span className="text-red-500">*</span>
                   </label>
                   <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-500">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-muted-foreground">
                       <FileText size={20} />
                     </div>
                     <select
@@ -419,8 +419,8 @@ export default function JobForm({ mode, initialData }: JobFormProps) {
                       onChange={handleChange}
                       onBlur={handleBlur}
                       disabled={tasksLoading}
-                      className={`w-full pl-12 pr-5 py-5 border-2 rounded-2xl text-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-blue-400 transition-all shadow-sm ${
-                        errors.taskId && touched.taskId ? "border-red-500" : "border-gray-300 dark:border-gray-700"
+                      className={`w-full pl-12 pr-5 py-5 border-2 rounded-2xl text-lg bg-input text-foreground focus:outline-none focus:ring-2 focus:ring-ring/40 focus:border-ring transition-all shadow-sm ${
+                        errors.taskId && touched.taskId ? "border-red-500" : "border-border"
                       }`}
                     >
                       <option value="">Select a task...</option>
@@ -433,7 +433,7 @@ export default function JobForm({ mode, initialData }: JobFormProps) {
                   </div>
 
                   {tasksLoading && (
-                    <p className="text-gray-500 dark:text-gray-400 text-sm mt-2 flex items-center gap-2">
+                    <p className="text-muted-foreground text-sm mt-2 flex items-center gap-2">
                       <Loader2 size={16} className="animate-spin" /> Loading tasks...
                     </p>
                   )}
@@ -459,13 +459,13 @@ export default function JobForm({ mode, initialData }: JobFormProps) {
 
                 {/* Description */}
                 <div className="md:col-span-2 space-y-2">
-                  <label className="block text-lg font-semibold text-gray-700 dark:text-gray-300">Description</label>
+                  <label className="block text-lg font-semibold text-foreground">Description</label>
                   <textarea
                     name="description"
                     value={formData.description}
                     onChange={handleChange}
                     rows={4}
-                    className="w-full px-5 py-5 border-2 rounded-2xl text-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-blue-400 transition-all shadow-sm"
+                    className="w-full px-5 py-5 border-2 rounded-2xl text-lg bg-input text-foreground placeholder:text-muted-foreground border-border focus:outline-none focus:ring-2 focus:ring-ring/40 focus:border-ring transition-all shadow-sm"
                     placeholder="Job details, objectives, notes..."
                   />
                 </div>
@@ -473,17 +473,17 @@ export default function JobForm({ mode, initialData }: JobFormProps) {
             </div>
 
             {/* Timeline */}
-            <div className="pt-10 border-t border-gray-100 dark:border-gray-800">
+            <div className="pt-10 border-t border-border">
               <div className="flex items-center gap-4 mb-8">
-                <div className="h-14 w-14 rounded-2xl bg-orange-50 dark:bg-orange-950/20 flex items-center justify-center">
-                  <CalendarClock size={28} className="text-orange-500" />
+                <div className="h-14 w-14 rounded-2xl bg-accent/15 flex items-center justify-center">
+                  <CalendarClock size={28} className="text-accent" />
                 </div>
-                <h2 className="text-3xl font-bold text-blue-600 dark:text-gray-100">Timeline</h2>
+                <h2 className="text-3xl font-bold text-foreground">Timeline</h2>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-10">
                 <div className="space-y-2">
-                  <label className="block text-lg font-semibold text-gray-700 dark:text-gray-300">
+                  <label className="block text-lg font-semibold text-foreground">
                     Start <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -492,8 +492,8 @@ export default function JobForm({ mode, initialData }: JobFormProps) {
                     value={formData.startTime}
                     onChange={handleChange}
                     onBlur={handleBlur}
-                    className={`w-full px-5 py-5 border-2 rounded-2xl text-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-blue-400 transition-all shadow-sm ${
-                      (errors.startTime || errors.dateRange) && touched.startTime ? "border-red-500" : "border-gray-300 dark:border-gray-700"
+                    className={`w-full px-5 py-5 border-2 rounded-2xl text-lg bg-input text-foreground focus:outline-none focus:ring-2 focus:ring-ring/40 focus:border-ring transition-all shadow-sm ${
+                      (errors.startTime || errors.dateRange) && touched.startTime ? "border-red-500" : "border-border"
                     }`}
                   />
                   {errors.startTime && touched.startTime && (
@@ -504,7 +504,7 @@ export default function JobForm({ mode, initialData }: JobFormProps) {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="block text-lg font-semibold text-gray-700 dark:text-gray-300">
+                  <label className="block text-lg font-semibold text-foreground">
                     End <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -513,8 +513,8 @@ export default function JobForm({ mode, initialData }: JobFormProps) {
                     value={formData.endTime}
                     onChange={handleChange}
                     onBlur={handleBlur}
-                    className={`w-full px-5 py-5 border-2 rounded-2xl text-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-blue-400 transition-all shadow-sm ${
-                      (errors.endTime || errors.dateRange) && touched.endTime ? "border-red-500" : "border-gray-300 dark:border-gray-700"
+                    className={`w-full px-5 py-5 border-2 rounded-2xl text-lg bg-input text-foreground focus:outline-none focus:ring-2 focus:ring-ring/40 focus:border-ring transition-all shadow-sm ${
+                      (errors.endTime || errors.dateRange) && touched.endTime ? "border-red-500" : "border-border"
                     }`}
                   />
                   {errors.endTime && touched.endTime && (
@@ -533,19 +533,19 @@ export default function JobForm({ mode, initialData }: JobFormProps) {
             </div>
 
             {/* Status */}
-            <div className="pt-10 border-t border-gray-100 dark:border-gray-800">
+            <div className="pt-10 border-t border-border">
               <div className="flex items-center gap-4 mb-8">
-                <div className="h-14 w-14 rounded-2xl bg-green-100/50 dark:bg-green-900/30 flex items-center justify-center">
-                  <CheckCircle2 size={28} className="text-green-600 dark:text-green-400" />
+                <div className="h-14 w-14 rounded-2xl bg-emerald-500/15 flex items-center justify-center">
+                  <CheckCircle2 size={28} className="text-emerald-400" />
                 </div>
-                <h2 className="text-3xl font-bold text-blue-600 dark:text-gray-100">Status</h2>
+                <h2 className="text-3xl font-bold text-foreground">Status</h2>
               </div>
 
               <select
                 name="status"
                 value={formData.status}
                 onChange={handleChange}
-                className="w-full max-w-md px-5 py-5 border-2 rounded-2xl text-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-blue-400 transition-all shadow-sm"
+                className="w-full max-w-md px-5 py-5 border-2 rounded-2xl text-lg bg-input text-foreground border-border focus:outline-none focus:ring-2 focus:ring-ring/40 focus:border-ring transition-all shadow-sm"
               >
                 {statusOptions.map((s) => (
                   <option key={s} value={s}>
@@ -556,18 +556,18 @@ export default function JobForm({ mode, initialData }: JobFormProps) {
             </div>
 
             {/* Assigned Resources */}
-            <div className="pt-10 border-t border-gray-100 dark:border-gray-800">
+            <div className="pt-10 border-t border-border">
               <div className="flex items-center gap-4 mb-8">
-                <div className="h-14 w-14 rounded-2xl bg-blue-50 dark:bg-blue-950/30 flex items-center justify-center">
-                  <Users size={28} className="text-blue-600 dark:text-blue-400" />
+                <div className="h-14 w-14 rounded-2xl bg-primary/15 flex items-center justify-center">
+                  <Users size={28} className="text-primary" />
                 </div>
-                <h2 className="text-3xl font-bold text-blue-600 dark:text-gray-100">Assigned Resources</h2>
+                <h2 className="text-3xl font-bold text-foreground">Assigned Resources</h2>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {/* Humans */}
                 <div className="space-y-4">
-                  <label className="block text-lg font-semibold text-gray-700 dark:text-gray-300">
+                  <label className="block text-lg font-semibold text-foreground">
                     Assign Human
                   </label>
                   <select
@@ -579,7 +579,7 @@ export default function JobForm({ mode, initialData }: JobFormProps) {
                         setSelectedHuman("");
                       }
                     }}
-                    className="w-full px-5 py-5 border-2 rounded-2xl text-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-blue-400"
+                    className="w-full px-5 py-5 border-2 rounded-2xl text-lg bg-input text-foreground border-border focus:outline-none focus:ring-2 focus:ring-ring/40 focus:border-ring"
                     disabled={humansLoading}
                   >
                     <option value="">Select available human...</option>
@@ -599,7 +599,7 @@ export default function JobForm({ mode, initialData }: JobFormProps) {
 
                 {/* Equipment */}
                 <div className="space-y-4">
-                  <label className="block text-lg font-semibold text-gray-700 dark:text-gray-300">
+                  <label className="block text-lg font-semibold text-foreground">
                     Assign Equipment
                   </label>
                   <select
@@ -611,7 +611,7 @@ export default function JobForm({ mode, initialData }: JobFormProps) {
                         setSelectedEquipment("");
                       }
                     }}
-                    className="w-full px-5 py-5 border-2 rounded-2xl text-lg bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-200 focus:border-blue-400"
+                    className="w-full px-5 py-5 border-2 rounded-2xl text-lg bg-input text-foreground border-border focus:outline-none focus:ring-2 focus:ring-ring/40 focus:border-ring"
                     disabled={equipmentsLoading}
                   >
                     <option value="">Select available equipment...</option>
@@ -632,12 +632,12 @@ export default function JobForm({ mode, initialData }: JobFormProps) {
 
               {/* Liste des ressources assignées */}
               <div className="mt-10">
-                <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4">
+                <h3 className="text-xl font-semibold text-foreground mb-4">
                   Assigned Resources ({formData.assignedResources.length})
                 </h3>
 
                 {formData.assignedResources.length === 0 ? (
-                  <p className="text-gray-500 dark:text-gray-400 italic">No resources assigned yet.</p>
+                  <p className="text-muted-foreground italic">No resources assigned yet.</p>
                 ) : (
                   <div className="space-y-3">
                     {formData.assignedResources.map((assigned, idx) => {
@@ -740,7 +740,7 @@ export default function JobForm({ mode, initialData }: JobFormProps) {
                           key={`resource-${idx}-${resourceId}`}
                           className={`flex items-center justify-between p-5 rounded-2xl border ${
                             exists 
-                              ? 'bg-gray-50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700'
+                              ? 'bg-muted/40 border-border'
                               : 'bg-yellow-50 dark:bg-yellow-950/30 border-yellow-200 dark:border-yellow-800'
                           }`}
                         >
@@ -751,11 +751,11 @@ export default function JobForm({ mode, initialData }: JobFormProps) {
                               <Wrench size={24} className={exists ? "text-orange-500" : "text-yellow-500"} />
                             )}
                             <div>
-                              <p className={`font-medium ${exists ? 'text-gray-900 dark:text-gray-100' : 'text-yellow-800 dark:text-yellow-300'}`}>
+                              <p className={`font-medium ${exists ? 'text-foreground' : 'text-yellow-800 dark:text-yellow-300'}`}>
                                 {name}
                                 {!exists && " (Missing/Deleted)"}
                               </p>
-                              <p className="text-sm text-gray-500 dark:text-gray-400">
+                              <p className="text-sm text-muted-foreground">
                                 {resourceType} • {role}
                                 {!exists && ` • ID: ${String(resourceId).substring(0, 8)}...`}
                               </p>
@@ -777,10 +777,10 @@ export default function JobForm({ mode, initialData }: JobFormProps) {
             </div>
 
             {/* Actions */}
-            <div className="pt-12 flex flex-col sm:flex-row gap-6 justify-end border-t border-gray-100 dark:border-gray-800">
+            <div className="pt-12 flex flex-col sm:flex-row gap-6 justify-end border-t border-border">
               <Link
                 href="/jobs"
-                className="px-10 py-5 bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 text-xl font-semibold rounded-2xl hover:bg-gray-50 dark:hover:bg-gray-700 transition flex items-center justify-center gap-3 shadow-sm"
+                className="px-10 py-5 bg-card border-2 border-border text-foreground text-xl font-semibold rounded-2xl hover:bg-muted transition flex items-center justify-center gap-3 shadow-sm"
               >
                 <X size={22} />
                 Cancel
@@ -789,7 +789,7 @@ export default function JobForm({ mode, initialData }: JobFormProps) {
               <button
                 type="submit"
                 disabled={isSubmitting || isLoading}
-                className={`px-12 py-5 bg-orange-500 text-white text-xl font-bold rounded-2xl shadow-sm hover:bg-orange-600 hover:shadow-sm focus:outline-none focus:ring-4 focus:ring-orange-200 transition-all duration-300 flex items-center justify-center gap-4 min-w-[280px] ${
+                className={`px-12 py-5 bg-accent text-accent-foreground text-xl font-bold rounded-2xl shadow-sm hover:brightness-110 hover:shadow-md focus:outline-none focus:ring-4 focus:ring-ring/40 transition-all duration-300 flex items-center justify-center gap-4 min-w-[280px] ${
                   isSubmitting ? "opacity-80 cursor-not-allowed" : ""
                 }`}
               >

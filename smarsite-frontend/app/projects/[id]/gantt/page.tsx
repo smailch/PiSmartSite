@@ -62,13 +62,18 @@ export default function ProjectGanttPage({ params }: { params: Promise<PageParam
               et le chemin critique sont au-dessus du graphique.
             </p>
             <div className="flex flex-wrap gap-2">
-              <Button variant="outline" size="sm" asChild className="shrink-0 gap-2">
+              <Button
+                variant="secondary"
+                size="sm"
+                asChild
+                className="shrink-0 gap-2 border border-primary/35 bg-primary/20 text-foreground shadow-sm hover:bg-primary/30 dark:border-primary/45 dark:bg-primary/25 dark:hover:bg-primary/35"
+              >
                 <Link href={`/projects/${project._id}/overview`}>
-                  <LayoutDashboard className="size-4" aria-hidden />
+                  <LayoutDashboard className="size-4 text-primary" aria-hidden />
                   Synthèse
                 </Link>
               </Button>
-              <Button variant="outline" size="sm" asChild className="shrink-0 gap-2">
+              <Button variant="default" size="sm" asChild className="shrink-0 gap-2 shadow-md">
                 <Link href={`/tasks?project=${project._id}&view=board`}>
                   <LayoutList className="size-4" aria-hidden />
                   Tâches du projet

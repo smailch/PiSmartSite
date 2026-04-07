@@ -119,15 +119,15 @@ export default function JobAttendancePage() {
       />
 
       {jobError && (
-        <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200">
+        <div className="mb-6 rounded-2xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
           Impossible de charger le job. Vérifiez l’API ({String(jobError)}).
         </div>
       )}
 
-      <div className="mx-auto max-w-5xl space-y-8">
-        <section className="rounded-2xl border border-orange-100 bg-white p-6 shadow-xl shadow-orange-500/10 dark:border-orange-900/50 dark:bg-gray-900/90">
-          <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-orange-700 dark:text-orange-300">
-            <CalendarClock className="h-5 w-5" />
+      <div className="mx-auto max-w-5xl space-y-8 text-foreground">
+        <section className="rounded-2xl border border-border bg-card p-6 shadow-lg shadow-black/20">
+          <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-foreground">
+            <CalendarClock className="h-5 w-5 text-accent" />
             Enregistrer un pointage
           </h2>
           {loading && !job ? (
@@ -146,7 +146,7 @@ export default function JobAttendancePage() {
                   required
                   value={form.resourceId}
                   onChange={(e) => setForm((f) => ({ ...f, resourceId: e.target.value }))}
-                  className="rounded-xl border border-orange-200 bg-white px-3 py-2 dark:border-orange-900 dark:bg-gray-950"
+                  className="rounded-xl border border-border bg-input px-3 py-2 text-foreground"
                 >
                   <option value="">— Sélectionner —</option>
                   {humanAssignments.map((ar) => {
@@ -161,17 +161,17 @@ export default function JobAttendancePage() {
                 </select>
               </label>
               <label className="flex flex-col gap-1 text-sm">
-                <span className="font-medium">Date</span>
+                <span className="font-medium text-foreground">Date</span>
                 <input
                   type="date"
                   required
                   value={form.date}
                   onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))}
-                  className="rounded-xl border border-orange-200 px-3 py-2 dark:border-orange-900 dark:bg-gray-950"
+                  className="rounded-xl border border-border bg-input px-3 py-2 text-foreground"
                 />
               </label>
               <label className="flex flex-col gap-1 text-sm">
-                <span className="font-medium">Statut</span>
+                <span className="font-medium text-foreground">Statut</span>
                 <select
                   value={form.status}
                   onChange={(e) =>
@@ -180,7 +180,7 @@ export default function JobAttendancePage() {
                       status: e.target.value as "present" | "absent",
                     }))
                   }
-                  className="rounded-xl border border-orange-200 px-3 py-2 dark:border-orange-900 dark:bg-gray-950"
+                  className="rounded-xl border border-border bg-input px-3 py-2 text-foreground"
                 >
                   <option value="present">Présent</option>
                   <option value="absent">Absent</option>
@@ -189,21 +189,21 @@ export default function JobAttendancePage() {
               {form.status === "present" && (
                 <>
                   <label className="flex flex-col gap-1 text-sm">
-                    <span className="font-medium">Entrée</span>
+                    <span className="font-medium text-foreground">Entrée</span>
                     <input
                       type="time"
                       value={form.checkIn}
                       onChange={(e) => setForm((f) => ({ ...f, checkIn: e.target.value }))}
-                      className="rounded-xl border border-orange-200 px-3 py-2 dark:border-orange-900 dark:bg-gray-950"
+                      className="rounded-xl border border-border bg-input px-3 py-2 text-foreground"
                     />
                   </label>
                   <label className="flex flex-col gap-1 text-sm">
-                    <span className="font-medium">Sortie</span>
+                    <span className="font-medium text-foreground">Sortie</span>
                     <input
                       type="time"
                       value={form.checkOut}
                       onChange={(e) => setForm((f) => ({ ...f, checkOut: e.target.value }))}
-                      className="rounded-xl border border-orange-200 px-3 py-2 dark:border-orange-900 dark:bg-gray-950"
+                      className="rounded-xl border border-border bg-input px-3 py-2 text-foreground"
                     />
                   </label>
                 </>
@@ -212,7 +212,7 @@ export default function JobAttendancePage() {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="inline-flex items-center gap-2 rounded-xl bg-orange-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-orange-500/25 hover:bg-orange-600 disabled:opacity-50"
+                  className="inline-flex items-center gap-2 rounded-xl bg-accent px-5 py-2.5 text-sm font-semibold text-accent-foreground shadow-lg shadow-black/20 hover:brightness-110 disabled:opacity-50"
                 >
                   {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                   Enregistrer
@@ -222,9 +222,9 @@ export default function JobAttendancePage() {
           )}
         </section>
 
-        <section className="rounded-2xl border border-orange-100 bg-white shadow-xl dark:border-orange-900/50 dark:bg-gray-900/90">
-          <h2 className="flex items-center gap-2 border-b border-orange-100 px-6 py-4 text-lg font-semibold text-orange-800 dark:border-orange-900 dark:text-orange-200">
-            <ClipboardList className="h-5 w-5" />
+        <section className="rounded-2xl border border-border bg-card shadow-lg shadow-black/20">
+          <h2 className="flex items-center gap-2 border-b border-border px-6 py-4 text-lg font-semibold text-foreground">
+            <ClipboardList className="h-5 w-5 text-accent" />
             Historique
           </h2>
           {attLoading ? (
@@ -237,7 +237,7 @@ export default function JobAttendancePage() {
             <div className="overflow-x-auto">
               <table className="w-full min-w-[640px] text-sm">
                 <thead>
-                  <tr className="border-b border-orange-100 bg-orange-50/50 text-left dark:border-orange-900 dark:bg-orange-950/20">
+                  <tr className="border-b border-border bg-muted/40 text-left text-foreground">
                     <th className="px-4 py-3 font-semibold">Travailleur</th>
                     <th className="px-4 py-3 font-semibold">Date</th>
                     <th className="px-4 py-3 font-semibold">Entrée</th>
@@ -245,12 +245,12 @@ export default function JobAttendancePage() {
                     <th className="px-4 py-3 font-semibold">Statut</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-orange-100 dark:divide-orange-900/50">
+                <tbody className="divide-y divide-border">
                   {attendance.map((row) => (
-                    <tr key={row._id} className="hover:bg-orange-50/30 dark:hover:bg-orange-950/20">
+                    <tr key={row._id} className="hover:bg-muted/30">
                       <td className="px-4 py-3">
                         <span className="flex items-center gap-2">
-                          <User className="h-4 w-4 text-orange-500" />
+                          <User className="h-4 w-4 text-accent" />
                           {resourceLabel(row.resourceId)}
                         </span>
                       </td>
@@ -263,8 +263,8 @@ export default function JobAttendancePage() {
                         <span
                           className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ${
                             row.status === "present"
-                              ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200"
-                              : "bg-gray-200 text-gray-800 dark:bg-gray-800 dark:text-gray-200"
+                              ? "border border-emerald-500/35 bg-emerald-500/15 text-emerald-200"
+                              : "border border-border bg-muted text-muted-foreground"
                           }`}
                         >
                           {row.status === "present" ? "Présent" : "Absent"}

@@ -242,7 +242,7 @@ export default function TaskKanbanBoard({
                                 ev.stopPropagation();
                                 onEdit(task.id);
                               }}
-                              className="shrink-0 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary focus-visible:outline-none"
+                              className="shrink-0 rounded-lg p-1.5 text-muted-foreground transition-colors hover:bg-primary/10 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                               aria-label={`Edit task: ${task.title}`}
                               title="Edit"
                             >
@@ -277,7 +277,7 @@ export default function TaskKanbanBoard({
                               <button
                                 type="button"
                                 onClick={() => onShowJobs(task.id)}
-                                className="inline-flex items-center gap-1 rounded-lg border border-primary/25 bg-primary/8 px-2 py-0.5 text-[11px] font-bold tabular-nums text-primary shadow-sm ring-1 ring-primary/10 transition-colors hover:bg-primary/15 hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:bg-primary/12 dark:ring-primary/20"
+                                className="inline-flex items-center gap-1 rounded-lg border border-primary/25 bg-primary/8 px-2 py-0.5 text-[11px] font-bold tabular-nums text-primary shadow-sm ring-1 ring-primary/10 transition-colors hover:bg-primary/15 hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 dark:bg-primary/12 dark:ring-primary/20"
                                 title="View jobs for this task"
                               >
                                 <ClipboardList className="h-3 w-3 opacity-90" aria-hidden />

@@ -1,10 +1,13 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import useSWR from 'swr';
 import MainLayout from '@/components/MainLayout';
 import PageHeader from '@/components/PageHeader';
-import { Camera, Upload, Image as ImageIcon, Trash2, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { Camera, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { fetcher, getProjectsKey } from '@/lib/api';
+import type { Project } from '@/lib/types';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3200';
 
@@ -48,6 +51,23 @@ export default function ProgressPhotosPage() {
   const [selectedProject, setSelectedProject] = useState<string>('all');
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
+
+  const { data: projectsList = [], isLoading: projectsLoading } = useSWR<Project[]>(
+    getProjectsKey(),
+    fetcher,
+  );
+
+  const projectLabelById = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const p of projectsList) {
+      m.set(p._id, p.name?.trim() ? p.name : p._id);
+    }
+    return m;
+  }, [projectsList]);
+
+  function resolveProjectLabel(projectId: string) {
+    return projectLabelById.get(projectId) ?? `Projet ${projectId.slice(0, 8)}…`;
+  }
 
   useEffect(() => {
     fetchPhotos();
@@ -148,7 +168,7 @@ export default function ProgressPhotosPage() {
     selectedProject === 'all' || p.projectId === selectedProject
   );
 
-  const projects = ['all', ...new Set(photos.map((p) => p.projectId))];
+  const filterProjectIds = ['all', ...new Set(photos.map((p) => p.projectId))];
 
   return (
     <MainLayout>
@@ -169,9 +189,9 @@ export default function ProgressPhotosPage() {
           onChange={(e) => setSelectedProject(e.target.value)}
           className="rounded-lg border border-white/10 bg-slate-900/50 px-4 py-2 text-sm text-slate-100 focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/25"
         >
-          {projects.map((p) => (
-            <option key={p} value={p}>
-              {p === 'all' ? 'All Projects' : `Project ${p}`}
+          {filterProjectIds.map((id) => (
+            <option key={id} value={id}>
+              {id === 'all' ? 'Tous les projets' : resolveProjectLabel(id)}
             </option>
           ))}
         </select>
@@ -238,7 +258,7 @@ export default function ProgressPhotosPage() {
                   <p className="mb-1 line-clamp-2 text-sm font-semibold text-slate-100">
                     {photo.caption || 'No caption'}
                   </p>
-                  <p className="mb-3 text-xs text-slate-500">Project {photo.projectId}</p>
+                  <p className="mb-3 text-xs text-slate-500">{resolveProjectLabel(photo.projectId)}</p>
 
                   {/* Progress Bar */}
                   {photo.estimatedProgress != null && (
@@ -335,8 +355,33 @@ export default function ProgressPhotosPage() {
 
             <form onSubmit={handleUpload} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-1">Project ID *</label>
-                <input name="projectId" required className="w-full rounded-lg border border-white/10 bg-slate-900/50 px-4 py-2 text-slate-100 placeholder:text-slate-500 focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/25" placeholder="proj-2025-001" />
+                <label className="mb-1 block text-sm font-medium text-card-foreground" htmlFor="upload-project-id">
+                  Projet *
+                </label>
+                <select
+                  id="upload-project-id"
+                  name="projectId"
+                  required
+                  disabled={projectsLoading || projectsList.length === 0}
+                  className="w-full rounded-lg border border-white/10 bg-slate-900/50 px-4 py-2 text-slate-100 focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/25 disabled:cursor-not-allowed disabled:opacity-60"
+                  defaultValue=""
+                >
+                  <option value="" disabled>
+                    {projectsLoading
+                      ? 'Chargement des projets…'
+                      : projectsList.length === 0
+                        ? 'Aucun projet disponible'
+                        : '— Choisir un projet —'}
+                  </option>
+                  {projectsList.map((p) => (
+                    <option key={p._id} value={p._id}>
+                      {p.name?.trim() ? p.name : p._id}
+                    </option>
+                  ))}
+                </select>
+                {projectsList.length === 0 && !projectsLoading ? (
+                  <p className="mt-1 text-xs text-amber-200/90">Créez d’abord un projet dans Projects.</p>
+                ) : null}
               </div>
 
               <div>
@@ -385,7 +430,7 @@ export default function ProgressPhotosPage() {
                 <button
                   type="submit"
                   className="flex-1 py-3 bg-primary text-white rounded-xl font-medium hover:bg-primary/90 disabled:opacity-50"
-                  disabled={uploading}
+                  disabled={uploading || projectsLoading || projectsList.length === 0}
                 >
                   {uploading ? (
                     <span className="flex items-center justify-center gap-2">

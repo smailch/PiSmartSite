@@ -20,26 +20,27 @@ import {
   Wrench,
   Handshake,
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 const navigationItems = [
-  { id: 'dashboard', label: 'Dashboard', icon: Home, href: '/home' },
   { id: 'clients', label: 'Espace client', icon: Handshake, href: '/dashboard/clients' },
+  { id: 'dashboard', label: 'Dashboard', icon: Home, href: '/home' },
   { id: 'projects', label: 'Projects', icon: Building2, href: '/projects' },
+  { id: 'tasks', label: 'Tasks', icon: Clipboard, href: '/tasks' },
   { id: 'jobs', label: 'Jobs', icon: Briefcase, href: '/jobs' },
   { id: 'humans', label: 'Humans', icon: UserCircle, href: '/humans' },
   { id: 'equipment', label: 'Equipment', icon: Wrench, href: '/equipment' },
-  { id: 'tasks', label: 'Tasks', icon: Clipboard, href: '/tasks' },
-  { id: 'reports', label: 'Reports', icon: BarChart3, href: '/reports' },
-  { id: 'team', label: 'Team', icon: Users, href: '/team' },
-  { id: 'budget', label: 'Budget', icon: Wallet, href: '/budget' },
-  { id: 'alerts', label: 'Alerts', icon: AlertCircle, href: '/alerts' },
-  { id: 'documents', label: 'Documents', icon: FileText, href: '/documents' },
   {
     id: 'progress-photos',
     label: 'Progress Photos',
     icon: Camera,
     href: '/progress-photos',
   },
+  { id: 'documents', label: 'Documents', icon: FileText, href: '/documents' },
+  { id: 'reports', label: 'Reports', icon: BarChart3, href: '/reports' },
+  { id: 'team', label: 'Team', icon: Users, href: '/team' },
+  { id: 'budget', label: 'Budget', icon: Wallet, href: '/budget' },
+  { id: 'alerts', label: 'Alerts', icon: AlertCircle, href: '/alerts' },
 ];
 
 export default function Sidebar() {
@@ -47,37 +48,47 @@ export default function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <>
-      {/* Mobile Toggle */}
+    <div className="contents" data-a11y-focus-follow="">
       <button
         type="button"
         onClick={() => setOpen(!open)}
         aria-label={open ? 'Close navigation menu' : 'Open navigation menu'}
         aria-expanded={open}
-        className="fixed left-4 top-4 z-50 rounded-xl bg-gradient-to-r from-orange-500 to-orange-400 p-2.5 text-white shadow-md shadow-orange-900/30 transition-all duration-300 ease-out hover:shadow-lg hover:scale-[1.02] active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 md:hidden"
+        className="fixed left-4 top-4 z-50 rounded-xl bg-gradient-to-r from-accent to-accent/85 p-2.5 text-accent-foreground shadow-lg shadow-black/25 transition-all duration-300 ease-out hover:brightness-110 hover:shadow-xl active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-accent focus-visible:ring-offset-2 focus-visible:ring-offset-background md:hidden"
       >
-        {open ? <X size={24} aria-hidden /> : <Menu size={24} aria-hidden />}
+        {open ? <X size={22} aria-hidden strokeWidth={2.25} /> : <Menu size={22} aria-hidden strokeWidth={2.25} />}
       </button>
 
-      {/* Sidebar */}
       <aside
-        className={`fixed left-0 top-0 z-40 flex h-screen flex-col border-r border-white/10 bg-slate-950/55 shadow-lg shadow-black/25 backdrop-blur-xl transition-all duration-300 ease-out ${
-          open ? 'w-64' : '-translate-x-full md:translate-x-0 md:w-64'
-        } md:relative md:translate-x-0`}
+        className={cn(
+          'fixed left-0 top-0 z-40 flex h-screen min-h-0 flex-col overflow-hidden border-r border-sidebar-border/60 bg-sidebar shadow-[4px_0_24px_-4px_rgba(0,0,0,0.35)] backdrop-blur-md transition-all duration-300 ease-out md:relative md:translate-x-0',
+          open ? 'w-[17rem] translate-x-0' : '-translate-x-full md:translate-x-0 md:w-[17rem]',
+        )}
       >
-        {/* Logo */}
-        <div className="border-b border-white/10 p-6">
-          <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight text-slate-100">
-            <Building2 size={28} className="shrink-0 text-blue-400" aria-hidden />
-            <span>
-              Smart<span className="text-orange-400">Site</span>
-            </span>
-          </h1>
-          <p className="mt-1.5 text-xs text-slate-500">Construction Management</p>
+        <div className="relative shrink-0 overflow-hidden border-b border-sidebar-border/50 px-4 pb-4 pt-5">
+          <div
+            className="pointer-events-none absolute inset-0 opacity-[0.12]"
+            style={{
+              background:
+                'radial-gradient(ellipse 80% 120% at 20% -20%, var(--sidebar-accent), transparent 55%), radial-gradient(ellipse 70% 100% at 100% 100%, var(--sidebar-primary), transparent 50%)',
+            }}
+          />
+          <div className="relative flex items-start gap-3">
+            <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-sidebar-accent/20 text-sidebar-accent shadow-inner shadow-black/10 ring-1 ring-sidebar-accent/25">
+              <Building2 size={22} strokeWidth={2} aria-hidden className="drop-shadow-sm" />
+            </div>
+            <div className="min-w-0 pt-0.5">
+              <h1 className="text-lg font-semibold leading-tight tracking-tight text-sidebar-foreground sm:text-xl">
+                Smart<span className="text-sidebar-primary">Site</span>
+              </h1>
+              <p className="mt-1 text-[11px] font-medium uppercase tracking-wider text-sidebar-foreground/55">
+                Construction Management
+              </p>
+            </div>
+          </div>
         </div>
 
-        {/* Navigation */}
-        <nav className="flex-1 space-y-1 overflow-y-auto p-4" aria-label="Main">
+        <nav className="flex min-h-0 flex-1 flex-col gap-1 overflow-hidden p-3 pt-4" aria-label="Main">
           {navigationItems.map((item) => {
             const Icon = item.icon;
             const isActive =
@@ -89,24 +100,35 @@ export default function Sidebar() {
                 href={item.href}
                 onClick={() => setOpen(false)}
                 aria-current={isActive ? 'page' : undefined}
-                className={`flex items-center gap-3 rounded-xl px-4 py-3 text-sm transition-all duration-300 ease-out focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950 ${
+                className={cn(
+                  'group relative flex shrink-0 items-center gap-3 rounded-xl px-2.5 py-2 text-[13px] font-medium leading-snug transition-all duration-200 ease-out focus:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-accent/70 focus-visible:ring-offset-2 focus-visible:ring-offset-sidebar sm:px-3 sm:text-sm',
                   isActive
-                    ? 'border border-blue-500/20 bg-gradient-to-r from-blue-500/25 via-blue-500/10 to-transparent font-medium text-blue-300 shadow-sm shadow-blue-950/20'
-                    : 'border border-transparent text-slate-400 hover:bg-white/[0.06] hover:text-slate-100'
-                }`}
+                    ? 'bg-sidebar-accent/12 text-sidebar-foreground shadow-[inset_3px_0_0_0_var(--sidebar-primary)] ring-1 ring-sidebar-border/40'
+                    : 'text-sidebar-foreground/72 hover:bg-sidebar-accent/[0.08] hover:text-sidebar-foreground hover:ring-1 hover:ring-sidebar-border/30',
+                )}
               >
-                <Icon size={20} className="shrink-0" aria-hidden />
-                <span>{item.label}</span>
+                <span
+                  className={cn(
+                    'flex size-9 shrink-0 items-center justify-center rounded-lg transition-all duration-200',
+                    isActive
+                      ? 'bg-sidebar-primary/25 text-sidebar-primary'
+                      : 'bg-sidebar-accent/8 text-sidebar-accent/90 group-hover:bg-sidebar-accent/18 group-hover:text-sidebar-accent',
+                  )}
+                >
+                  <Icon size={18} strokeWidth={2} aria-hidden className="shrink-0" />
+                </span>
+                <span className="min-w-0 flex-1 truncate tracking-tight">{item.label}</span>
+                {isActive ? (
+                  <span
+                    className="absolute right-2 size-1.5 rounded-full bg-sidebar-primary shadow-[0_0_10px_var(--sidebar-primary)]"
+                    aria-hidden
+                  />
+                ) : null}
               </Link>
             );
           })}
         </nav>
-
-        {/* Footer */}
-        <div className="border-t border-white/10 p-4">
-          <p className="text-center text-xs text-slate-500">v0.1.0</p>
-        </div>
       </aside>
-    </>
+    </div>
   );
 }
