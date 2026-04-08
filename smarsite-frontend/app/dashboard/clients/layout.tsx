@@ -55,7 +55,7 @@ export default function ClientsMarketingLayout({
               Telegram
             </a>
             <Link href="/home" className={navCta}>
-              Espace équipe
+              Se Connecter
             </Link>
           </nav>
         </div>

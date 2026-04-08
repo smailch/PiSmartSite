@@ -1,21 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  Building2,
-  BarChart3,
-  Users,
-  Wallet,
-  AlertCircle,
-  FileText,
+  Building2, BarChart3, Users, Wallet, AlertCircle,
+  FileText, Menu, X, Home, Clipboard, Briefcase, UserPlus, ShieldAlert, MessageCircle,
   Camera,
-  Menu,
-  X,
-  Home,
-  Clipboard,
-  Briefcase,
   UserCircle,
   Wrench,
   Handshake,
@@ -44,9 +35,33 @@ const navigationItems = [
   { id: 'alerts', label: 'Alerts', icon: AlertCircle, href: '/alerts' },
 ];
 
+// Item visible seulement pour Admin
+const adminItems = [
+  { id: 'users', label: 'Users', icon: UserPlus, href: '/users' },
+  { id: 'admin-alerts', label: 'Security Alerts', icon: ShieldAlert, href: '/alerts-log' },
+  { id: 'client-questions', label: 'Client Questions', icon: MessageCircle, href: '/client-questions' },
+];
+
 export default function Sidebar() {
   const [open, setOpen] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
   const pathname = usePathname();
+
+  // ✅ Récupérer le rôle depuis le token JWT
+  useEffect(() => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      // Vérifie si le rôle est Admin (adapte selon ton payload JWT)
+      if (payload.role === 'Admin' || payload.roleName === 'Admin') {
+        setIsAdmin(true);
+      }
+    } catch { }
+  }, []);
+
+  const allItems = isAdmin ? [...navigationItems, ...adminItems] : navigationItems;
+
 
   return (
     <div className="contents" data-a11y-focus-follow="">
@@ -89,7 +104,7 @@ export default function Sidebar() {
           </div>
         </div>
 
-        <nav className="flex min-h-0 flex-1 flex-col gap-1 overflow-hidden p-3 pt-4" aria-label="Main">
+        <nav className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto p-3 pt-4" aria-label="Main">
           {navigationItems.map((item) => {
             const Icon = item.icon;
             const isActive =
@@ -126,9 +141,61 @@ export default function Sidebar() {
                   />
                 ) : null}
               </Link>
+
             );
           })}
-        </nav>
+          {/* ✅ Section Admin */}
+          {isAdmin && (
+            <>
+              <div style={{ margin: '12px 0 6px', padding: '0 10px' }}>
+                <span style={{
+                  fontSize: '10px', fontWeight: '800', letterSpacing: '1px',
+                  textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)'
+                }}>
+                  Admin
+                </span>
+              </div>
+
+              {adminItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = pathname === item.href ||
+                  (item.href !== '/' && pathname.startsWith(`${item.href}/`));
+                return (
+                  <Link key={item.id} href={item.href} onClick={() => setOpen(false)}
+                    aria-current={isActive ? 'page' : undefined}
+                    className={cn(
+                      'group relative flex shrink-0 items-center gap-3 rounded-xl px-2.5 py-2 text-[13px] font-medium leading-snug transition-all duration-200 ease-out focus:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-accent/70 focus-visible:ring-offset-2 focus-visible:ring-offset-sidebar sm:px-3 sm:text-sm',
+                      isActive
+                        ? 'bg-sidebar-accent/12 text-sidebar-foreground shadow-[inset_3px_0_0_0_var(--sidebar-primary)] ring-1 ring-sidebar-border/40'
+                        : 'text-sidebar-foreground/72 hover:bg-sidebar-accent/[0.08] hover:text-sidebar-foreground hover:ring-1 hover:ring-sidebar-border/30',
+                    )}>
+                    <span className={cn(
+                      'flex size-9 shrink-0 items-center justify-center rounded-lg transition-all duration-200',
+                      isActive
+                        ? 'bg-sidebar-primary/25 text-sidebar-primary'
+                        : 'bg-sidebar-accent/8 text-sidebar-accent/90 group-hover:bg-sidebar-accent/18 group-hover:text-sidebar-accent',
+                    )}>
+                      <Icon size={18} strokeWidth={2} aria-hidden className="shrink-0" />
+                    </span>
+                    <span className="min-w-0 flex-1 truncate tracking-tight">{item.label}</span>
+                    <span style={{
+                      fontSize: '9px', fontWeight: '800',
+                      backgroundColor: '#FACC15', color: '#132849',
+                      padding: '2px 6px', borderRadius: '20px', flexShrink: 0
+                    }}>
+                      ADMIN
+                    </span>
+                    {isActive && (
+                      <span className="absolute right-2 size-1.5 rounded-full bg-sidebar-primary shadow-[0_0_10px_var(--sidebar-primary)]" aria-hidden />
+                    )}
+                  </Link>
+                );
+              })}
+               </>
+          )}
+
+
+            </nav>
       </aside>
     </div>
   );

@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { MongooseModule } from '@nestjs/mongoose';
 import { join } from 'node:path';
 import { validateGroqEnv } from './analysis-ai/groq-env.validation';
 import { ResourcesModule } from './resources/resources.module';
@@ -18,6 +17,11 @@ import { UsersModule } from './users/users.module';
 import { TelegramModule } from './telegram/telegram.module';
 import { HumanResourcesModule } from './human-resources/human-resources.module';
 import { EquipmentResourcesModule } from './equipment-resources/equipment-resources.module';
+import { RolesModule } from './roles/roles.module';
+import { AuthModule } from './auth/auth.module';
+import { MongooseModule } from '@nestjs/mongoose';
+import { AuditLogModule } from './audit-logs/audit-log.module';
+import { MessagingModule } from './messaging/messaging.module';
 import { AnalysisAiModule } from './analysis-ai/analysis-ai.module';
 import { FinanceModule } from './modules/finance/finance.module';
 import { ReportsModule } from './modules/finance/reports/reports.module';
@@ -34,21 +38,27 @@ import { ProgressPhotosModule } from './progress-photos/progress-photos.module';
       envFilePath: [
         join(backendRoot, '.env.local'),
         join(backendRoot, '.env'),
-                join(backendRoot, '.env.example'),
+        join(backendRoot, '.env.example'),
 
       ],
       validate: validateGroqEnv,
       ignoreEnvFile: false,    
     }),
-    // Connexion MongoDB Atlas
-    MongooseModule.forRoot(
-      'mongodb+srv://mourad:mourad@smartsite.poyscqk.mongodb.net/smartsite?retryWrites=true&w=majority'
+    MongooseModule.forRoot('mongodb://localhost:27017/smartsiteloc'
     ),
+    JobsModule,
+    AuditLogModule,
     ResourcesModule,
     JobsModule,
     ProjectsModule, // Ajout du module Projects
     TasksModule, // Ajout du module Tasks
     UsersModule,
+    RolesModule,
+    AuthModule,
+    HumanResourcesModule,
+    EquipmentResourcesModule,
+    AnalysisAiModule,
+    MessagingModule,
     AnalysisAiModule,
     TelegramModule,
     HumanResourcesModule,
