@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import PDFDocument from 'pdfkit';
 
 import { Invoice, InvoiceDocument } from '../invoices/schemas/invoice.schema';
 import { Payment, PaymentDocument } from '../payments/schemas/payment.schema';
@@ -216,4 +217,87 @@ FORMAT:
       ai: parsed,
     };
   }
+  async generatePdf(projectId: string): Promise<Buffer> {
+  const report = await this.getAIReport(projectId);
+
+  const doc = new PDFDocument({ margin: 50 });
+
+  const buffers: Buffer[] = [];
+
+  doc.on('data', buffers.push.bind(buffers));
+
+  return new Promise((resolve, reject) => {
+    doc.on('end', () => {
+      resolve(Buffer.concat(buffers));
+    });
+
+    // =========================
+    // TITLE
+    // =========================
+    doc
+      .fontSize(20)
+      .text('Financial Report', { align: 'center' });
+
+    doc.moveDown();
+
+    // =========================
+    // SCORE
+    // =========================
+    doc
+      .fontSize(14)
+      .text(`Score: ${report.score}/100`);
+    doc.text(`Risk: ${report.risk}`);
+
+    doc.moveDown();
+
+    // =========================
+    // KPIs
+    // =========================
+    doc.fontSize(12);
+    doc.text(`Total Invoiced: ${report.totalInvoiced}`);
+    doc.text(`Total Paid: ${report.totalPaid}`);
+    doc.text(`Pending: ${report.totalPending}`);
+    doc.text(`Overdue: ${report.overdueAmount}`);
+
+    doc.moveDown();
+
+    // =========================
+    // SUMMARY
+    // =========================
+    doc.fontSize(14).text('Summary');
+    doc.moveDown(0.5);
+    doc.fontSize(12).text(report.ai.summary);
+
+    doc.moveDown();
+
+    // =========================
+    // ISSUES
+    // =========================
+    doc.fontSize(14).text('Issues');
+    doc.moveDown(0.5);
+
+    if (report.ai.issues.length === 0) {
+      doc.text('No issues detected');
+    } else {
+      report.ai.issues.forEach((i) => doc.text(`• ${i}`));
+    }
+
+    doc.moveDown();
+
+    // =========================
+    // RECOMMENDATIONS
+    // =========================
+    doc.fontSize(14).text('Recommendations');
+    doc.moveDown(0.5);
+
+    report.ai.recommendations.forEach((r) =>
+      doc.text(`• ${r}`)
+    );
+
+    doc.moveDown();
+    doc.text(`Confidence: ${report.ai.confidence}`);
+
+    doc.end();
+  });
+}
 }
