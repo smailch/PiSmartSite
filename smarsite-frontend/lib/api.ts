@@ -198,6 +198,28 @@ export function updateJob(
     body: JSON.stringify(payload),
   });
 }
+// ======================
+// Reports
+// ======================
+
+export function getProjectAIReport(projectId: string) {
+  return apiFetch<{
+    totalInvoiced: number;
+    totalPaid: number;
+    totalPending: number;
+    overdueAmount: number;
+    invoiceCount: number;
+    oldestUnpaidInvoiceDays: number;
+    score: number;
+    risk: 'LOW' | 'MEDIUM' | 'HIGH';
+    ai: {
+      summary: string;
+      issues: string[];
+      recommendations: string[];
+      confidence: string;
+    };
+  }>(`/reports/project/${projectId}/ai`);
+}
 
 export function deleteJob(id: string): Promise<void> {
   return apiFetch<void>(`/jobs/${id}`, {

@@ -14,7 +14,6 @@ import { JobsModule } from './jobs/jobs.module';
 import { ProjectsModule } from './projects/projects.module';
 import { TasksModule } from './tasks/tasks.module';
 import { UsersModule } from './users/users.module';
-import { AnalysisAiModule } from './analysis-ai/analysis-ai.module';
 import { TelegramModule } from './telegram/telegram.module';
 import { HumanResourcesModule } from './human-resources/human-resources.module';
 import { EquipmentResourcesModule } from './equipment-resources/equipment-resources.module';
@@ -23,6 +22,11 @@ import { AuthModule } from './auth/auth.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AuditLogModule } from './audit-logs/audit-log.module';
 import { MessagingModule } from './messaging/messaging.module';
+import { AnalysisAiModule } from './analysis-ai/analysis-ai.module';
+import { FinanceModule } from './modules/finance/finance.module';
+import { ReportsModule } from './modules/finance/reports/reports.module';
+import { PaymentsModule } from './modules/finance/payments/payments.module';
+import { InvoicesModule } from './modules/finance/invoices/invoices.module';
 import { AttendanceModule } from './attendance/attendance.module';
 import { DocumentsModule } from './documents/documents.module';
 import { ProgressPhotosModule } from './progress-photos/progress-photos.module';
@@ -34,8 +38,11 @@ import { ProgressPhotosModule } from './progress-photos/progress-photos.module';
       envFilePath: [
         join(backendRoot, '.env.local'),
         join(backendRoot, '.env'),
+                join(backendRoot, '.env.example'),
+
       ],
       validate: validateGroqEnv,
+      ignoreEnvFile: false,    
     }),
     MongooseModule.forRoot('mongodb://localhost:27017/smartsiteloc'
     ),
@@ -56,6 +63,11 @@ import { ProgressPhotosModule } from './progress-photos/progress-photos.module';
     TelegramModule,
     HumanResourcesModule,
     EquipmentResourcesModule,
+    AnalysisAiModule,
+    InvoicesModule,
+    PaymentsModule,
+    ReportsModule,
+    FinanceModule,
     AttendanceModule,
     DocumentsModule,
     ProgressPhotosModule,
@@ -64,3 +76,4 @@ import { ProgressPhotosModule } from './progress-photos/progress-photos.module';
   providers: [],
 })
 export class AppModule {}
+

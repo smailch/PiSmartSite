@@ -18,6 +18,7 @@ const navigationItems = [
   { id: 'dashboard', label: 'Dashboard', icon: Home, href: '/home' },
   { id: 'projects', label: 'Projects', icon: Building2, href: '/projects' },
   { id: 'tasks', label: 'Tasks', icon: Clipboard, href: '/tasks' },
+  { id: 'invoices', label: 'Invoices', icon: BarChart3, href: '/invoices' },
   { id: 'jobs', label: 'Jobs', icon: Briefcase, href: '/jobs' },
   { id: 'humans', label: 'Humans', icon: UserCircle, href: '/humans' },
   { id: 'equipment', label: 'Equipment', icon: Wrench, href: '/equipment' },
