@@ -37,11 +37,7 @@ const navigationItems = [
     icon: Camera,
     href: '/progress-photos',
   },
-  { id: 'documents', label: 'Documents', icon: FileText, href: '/documents' },
-  { id: 'reports', label: 'Reports', icon: BarChart3, href: '/reports' },
-  { id: 'team', label: 'Team', icon: Users, href: '/team' },
-  { id: 'budget', label: 'Budget', icon: Wallet, href: '/budget' },
-  { id: 'alerts', label: 'Alerts', icon: AlertCircle, href: '/alerts' },
+
 ];
 
 export default function Sidebar() {
