@@ -157,8 +157,8 @@ cd smartsite-ai-service
 python -m venv .venv
 # Windows : .venv\Scripts\activate
 pip install -r requirements.txt
-set YOLO_MODEL_PATH=weights\detect.pt
-uvicorn main:app --host 0.0.0.0 --port 8001
+set YOLO_MODEL_PATH=weights\best.pt
+    uvicorn main:app --host 0.0.0.0 --port 8001
 ```
 
 Dans `smartsite-backend/.env` : `AI_ANALYSIS_URL=http://127.0.0.1:8001/analyze-image` (voir `.env.example`).
