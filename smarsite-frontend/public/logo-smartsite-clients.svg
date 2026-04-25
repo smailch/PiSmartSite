@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 96" fill="none" role="img" aria-labelledby="title">
+  <title id="title">SmartSite</title>
+  <rect width="420" height="96" rx="16" fill="#0f172a"/>
+  <path fill="#f97316" d="M28 68V28h12l14 28 14-28h12v40h-10V48l-10 20h-10L38 48v20H28Z"/>
+  <text x="210" y="62" text-anchor="middle" fill="#f8fafc" font-family="system-ui,-apple-system,'Segoe UI',sans-serif" font-size="26" font-weight="700" letter-spacing="-0.02em">SmartSite</text>
+</svg>

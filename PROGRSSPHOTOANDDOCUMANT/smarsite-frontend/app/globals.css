@@ -1,0 +1,309 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Thème sombre premium (fond slate + glass) avec identité couleur PiSmartSite d’origine :
+ * primary teal #0B4F6C, accent orange #F28C28, accents UI #36a2d6.
+ */
+:root {
+  --background: #0f172a;
+  --foreground: #f8fafc;
+  --card: #1e293b;
+  --card-foreground: #f8fafc;
+  --popover: #1e293b;
+  --popover-foreground: #f8fafc;
+  --primary: #0b4f6c;
+  --primary-foreground: #ffffff;
+  --secondary: #334155;
+  --secondary-foreground: #f8fafc;
+  --muted: #334155;
+  --muted-foreground: #94a3b8;
+  --accent: #f28c28;
+  --accent-foreground: #0f172a;
+  --destructive: #f87171;
+  --destructive-foreground: #0f172a;
+  --border: #334155;
+  --input: #1e293b;
+  --ring: #36a2d6;
+  --chart-1: #36a2d6;
+  --chart-2: #f28c28;
+  --chart-3: #0b4f6c;
+  --chart-4: #4ade80;
+  --chart-5: #fb923c;
+  --radius: 0.75rem;
+  --sidebar: #0a3d54;
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #f28c28;
+  --sidebar-primary-foreground: #0f172a;
+  --sidebar-accent: #36a2d6;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #0b4f6c;
+  --sidebar-ring: #f28c28;
+  --bg-glow-blue: rgb(54 162 214 / 0.14);
+  --bg-glow-orange: rgb(242 140 40 / 0.14);
+}
+
+.dark {
+  --background: #0f172a;
+  --foreground: #f8fafc;
+  --card: #1e293b;
+  --card-foreground: #f8fafc;
+  --popover: #1e293b;
+  --popover-foreground: #f8fafc;
+  --primary: #0b4f6c;
+  --primary-foreground: #ffffff;
+  --secondary: #334155;
+  --secondary-foreground: #f8fafc;
+  --muted: #334155;
+  --muted-foreground: #94a3b8;
+  --accent: #f28c28;
+  --accent-foreground: #0f172a;
+  --destructive: #f87171;
+  --destructive-foreground: #0f172a;
+  --border: #334155;
+  --input: #1e293b;
+  --ring: #36a2d6;
+  --chart-1: #36a2d6;
+  --chart-2: #f28c28;
+  --chart-3: #0b4f6c;
+  --chart-4: #4ade80;
+  --chart-5: #fdba74;
+  --sidebar: #0a3d54;
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #f28c28;
+  --sidebar-primary-foreground: #0f172a;
+  --sidebar-accent: #36a2d6;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #0b4f6c;
+  --sidebar-ring: #f28c28;
+  --bg-glow-blue: rgb(54 162 214 / 0.14);
+  --bg-glow-orange: rgb(242 140 40 / 0.14);
+}
+
+@theme inline {
+  --font-sans: 'Geist', 'Geist Fallback';
+  --font-mono: 'Geist Mono', 'Geist Mono Fallback';
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  /**
+   * Premium dark canvas (all pages):
+   * Base ≈ bg-gradient-to-br from-slate-900 via-slate-950 to near-black (no #000).
+   * ::before — two large radial glows (blue top-left, orange bottom-right), blur-3xl.
+   * ::after — soft vignette + imperceptible grain for depth (no pattern noise).
+   */
+  html {
+    min-height: 100%;
+    color-scheme: dark;
+    background-color: #0f172a;
+    background-image: linear-gradient(
+      to bottom right,
+      #0f172a 0%,
+      #020617 52%,
+      #030712 100%
+    );
+  }
+
+  body {
+    @apply min-h-screen text-foreground antialiased;
+    position: relative;
+    isolation: isolate;
+    background-color: transparent;
+    background-image: linear-gradient(
+      to bottom right,
+      #0f172a 0%,
+      #020617 52%,
+      #030712 100%
+    );
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: -12%;
+    z-index: -1;
+    pointer-events: none;
+    background:
+      radial-gradient(
+        ellipse 62vw 52vh at 4% 8%,
+        var(--bg-glow-blue),
+        transparent 58%
+      ),
+      radial-gradient(
+        ellipse 56vw 48vh at 96% 92%,
+        var(--bg-glow-orange),
+        transparent 56%
+      );
+    filter: blur(64px);
+    -webkit-filter: blur(64px);
+    opacity: 1;
+    transform: translateZ(0);
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-repeat: no-repeat, repeat;
+    background-size:
+      auto,
+      192px 192px;
+    /* Inner vignette + ultra-light grain (ties glows into the base without texture noise) */
+    background-image:
+      radial-gradient(
+        ellipse 78% 64% at 50% 42%,
+        rgb(15 23 42 / 0) 0%,
+        rgb(15 23 42 / 0.18) 58%,
+        rgb(2 6 23 / 0.58) 100%
+      ),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='192' height='192'%3E%3Cfilter id='n' x='0' y='0'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.022'/%3E%3C/svg%3E");
+    opacity: 1;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    body::before {
+      filter: none;
+      -webkit-filter: none;
+      inset: 0;
+      opacity: 0.88;
+    }
+    body::after {
+      background-image: radial-gradient(
+        ellipse 78% 64% at 50% 42%,
+        rgb(15 23 42 / 0) 0%,
+        rgb(15 23 42 / 0.18) 58%,
+        rgb(2 6 23 / 0.58) 100%
+      );
+      background-repeat: no-repeat;
+      background-size: auto;
+    }
+  }
+  /**
+   * WCAG 2.4.7 Focus visible — anneau net ≥2px, offset pour le contraste sur fonds variés.
+   */
+  :where(
+      button,
+      [role='button'],
+      a,
+      input,
+      select,
+      textarea,
+      summary,
+      [tabindex]:not([tabindex='-1'])
+    ):focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+  :where(
+      button,
+      [role='button'],
+      a,
+      input,
+      select,
+      textarea,
+      summary
+    ):focus:not(:focus-visible) {
+    outline: none;
+  }
+}
+
+@layer utilities {
+  @keyframes skeleton-shimmer {
+    100% {
+      transform: translateX(100%);
+    }
+  }
+  .skeleton-premium {
+    @apply relative overflow-hidden rounded-xl;
+    background-color: rgb(51 65 85 / 0.45);
+    border: 1px solid rgb(148 163 184 / 0.08);
+  }
+  .skeleton-premium::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgb(255 255 255 / 0.07),
+      transparent
+    );
+    animation: skeleton-shimmer 1.4s ease-in-out infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .skeleton-premium::after {
+      animation: none;
+    }
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+}
+
+/* Optional site accessibility toggles (set on <html> from Accessibility menu) */
+html[data-a11y-reduced-motion='true'] *,
+html[data-a11y-reduced-motion='true'] *::before,
+html[data-a11y-reduced-motion='true'] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+html[data-a11y-large-text='true'] {
+  font-size: 112.5%;
+}
