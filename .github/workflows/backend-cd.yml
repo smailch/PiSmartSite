@@ -6,6 +6,8 @@ on:
   workflow_run:
     workflows: ["Backend CI"]
     types: [completed]
+    # N’enfile le CD que si le Backend CI a tourné sur main/master (évite 2× CD par push preprod+main)
+    branches: [main, master]
 
 concurrency:
   group: backend-cd-prod

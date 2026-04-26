@@ -50,8 +50,12 @@ Les **tests sont obligatoires** : toute commande de test en échec fait échouer
 
 ## Déclenchement des CD
 
-- Les workflows **CD** utilisent `workflow_run` : ils ne s’exécutent **que** lorsque le workflow CI ciblé s’est **terminé avec succès** (`conclusion == success`).
-- Filtre branche : **uniquement** `main` ou `master`, et seulement pour un événement **push** (pas de déploiement automatique sur les PR).
+- Les workflows **CD** utilisent `workflow_run` : ils ne s’exécutent **que** lorsque le workflow CI ciblé s’est **terminé avec succès** sur **`main` ou `master`** (filtre `branches` sur le déclencheur) — ainsi un push sur `preprod_final` ne crée **pas** de run CD inutile.
+- Le job vérifie aussi : événement **push** (pas de déploiement automatique sur les PR seules).
+
+### Pourquoi beaucoup de « workflow runs » d’un coup ?
+
+Un même commit sur **`preprod_final` puis sur `main`** lance : 4 CI (2 branches × 2 apps) + 2 CD (Backend + Front, une fois le CI `main` vert). C’est cohérent. Après le correctif `branches: [main, master]` sur les CD, les déploiements ne se programment plus quand seul le CI `preprod_final` a réussi.
 
 ## Filtres `paths` (CI)
 

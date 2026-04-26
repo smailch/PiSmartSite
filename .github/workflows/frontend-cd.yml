@@ -6,6 +6,7 @@ on:
   workflow_run:
     workflows: ["Frontend CI"]
     types: [completed]
+    branches: [main, master]
 
 concurrency:
   group: frontend-cd-prod
