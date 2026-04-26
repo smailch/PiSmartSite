@@ -3,12 +3,12 @@ name: Frontend CI
 
 on:
   push:
-    branches: [main, master, develop]
+    branches: [main, master, develop, preprod_final]
     paths:
       - "smarsite-frontend/**"
       - ".github/workflows/frontend-ci.yml"
   pull_request:
-    branches: [main, master, develop]
+    branches: [main, master, develop, preprod_final]
     paths:
       - "smarsite-frontend/**"
       - ".github/workflows/frontend-ci.yml"
