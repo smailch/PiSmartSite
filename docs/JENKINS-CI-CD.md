@@ -53,7 +53,7 @@ Télécharger la [LTS Jenkins](https://www.jenkins.io/download/) et suivre l’a
    - **Git**  
    - **Pipeline**  
 
-   Les `Jenkinsfile` du dépôt **n’exigent pas** le plugin **NodeJS** : si `node` ou `python3` est absent sur l’agent (ex. image `jenkins/jenkins`), les stages **Bootstrap Node** et **Bootstrap Python** installent **Node 22** et **CPython 3.11** (build autonome [python-build-standalone](https://github.com/astral-sh/python-build-standalone)) sous `.ci-tools/` et mettent à jour le `PATH`.
+   Si `node` ou `python3` est absent sur l’agent, le stage **Bootstrap toolchain** met en cache **Node 22** et **CPython 3.11** (variante *install_only_stripped*, plus légère) sous `.ci-tools/` ; les deux `curl` partent **en parallèle** quand tout est à télécharger. Les builds suivants réutilisent le workspace (ou gardez le dossier de job) pour éviter de retélécharger.
 
    (Optionnel : **Blue Ocean** pour une UI de pipelines.)
 
