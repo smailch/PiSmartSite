@@ -2,6 +2,17 @@
 
 Dépôt monorepo : **Backend** NestJS (`smartsite-backend/`), **Frontend** Next.js (`smarsite-frontend/`).
 
+## Conformité exigences DevOps (4 pipelines, tests intégrés)
+
+| Exigence | Statut | Réalisation |
+|----------|--------|-------------|
+| **2 pipelines CI** (Back / Front) | Fait | Workflows **Backend CI** et **Frontend CI** : install, tests (`npm run test:ci`), build ; échec des tests = pipeline en échec. |
+| **2 pipelines CD** (Back / Front) | Fait | Jobs **Deploy backend (hook)** et **Deploy frontend (hook)** dans les mêmes fichiers, après le job de build, uniquement sur `main` / `master` (push). |
+| **CD après succès du CI du même côté** | Fait | `needs: [build-and-test]` : le déploiement ne s’exécute que si le job CI a réussi. |
+| **Tests unitaires Back + Front dans les pipelines** | Fait | Jest (Nest, `*.spec.ts`) et Vitest (Next, `*.test.ts` / `*.tsx` dans le périmètre du projet) via `test:ci`. L’évaluation porte sur l’**intégration** dans le pipeline, pas sur la complexité des scénarios. |
+
+**4 pipelines au total** : il y a **2 workflows GitHub Actions** (un par stack) ; chacun contient **2 jobs** = **1 CI + 1 CD** (équivalent à 2+2 pipelines). C’est la forme recommandée pour enchaîner strictement build puis déploiement sans `workflow_run` (évite doublons dans l’historique). Si un enseignant exige **4 fichiers** `.yml` distincts, l’essentiel fonctionnel (CI+CD, ordre, tests) est déjà là ; on peut dupliquer visuellement en 4 fichiers, avec le risque de double déclenchement CD (cf. annexe historique de ce doc).
+
 ## Démarrage pas à pas (à la suite d’un test local OK)
 
 1. **Avoir le code sur GitHub**  
