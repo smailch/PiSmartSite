@@ -1,7 +1,8 @@
 /**
  * PiSmartSite — CI Backend (NestJS)
  * Job Jenkins : charger ce fichier via « Pipeline script from SCM », Script Path = smartsite-backend/Jenkinsfile
- * Prérequis : NodeJS nommé « nodejs-22 » (Global Tool Configuration) + agent Linux avec Git.
+ * Prérequis : Node.js + npm sur le PATH de l’agent Linux (idéalement 22.x), Git.
+ * Option : plugin NodeJS + tools { nodejs 'nodejs-22' }.
  */
 pipeline {
   agent any
@@ -9,10 +10,6 @@ pipeline {
   options {
     timestamps()
     buildDiscarder(logRotator(numToKeepStr: '20'))
-  }
-
-  tools {
-    nodejs 'nodejs-22'
   }
 
   environment {
@@ -26,6 +23,12 @@ pipeline {
     stage('Checkout') {
       steps {
         checkout scm
+      }
+    }
+
+    stage('Toolchain') {
+      steps {
+        sh 'node -v && npm -v'
       }
     }
 

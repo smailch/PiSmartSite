@@ -1,7 +1,7 @@
 /**
  * PiSmartSite — CI Frontend (Next.js)
  * Job Jenkins : Script Path = smarsite-frontend/Jenkinsfile
- * Prérequis : NodeJS « nodejs-22 » + agent Linux.
+ * Prérequis : Node.js + npm sur le PATH (22.x recommandé). Option : plugin NodeJS.
  * Définir la variable de job NEXT_PUBLIC_API_URL (ou laisser le défaut ci-dessous).
  */
 pipeline {
@@ -10,10 +10,6 @@ pipeline {
   options {
     timestamps()
     buildDiscarder(logRotator(numToKeepStr: '20'))
-  }
-
-  tools {
-    nodejs 'nodejs-22'
   }
 
   environment {
@@ -28,6 +24,12 @@ pipeline {
     stage('Checkout') {
       steps {
         checkout scm
+      }
+    }
+
+    stage('Toolchain') {
+      steps {
+        sh 'node -v && npm -v'
       }
     }
 

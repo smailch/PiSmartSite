@@ -52,13 +52,12 @@ Télécharger la [LTS Jenkins](https://www.jenkins.io/download/) et suivre l’a
 1. **Manage Jenkins → Plugins → Available plugins** : installer au minimum  
    - **Git**  
    - **Pipeline**  
-   - **NodeJS**  
+
+   Les `Jenkinsfile` du dépôt **n’exigent plus** le plugin **NodeJS** : ils utilisent `node` et `npm` déjà présents sur le **PATH** de l’agent (idéalement **Node 22.x**). Tu peux quand même installer le plugin NodeJS et déclarer un outil nommé `nodejs-22` si tu préfères gérer Node depuis Jenkins.
 
    (Optionnel : **Blue Ocean** pour une UI de pipelines.)
 
-2. **Manage Jenkins → Tools → NodeJS installations**  
-   - **Name** : `nodejs-22` (le nom doit **correspondre exactement** aux `Jenkinsfile`)  
-   - Cocher « Install automatically » et choisir une version **22.x** (alignée sur GitHub Actions du dépôt).
+2. **Node sur l’agent** : installe Node.js 20+ sur la machine (ou l’image Docker) qui exécute les builds, ou configure **Manage Jenkins → Tools → NodeJS** + remets un bloc `tools { nodejs 'nodejs-22' }` dans les pipelines si tu utilises ce plugin.
 
 3. **Agents** : les `Jenkinsfile` utilisent `sh` et `curl` — privilégier un **agent Linux** (conteneur ou VM). Sur agent Windows uniquement, il faudrait adapter les étapes (`bat`, etc.).
 

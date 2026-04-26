@@ -2,8 +2,9 @@
  * PiSmartSite — CI monorepo (1 job) : Backend NestJS + Frontend Next.js + smartsite-ai-service (Python)
  *
  * Jenkins : Pipeline from SCM → Script Path = Jenkinsfile (racine du dépôt)
- * Prérequis : agent Linux, Git, plugins Git + Pipeline + NodeJS ; outil Node nommé « nodejs-22 »
- * Python 3 doit être disponible sur l’agent (python3) pour le service IA.
+ * Prérequis : agent Linux avec Node.js 20+ et npm sur le PATH, Git, plugins Git + Pipeline.
+ * (Option : plugin « NodeJS » + outil « nodejs-22 » — alors tu peux rajouter tools { nodejs 'nodejs-22' }.)
+ * Python 3 sur l’agent (python3) pour smartsite-ai-service.
  *
  * Le service IA : installation légère (FastAPI + Uvicorn + multipart) + compileall + import de main.
  * Torch / Ultralytics ne sont pas installés en CI (trop lourds) ; le code reste validé syntaxiquement.
@@ -14,10 +15,6 @@ pipeline {
   options {
     timestamps()
     buildDiscarder(logRotator(numToKeepStr: '20'))
-  }
-
-  tools {
-    nodejs 'nodejs-22'
   }
 
   environment {
@@ -31,6 +28,19 @@ pipeline {
     stage('Checkout') {
       steps {
         checkout scm
+      }
+    }
+
+    stage('Toolchain') {
+      steps {
+        sh '''
+          set -e
+          echo ">>> Node / npm (requis sur l’agent si le plugin NodeJS n’est pas installé)"
+          node -v
+          npm -v
+          echo ">>> Python (service IA)"
+          command -v python3 >/dev/null 2>&1 && python3 --version || { echo "python3 manquant"; exit 1; }
+        '''
       }
     }
 
