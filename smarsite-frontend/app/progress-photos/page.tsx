@@ -28,6 +28,7 @@ import {
   getTasksByProjectKey,
   getJobsKey,
 } from '@/lib/api';
+import Image from 'next/image';
 import { postFormDataWithUploadProgress } from '@/lib/uploadWithProgress';
 import type { BackendTask, Job, Project } from '@/lib/types';
 import { useJobProgress } from '@/hooks/useJobProgress';
@@ -476,11 +477,12 @@ export default function ProgressPhotosPage() {
                             className="group/step relative mx-auto w-full max-w-lg shrink-0 overflow-hidden rounded-2xl bg-slate-950 outline-none ring-1 ring-white/15 transition hover:ring-primary/40 focus-visible:ring-2 focus-visible:ring-primary md:mx-0 md:w-[min(100%,440px)]"
                           >
                             <div className="relative aspect-[4/3] w-full">
-                              {/* eslint-disable-next-line @next/next/no-img-element */}
-                              <img
+                              <Image
                                 src={img}
                                 alt=""
-                                className="h-full w-full object-contain transition duration-300 group-hover/step:scale-[1.02]"
+                                fill
+                                className="object-contain transition duration-300 group-hover/step:scale-[1.02]"
+                                sizes="(max-width: 768px) 100vw, 440px"
                               />
                             </div>
                             <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/20 opacity-60 transition group-hover/step:opacity-90" />
@@ -541,15 +543,12 @@ export default function ProgressPhotosPage() {
                 className="group/card cursor-pointer overflow-hidden rounded-2xl border border-white/10 bg-card/80 shadow-lg shadow-black/30 backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-white/20 hover:shadow-2xl hover:shadow-black/40"
               >
                 <div className="relative aspect-[4/3] overflow-hidden bg-slate-950">
-                  <img
+                  <Image
                     src={fullSrc}
                     alt={photo.caption || 'Progress photo'}
-                    className="h-full w-full object-cover transition duration-500 ease-out group-hover/card:scale-[1.04]"
-                    onError={(e) => {
-                      e.currentTarget.src = 'https://placehold.co/600x400/eee/ccc?text=No+Photo+Available';
-                      e.currentTarget.className =
-                        'h-full w-full object-cover opacity-60 transition duration-500 ease-out group-hover/card:scale-[1.04]';
-                    }}
+                    fill
+                    className="object-cover transition duration-500 ease-out group-hover/card:scale-[1.04]"
+                    sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
                   />
                   <div className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-white/10" />
                   <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/75 via-black/25 to-transparent" />
@@ -819,12 +818,15 @@ export default function ProgressPhotosPage() {
             className="flex max-h-[min(92vh,960px)] w-full max-w-6xl flex-col items-center gap-4"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={lightbox.src}
-              alt=""
-              className="max-h-[min(78vh,860px)] w-auto max-w-full rounded-xl object-contain shadow-2xl ring-1 ring-white/10"
-            />
+            <div className="relative mx-auto h-[min(78vh,860px)] w-full max-w-full">
+              <Image
+                src={lightbox.src}
+                alt=""
+                fill
+                className="rounded-xl object-contain shadow-2xl ring-1 ring-white/10"
+                sizes="100vw"
+              />
+            </div>
             {lightbox.label ? (
               <p className="max-w-2xl text-center text-sm font-medium leading-relaxed text-white/90">
                 {lightbox.label}

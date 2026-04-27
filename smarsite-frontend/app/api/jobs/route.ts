@@ -2,7 +2,11 @@ import { NextResponse } from "next/server";
 import { jobsStore, getNextId, resources, tasksList } from "@/lib/jobsStore";
 
 export async function GET() {
-  return NextResponse.json(jobsStore);
+  return NextResponse.json(jobsStore, {
+    headers: {
+      "Cache-Control": "public, s-maxage=60, stale-while-revalidate=300",
+    },
+  });
 }
 
 export async function POST(request: Request) {

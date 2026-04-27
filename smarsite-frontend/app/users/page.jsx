@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import MainLayout from '@/components/MainLayout';
 import { Trash2, Pencil, Plus, X, Eye, EyeOff, Users } from 'lucide-react';
+import Image from 'next/image';
 
 const API = 'http://localhost:3200';
 
@@ -327,7 +328,7 @@ export default function UsersPage() {
                         overflow: 'hidden',
                       }}>
                         {user.profileImage
-                          ? <img src={user.profileImage} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          ? <Image src={user.profileImage} alt="" width={40} height={40} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                           : initials(user.fullName)
                         }
                       </div>

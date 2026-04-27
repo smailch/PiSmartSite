@@ -1,9 +1,11 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import MainLayout from '@/components/MainLayout';
+import { FaceApiLoader } from '@/components/FaceApiLoader';
 
 const MODELS_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model';
 const API = 'http://localhost:3200';
@@ -359,6 +361,7 @@ export default function ProfilePage() {
 
   return (
     <MainLayout>
+      <FaceApiLoader />
       <style>{`
         @keyframes slideIn { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
         .tab-btn:hover  { background-color: #f0f4ff !important; }
@@ -375,7 +378,18 @@ export default function ProfilePage() {
         <div style={s.avatarCard}>
           <div className="avatar-wrap" style={s.avatarWrap} onClick={() => fileRef.current.click()}>
             {avatar
-              ? <img src={avatar} alt="avatar" style={s.avatarImg} />
+              ? (
+                typeof avatar === 'string' && avatar.startsWith('data:')
+                  ? (
+                    <>
+                      {/* TODO: optimiser avec next/image */}
+                      <img src={avatar} alt="avatar" style={s.avatarImg} />
+                    </>
+                  )
+                  : (
+                    <Image src={avatar} alt="avatar" fill sizes="100px" style={{ objectFit: 'cover' }} />
+                  )
+              )
               : <div style={s.avatarInitials}>{initials}</div>
             }
             <div className="avatar-overlay" style={s.avatarOverlay}>📷</div>

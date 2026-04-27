@@ -1,6 +1,7 @@
 "use client";
 
 import { use, useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import useSWR from "swr";
 import MainLayout from "@/components/MainLayout";
@@ -209,13 +210,8 @@ export default function ProjectJobProgressPage({
                           </p>
                         ) : null}
                         {img ? (
-                          <div className="mt-3 overflow-hidden rounded-lg border border-white/10">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <img
-                              src={img}
-                              alt=""
-                              className="max-h-48 w-full object-cover"
-                            />
+                          <div className="relative mt-3 h-48 w-full overflow-hidden rounded-lg border border-white/10">
+                            <Image src={img} alt="" fill className="object-cover" sizes="(max-width: 768px) 100vw, 640px" />
                           </div>
                         ) : null}
                       </div>

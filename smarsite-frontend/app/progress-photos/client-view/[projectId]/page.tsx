@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { useParams } from 'next/navigation';
 import MainLayout from '@/components/MainLayout';
 import PageHeader from '@/components/PageHeader';
@@ -153,16 +154,15 @@ export default function ClientViewPage() {
               <div className="grid grid-cols-1 lg:grid-cols-2">
                 {/* Photo */}
                 <div
-                  className="relative aspect-video lg:aspect-auto cursor-pointer bg-secondary"
+                  className="relative aspect-video lg:aspect-auto min-h-[200px] cursor-pointer bg-secondary"
                   onClick={() => setSelectedPhoto(photo)}
                 >
-                  <img
+                  <Image
                     src={photoDisplaySrc(photo.photoUrl)}
                     alt={photo.caption || 'Progress photo'}
-                    className="w-full h-full object-cover hover:opacity-90 transition-opacity"
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="300"%3E%3Crect fill="%23ddd" width="400" height="300"/%3E%3Ctext fill="%23999" x="50%25" y="50%25" text-anchor="middle" dy=".3em"%3EImage%3C/text%3E%3C/svg%3E';
-                    }}
+                    fill
+                    className="object-cover transition-opacity hover:opacity-90"
+                    sizes="(max-width: 1024px) 100vw, 50vw"
                   />
                   {photo.estimatedProgress !== undefined && (
                     <div className="absolute top-4 right-4 px-3 py-1 rounded-full bg-primary text-white font-bold text-sm shadow-lg">
@@ -248,13 +248,19 @@ export default function ClientViewPage() {
           className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 p-4 backdrop-blur-sm"
           onClick={() => setSelectedPhoto(null)}
         >
-          <div className="max-w-6xl w-full">
-            <img
-              src={photoDisplaySrc(selectedPhoto.photoUrl)}
-              alt={selectedPhoto.caption || 'Progress photo'}
-              className="w-full h-auto rounded-lg"
+          <div className="relative max-w-6xl w-full">
+            <div
+              className="relative aspect-video w-full overflow-hidden rounded-lg bg-muted"
               onClick={(e) => e.stopPropagation()}
-            />
+            >
+              <Image
+                src={photoDisplaySrc(selectedPhoto.photoUrl)}
+                alt={selectedPhoto.caption || 'Progress photo'}
+                fill
+                className="object-contain"
+                sizes="(max-width: 1152px) 100vw, 1152px"
+              />
+            </div>
             <div className="mt-4 text-center">
               <p className="text-white text-lg font-semibold">
                 {selectedPhoto.caption || 'Progress Update'}

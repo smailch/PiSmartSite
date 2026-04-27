@@ -918,6 +918,7 @@ export function DreamHouseClient() {
                               </p>
                             </div>
                           ) : (
+                            // TODO: optimiser avec next/image
                             // eslint-disable-next-line @next/next/no-img-element -- blob: local après proxy
                             <img
                               src={proxiedImageUrls[i]}
@@ -949,6 +950,7 @@ export function DreamHouseClient() {
                       )}
                     >
                       {proxiedImageUrls[i] ? (
+                        // TODO: optimiser avec next/image
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
                           src={proxiedImageUrls[i]}

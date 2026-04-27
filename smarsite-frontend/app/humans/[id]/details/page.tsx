@@ -3,6 +3,7 @@ import { use } from "react";
 import useSWR from "swr";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import {
   ArrowLeft,
   Pencil,
@@ -112,12 +113,14 @@ export default function HumanDetailsPage({
             <div className="px-8 sm:px-12 lg:px-16 pb-12 lg:pb-16 -mt-20 relative">
               <div className="flex flex-col lg:flex-row lg:items-end gap-8 lg:gap-12">
                 <div className="relative group flex-shrink-0">
-                  <div className="flex h-40 w-40 items-center justify-center rounded-3xl border-8 border-card bg-primary text-6xl font-bold text-primary-foreground shadow-sm ring-2 ring-border transition-all duration-300 group-hover:scale-[1.02] group-hover:ring-ring/50 lg:h-48 lg:w-48 lg:text-7xl">
+                  <div className="relative flex h-40 w-40 items-center justify-center overflow-hidden rounded-3xl border-8 border-card bg-primary text-6xl font-bold text-primary-foreground shadow-sm ring-2 ring-border transition-all duration-300 group-hover:scale-[1.02] group-hover:ring-ring/50 lg:h-48 lg:w-48 lg:text-7xl">
                     {human.imageUrl ? (
-                      <img
+                      <Image
                         src={resolveAssetUrl(human.imageUrl)}
                         alt={`${human.firstName} ${human.lastName}`}
-                        className="h-full w-full object-cover rounded-3xl"
+                        fill
+                        className="object-cover rounded-3xl"
+                        sizes="(max-width: 1024px) 160px, 192px"
                       />
                     ) : (
                       getInitials(human.firstName, human.lastName)

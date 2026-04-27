@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import MainLayout from '@/components/MainLayout';
 import PageHeader from '@/components/PageHeader';
 import { getApiBaseUrl, getApiRootAbsoluteUrl, getAuthHeaderInit } from '@/lib/api';
@@ -155,13 +156,12 @@ export default function ValidatePhotosPage() {
                 >
                   {/* Photo */}
                   <div className="relative aspect-video bg-secondary cursor-pointer" onClick={() => setSelectedPhoto(photo)}>
-                    <img
+                    <Image
                       src={getPhotoUrl(photo.photoUrl)}
                       alt={photo.caption || 'Progress photo'}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="300"%3E%3Crect fill="%23ddd" width="400" height="300"/%3E%3Ctext fill="%23999" x="50%25" y="50%25" text-anchor="middle" dy=".3em"%3EImage%3C/text%3E%3C/svg%3E';
-                      }}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 1024px) 100vw, 33vw"
                     />
                     <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors flex items-center justify-center">
                       <ImageIcon size={32} className="text-white opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -248,14 +248,15 @@ export default function ValidatePhotosPage() {
 
             {/* Photo */}
             <div className="p-6">
-              <img
-                src={getPhotoUrl(selectedPhoto.photoUrl)}
-                alt={selectedPhoto.caption || 'Progress photo'}
-                className="w-full rounded-lg mb-4"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="800" height="600"%3E%3Crect fill="%23ddd" width="800" height="600"/%3E%3Ctext fill="%23999" x="50%25" y="50%25" text-anchor="middle" dy=".3em"%3EImage%3C/text%3E%3C/svg%3E';
-                }}
-              />
+              <div className="relative mb-4 aspect-video w-full overflow-hidden rounded-lg bg-muted">
+                <Image
+                  src={getPhotoUrl(selectedPhoto.photoUrl)}
+                  alt={selectedPhoto.caption || 'Progress photo'}
+                  fill
+                  className="object-contain"
+                  sizes="(max-width: 672px) 100vw, 672px"
+                />
+              </div>
 
               {/* Photo Details */}
               <div className="mb-6">

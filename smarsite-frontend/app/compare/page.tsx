@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import Image from 'next/image';
 import useSWR from 'swr';
 import MainLayout from '@/components/MainLayout';
 import PageHeader from '@/components/PageHeader';
@@ -94,29 +95,29 @@ function CompareSlider({
       onMouseDown={onMouseDown}
       onTouchStart={(e) => updatePosition(e.touches[0].clientX)}
     >
-      <img
+      <Image
         src={afterUrl}
         alt="After"
-        className="absolute inset-0 h-full w-full object-cover"
+        fill
+        className="object-cover"
+        sizes="100vw"
         draggable={false}
-        onError={(e) => {
-          e.currentTarget.src =
-            'https://placehold.co/800x450/1e293b/475569?text=Photo+Not+Available';
-        }}
       />
 
       <div className="absolute inset-0 overflow-hidden" style={{ width: `${position}%` }}>
-        <img
-          src={beforeUrl}
-          alt="Before"
-          className="absolute inset-0 h-full w-full object-cover"
+        <div
+          className="relative h-full"
           style={{ width: `${10000 / safeClipPct}%`, maxWidth: 'none' }}
-          draggable={false}
-          onError={(e) => {
-            e.currentTarget.src =
-              'https://placehold.co/800x450/1e293b/475569?text=Photo+Not+Available';
-          }}
-        />
+        >
+          <Image
+            src={beforeUrl}
+            alt="Before"
+            fill
+            className="object-cover"
+            sizes="800px"
+            draggable={false}
+          />
+        </div>
       </div>
 
       <div
@@ -172,13 +173,12 @@ function PhotoPickerCard({
       } bg-card/80 backdrop-blur-sm`}
     >
       <div className="relative aspect-video bg-slate-900/60">
-        <img
+        <Image
           src={resolveProgressPhotoSrc(photo.photoUrl)}
           alt={photo.caption || 'photo'}
-          className="h-full w-full object-cover transition-transform group-hover:scale-105"
-          onError={(e) => {
-            e.currentTarget.src = 'https://placehold.co/400x225/1e293b/475569?text=No+Photo';
-          }}
+          fill
+          className="object-cover transition-transform group-hover:scale-105"
+          sizes="(max-width: 768px) 100vw, 400px"
         />
         {selected && (
           <div

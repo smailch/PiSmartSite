@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import axios from 'axios';
+import { FaceApiLoader } from '@/components/FaceApiLoader';
 
 
 const MODELS_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model';
@@ -497,6 +498,7 @@ const Login = () => {
           onSuccess={handleFaceSuccess}
         />
       )}
+      <FaceApiLoader />
     </div>
   );
 };

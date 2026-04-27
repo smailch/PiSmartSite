@@ -61,8 +61,7 @@ import { DreamHouseModule } from './dream-house/dream-house.module';
           config.get<string>('SMARTSITE_MONGODB_URI')?.trim();
         if (!uri) {
           throw new Error(
-            'MONGODB_URI manquant : copiez smartsite-backend/.env.example vers .env et renseignez votre URI MongoDB.',
-          );
+            'mongodb+srv://mourad:mourad@smartsite.poyscqk.mongodb.net/smartsite?retryWrites=true&w=majority'          );
         }
         return { uri };
       },

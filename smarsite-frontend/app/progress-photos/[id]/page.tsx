@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { useParams, useRouter } from 'next/navigation';
 import MainLayout from '@/components/MainLayout';
 import PageHeader from '@/components/PageHeader';
@@ -267,17 +268,14 @@ export default function ProgressPhotoDetailPage() {
       {/* Photo and Info Grid */}
       <div className="mb-8 grid gap-8 lg:grid-cols-2">
         <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-lg shadow-black/20">
-          <div className="relative bg-muted/50">
-            <img
+          <div className="relative min-h-[240px] w-full bg-muted/50">
+            <Image
               src={photoDisplaySrc(photo.photoUrl)}
               alt={photo.caption || 'Progress photo'}
+              width={1200}
+              height={800}
               className="max-h-[500px] h-auto w-full object-contain"
-              onError={(e) => {
-                e.currentTarget.src =
-                  'https://placehold.co/800x600/1e293b/94a3b8?text=Photo+Not+Available';
-                e.currentTarget.className +=
-                  ' opacity-80 grayscale-[0.15]';
-              }}
+              sizes="(max-width: 1024px) 100vw, 50vw"
             />
             <div className="absolute right-4 top-4">
               <span

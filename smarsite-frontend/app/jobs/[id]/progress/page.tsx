@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState, type ChangeEvent, type DragEvent } from "react";
+import Image from "next/image";
 import { useParams } from "next/navigation";
 import { Line } from "react-chartjs-2";
 import {
@@ -591,11 +592,13 @@ export default function JobProgressPage() {
                         }`}
                       >
                         {step.photoUrl ? (
-                          <div className="relative w-full max-w-xs">
-                            <img
+                          <div className="relative mx-auto h-48 w-full max-w-xs">
+                            <Image
                               src={resolveProgressPhotoUrl(step.photoUrl)}
                               alt="Step evidence"
-                              className="mx-auto max-h-48 w-auto rounded-lg border border-border object-contain shadow-md"
+                              fill
+                              className="rounded-lg border border-border object-contain shadow-md"
+                              sizes="320px"
                             />
                             <button
                               type="button"

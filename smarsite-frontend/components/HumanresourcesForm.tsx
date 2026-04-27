@@ -530,6 +530,7 @@ export default function HumanForm({ mode, initialData }: HumanFormProps) {
                   </button>
                   {imagePreview && (
                     <div className="mt-3 h-40 w-40 overflow-hidden rounded-2xl border-2 border-border">
+                      {/* TODO: optimiser avec next/image */}
                       <img src={imagePreview} alt="Preview" className="h-full w-full object-cover" />
                     </div>
                   )}

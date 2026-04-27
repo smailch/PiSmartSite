@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { Bell, Settings, Bot, Send, X, Loader2 } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -379,7 +380,7 @@ export default function Topbar() {
                   backgroundColor: '#132849', padding: 0, transition: 'transform 0.2s'
                 }}>
                 {user?.profileImage ? (
-                  <img src={user.profileImage} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <Image src={user.profileImage} alt="avatar" width={42} height={42} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 ) : (
                   <div style={{
                     width: '100%', height: '100%', display: 'flex', justifyContent: 'center',
@@ -414,7 +415,7 @@ export default function Topbar() {
                       overflow: 'hidden', flexShrink: 0
                     }}>
                       {user?.profileImage
-                        ? <img src={user.profileImage} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        ? <Image src={user.profileImage} alt="avatar" width={40} height={40} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         : <span style={{ fontSize: '15px', fontWeight: '800', color: '#FACC15' }}>{initials}</span>
                       }
                     </div>
