@@ -159,6 +159,15 @@ Le monorepo inclut **`sonar-project.properties`** (clé **`PiSmartSite`**, sourc
        - **Linux** : souvent `http://172.17.0.1:9000` (passerelle du réseau `bridge`) ou l’IP LAN de la machine hôte.
      - Même URL à mettre ici **ou** laisser l’URL « interne » ici et définir sur le **job** la variable **`SONAR_HOST_URL_OVERRIDE`** avec cette URL (prioritaire pour `scripts/sonar-scan.mjs`).
    - **Server authentication token** : coller le token Sonar (credentials Jenkins).
+
+**Navigateur vs Jenkins (souvent confondu)**  
+
+- **`http://localhost:9000`** : c’est l’URL normale **sur ton PC** pour ouvrir le tableau de bord SonarQube. Garde-la pour le navigateur.
+- **`http://host.docker.internal:9000`** : ce nom est surtout pour que **un processus à l’intérieur d’un conteneur Docker** (ex. Jenkins) joigne un service qui tourne **sur la machine hôte**. Sur Windows, l’ouvrir **dans Chrome/Edge** peut donner **ERR_CONNECTION_TIMED_OUT** : ce n’est pas grave, ce n’est pas le bon test.
+- Pour vérifier que **Jenkins** atteint bien Sonar, depuis une console :  
+  `docker exec -it pismartsite-jenkins curl -sI http://host.docker.internal:9000`  
+  Si ça échoue, utilise à la place l’**adresse IPv4 de ton PC** sur le réseau local (voir `ipconfig` → « Adresse IPv4 », ex. `http://192.168.1.42:9000`) dans **`SONAR_HOST_URL_OVERRIDE`** et, si besoin, ouvre le port 9000 du pare-feu Windows pour le réseau privé. Cette même URL fonctionne souvent à la fois depuis le conteneur et depuis d’autres machines du LAN.
+
 3. *(Option)* **Global Tool Configuration** : ajouter **SonarQube Scanner** si tu préfères le binaire Java au lieu de `npx` ; le dépôt utilise déjà `node scripts/sonar-scan.mjs` (pas d’obligation).
 
 ### 7.3 Webhook (indispensable pour `waitForQualityGate`)
