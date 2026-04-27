@@ -1,11 +1,12 @@
 /**
- * SonarQube / SonarCloud — scanner npm v4 (@sonar/scan / sonarqube-scanner).
- * Le CLI n’accepte plus les arguments -D… en ligne de commande : utiliser l’environnement.
+ * SonarQube / SonarCloud — scanner npm v4 (bootstrapper) + SonarScanner CLI Java.
  *
- * Jenkins dans Docker : l’URL « http://localhost:9000 » du serveur SonarQube pointe vers le
- * conteneur Jenkins, pas l’hôte. Définir SONAR_HOST_URL_OVERRIDE sur le job, ex. :
- *   http://host.docker.internal:9000   (Docker Desktop Windows/macOS)
- *   http://172.17.0.1:9000               (Linux, gateway du bridge docker0)
+ * Sur SonarQube **Server** 9.9, le CLI Java exige en pratique un jeton utilisateur comme
+ * **sonar.login** (voir message « Please provide a user token in sonar.login »). Seul
+ * SONAR_TOKEN ne suffit pas toujours une fois le bootstrapper npm lancé le JRE.
+ * On passe donc -Dsonar.login=… via SONAR_SCANNER_OPTS (hérité par le processus Java).
+ *
+ * URL : SONAR_HOST_URL_OVERRIDE / SONAR_HOST_URL (Jenkins + Docker : host.docker.internal).
  *
  * @see https://docs.sonarsource.com/sonarqube-server/latest/analyzing-source-code/scanners/npm/introduction/
  */
@@ -16,7 +17,7 @@ const token =
   process.env.SONAR_AUTH_TOKEN?.trim();
 if (!token) {
   console.error(
-    "SONAR_TOKEN (ou SONAR_AUTH_TOKEN) manquant. Jenkins : withSonarQubeEnv injecte SONAR_AUTH_TOKEN.",
+    "SONAR_TOKEN (ou SONAR_AUTH_TOKEN) manquant. Jenkins : withSonarQubeEnv + token sur le serveur SonarQube, ou credentials « Secret text » sur le job.",
   );
   process.exit(1);
 }
@@ -30,11 +31,17 @@ const host = override || fromEnv;
 
 const childEnv = { ...process.env };
 delete childEnv.SONARQUBE_SCANNER_PARAMS;
-delete childEnv.SONAR_LOGIN;
-childEnv.SONAR_TOKEN = token;
+// Évite que le CLI Java ignore sonar.login si sonar.token est aussi défini vide / incohérent
+delete childEnv.SONAR_TOKEN;
+delete childEnv.SONAR_AUTH_TOKEN;
+delete childEnv.SONAR_SCANNER_OPTS;
+
 if (host) {
   childEnv.SONAR_HOST_URL = host;
 }
+
+// Jeton utilisateur SonarQube : propriété attendue par SonarScanner 6 + SQ 9.9 LTS
+childEnv.SONAR_SCANNER_OPTS = `-Dsonar.login=${token}`;
 
 const isWin = process.platform === "win32";
 const res = spawnSync(isWin ? "npx.cmd" : "npx", ["-y", "sonarqube-scanner"], {
