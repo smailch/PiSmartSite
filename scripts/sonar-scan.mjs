@@ -32,9 +32,13 @@ const fromEnv =
   process.env.SONAR_HOST_URL?.trim() || process.env.SONARQUBE_HOST?.trim();
 const host = override || fromEnv;
 
-// Paramètres d’analyse pour le CLI Java (priorité documentée npm v4)
+// SonarQube 9.9 LTS : le jeton utilisateur / analyse se passe dans sonar.login
+// (laisser sonar.password vide). sonar.token seul peut être ignoré par le CLI →
+// « Not authorized » dès le chargement des réglages.
+// Ne pas laisser SONAR_TOKEN dans l’env du processus enfant : le bootstrapper npm
+// injecterait aussi sonar.token ; les deux propriétés ensemble déclenchent des
+// avertissements et un comportement imprévisible selon les versions.
 const jsonParams = {
-  // SQ 9.9 LTS + Scanner 6 : jeton utilisateur (User token) dans sonar.login
   "sonar.login": token,
 };
 if (host) {
@@ -45,6 +49,8 @@ const childEnv = { ...process.env };
 delete childEnv.SONARQUBE_SCANNER_PARAMS;
 delete childEnv.SONAR_SCANNER_JSON_PARAMS;
 delete childEnv.SONAR_SCANNER_OPTS;
+delete childEnv.SONAR_TOKEN;
+delete childEnv.SONAR_AUTH_TOKEN;
 
 childEnv.SONAR_SCANNER_JSON_PARAMS = JSON.stringify(jsonParams);
 
