@@ -252,6 +252,14 @@
 }
 
 @layer utilities {
+  /*
+   * Accessibility contrast override:
+   * this project uses a dark canvas by default, so slate-500 is too dim for body/help text.
+   */
+  .text-slate-500 {
+    @apply text-slate-300;
+  }
+
   @keyframes skeleton-shimmer {
     100% {
       transform: translateX(100%);
