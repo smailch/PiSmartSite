@@ -1,12 +1,20 @@
 import axios from "axios";
-import { getApiBaseUrl } from "./api";
+import { getApiBaseUrl, getAuthHeaderInit } from "./api";
 import { formatAxiosError } from "./formatAxiosError";
 
 function createClient() {
-  return axios.create({
+  const client = axios.create({
     baseURL: getApiBaseUrl(),
     headers: { "Content-Type": "application/json" },
   });
+  client.interceptors.request.use((config) => {
+    const auth = getAuthHeaderInit();
+    if (auth.Authorization) {
+      config.headers.Authorization = auth.Authorization;
+    }
+    return config;
+  });
+  return client;
 }
 
 export type AttendanceRecord = {

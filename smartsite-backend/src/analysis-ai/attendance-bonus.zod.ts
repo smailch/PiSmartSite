@@ -2,14 +2,20 @@ import { z } from 'zod';
 
 const OBJECT_ID_RE = /^[a-fA-F0-9]{24}$/;
 
+const nullableNonNegativeDt = z.preprocess(
+  (v) =>
+    v === null || v === undefined || v === "" ? null : v,
+  z.union([z.null(), z.coerce.number().nonnegative()]),
+);
+
 export const travailleurBonusSchema = z.object({
   resourceId: z.string().regex(OBJECT_ID_RE),
   nomAffiche: z.string().min(1),
   /** Points de présence mensuels (échelle 0–30, jours ouvrables, week-ends exclus). */
-  scorePerformance: z.number().min(0).max(30),
+  scorePerformance: z.coerce.number().min(0).max(30),
   /** Prime en dinars tunisiens (DT) selon le barème serveur. */
-  montantPrimeSuggere: z.union([z.number().nonnegative(), z.null()]),
-  montantBonusSuggere: z.union([z.number().nonnegative(), z.null()]),
+  montantPrimeSuggere: nullableNonNegativeDt,
+  montantBonusSuggere: nullableNonNegativeDt,
   justification: z.string().min(1),
   pointsForts: z.array(z.string().min(1)).max(6),
 });
@@ -18,7 +24,7 @@ export const attendanceBonusAnalysisPayloadSchema = z.object({
   summary: z.string().min(1),
   recommendationsEquipe: z.array(z.string().min(1)).max(8),
   travailleurs: z.array(travailleurBonusSchema),
-  confiance: z.number().min(0).max(1),
+  confiance: z.coerce.number().min(0).max(1),
 });
 
 export type AttendanceBonusAnalysisPayload = z.infer<

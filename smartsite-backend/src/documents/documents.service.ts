@@ -44,6 +44,7 @@ export class DocumentsService {
           { title: { $regex: query, $options: 'i' } },
           { description: { $regex: query, $options: 'i' } },
           { category: { $regex: query, $options: 'i' } },
+          { aiSummary: { $regex: query, $options: 'i' } },
         ],
       })
       .exec();

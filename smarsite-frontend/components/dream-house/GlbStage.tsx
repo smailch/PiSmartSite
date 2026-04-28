@@ -38,7 +38,7 @@ export function GlbStage({ url }: GlbStageProps) {
         <model-viewer
           key={`${url}-${viewKey}`}
           src={url}
-          alt="Maquette 3D Dream House"
+          alt="Dream House 3D model"
           className="block h-full w-full"
           style={{
             width: "100%",
@@ -59,7 +59,7 @@ export function GlbStage({ url }: GlbStageProps) {
         className="border-white/15 bg-slate-950/40 text-slate-200 hover:bg-slate-800/80"
         onClick={resetView}
       >
-        Réinitialiser la vue
+        Reset view
       </Button>
     </div>
   );

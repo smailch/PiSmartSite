@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import MainLayout from '@/components/MainLayout';
 import PageHeader from '@/components/PageHeader';
 import { DocumentTypeIcon } from '@/components/DocumentTypeIcon';
-import { FileText, Download, Upload, ArrowLeft, History, User, Calendar, AlertCircle } from 'lucide-react';
+import { Download, Upload, ArrowLeft, History, User, Calendar, AlertCircle } from 'lucide-react';
 import { buildUploadsFileHref, getApiBaseUrl, getAuthHeaderInit } from '@/lib/api';
 import { postFormDataWithUploadProgress } from '@/lib/uploadWithProgress';
 
@@ -21,6 +21,7 @@ interface Document {
   category: string;
   createdAt: string;
   updatedAt: string;
+  aiSummary?: string;
 }
 
 interface Version {
@@ -175,8 +176,12 @@ export default function DocumentDetailPage() {
   if (loading) {
     return (
       <MainLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
+        <div
+          role="status"
+          className="flex flex-col items-center justify-center gap-4 rounded-xl border border-white/10 bg-card/60 py-16 shadow-lg shadow-black/20 backdrop-blur-sm"
+        >
+          <div className="h-12 w-12 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          <p className="text-sm text-slate-400">Loading document…</p>
         </div>
       </MainLayout>
     );
@@ -185,11 +190,15 @@ export default function DocumentDetailPage() {
   if (error || !document) {
     return (
       <MainLayout>
-        <div className="flex flex-col items-center justify-center h-64 text-center">
-          <AlertCircle size={64} className="text-destructive mb-4" />
-          <h2 className="text-xl font-semibold mb-2">Error</h2>
-          <p className="text-muted-foreground mb-6">{error || 'Document not found'}</p>
-          <button onClick={() => router.back()} className="px-6 py-2 bg-primary text-white rounded-lg">
+        <div className="flex flex-col items-center justify-center rounded-xl border border-destructive/30 bg-destructive/10 px-8 py-16 text-center">
+          <AlertCircle size={56} className="mb-4 text-destructive" />
+          <h2 className="mb-2 text-xl font-semibold text-slate-100">Error</h2>
+          <p className="mb-6 max-w-md text-slate-400">{error || 'Document not found'}</p>
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="rounded-xl bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground shadow-sm transition hover:brightness-110"
+          >
             Go Back
           </button>
         </div>
@@ -197,25 +206,38 @@ export default function DocumentDetailPage() {
     );
   }
 
+  const categoryRing =
+    document.category === 'plan'
+      ? 'bg-blue-500/15 text-blue-200 ring-blue-500/30'
+      : document.category === 'report'
+        ? 'bg-emerald-500/15 text-emerald-200 ring-emerald-500/30'
+        : document.category === 'contract'
+          ? 'bg-violet-500/15 text-violet-200 ring-violet-500/30'
+          : document.category === 'invoice'
+            ? 'bg-amber-500/15 text-amber-200 ring-amber-500/30'
+            : 'bg-slate-500/15 text-slate-200 ring-slate-500/30';
+
   return (
     <MainLayout>
       <PageHeader
         title={document.title}
-        description={`${document.fileType.toUpperCase()} • Version ${document.currentVersion}`}
+        description={`${document.fileType.toUpperCase()} · Version ${document.currentVersion}`}
         startAdornment={
           <DocumentTypeIcon fileType={document.fileType} size={28} boxClassName="size-14" />
         }
       >
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3">
           <button
+            type="button"
             onClick={() => router.back()}
-            className="px-4 py-2 border border-border hover:bg-secondary rounded-lg flex items-center gap-2"
+            className="flex items-center gap-2 rounded-xl border border-white/10 bg-card/80 px-4 py-2 text-sm font-medium text-slate-200 shadow-sm transition hover:bg-white/[0.08]"
           >
             <ArrowLeft size={18} /> Back
           </button>
           <button
+            type="button"
             onClick={() => setShowNewVersionModal(true)}
-            className="px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent/90 flex items-center gap-2"
+            className="flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-md transition hover:brightness-110"
           >
             <Upload size={18} /> New Version
           </button>
@@ -223,103 +245,126 @@ export default function DocumentDetailPage() {
       </PageHeader>
 
       {/* Document Info */}
-      <div className="bg-white rounded-xl border shadow-sm p-6 mb-8">
-        <div className="grid md:grid-cols-2 gap-8">
+      <div className="mb-8 rounded-xl border border-white/10 bg-card/80 p-6 shadow-lg shadow-black/25 backdrop-blur-sm lg:p-8">
+        <div className="grid gap-8 md:grid-cols-2">
           <div>
-            <h3 className="text-sm font-semibold text-muted-foreground mb-2">Description</h3>
-            <p>{document.description || 'No description'}</p>
+            <h3 className="mb-2 text-sm font-semibold text-slate-400">Description</h3>
+            <p className="leading-relaxed text-slate-100">{document.description || 'No description provided.'}</p>
+
+            {document.aiSummary && (
+              <div className="mt-4 rounded-lg border border-primary/25 bg-primary/10 p-4">
+                <p className="mb-1 flex items-center gap-1.5 text-xs font-semibold text-primary">
+                  🤖 AI Summary
+                </p>
+                <p className="text-sm leading-relaxed text-slate-300">{document.aiSummary}</p>
+              </div>
+            )}
           </div>
-          <div className="space-y-4">
+
+          <div className="space-y-5">
             <div>
-              <h3 className="text-sm font-semibold text-muted-foreground">Category</h3>
-              <span className="inline-block px-3 py-1 mt-1 rounded-full bg-primary/10 text-primary text-sm">
+              <h3 className="mb-1 text-sm font-semibold text-slate-400">Category</h3>
+              <span
+                className={`inline-block rounded-full px-3 py-1 text-xs font-semibold ring-1 ${categoryRing}`}
+              >
                 {document.category}
               </span>
             </div>
             <div>
-              <h3 className="text-sm font-semibold text-muted-foreground">Project</h3>
-              <p className="mt-1">{document.projectId}</p>
+              <h3 className="mb-1 text-sm font-semibold text-slate-400">Project</h3>
+              <p className="font-mono text-sm text-slate-200">{document.projectId}</p>
             </div>
             <div>
-              <h3 className="text-sm font-semibold text-muted-foreground">Uploaded by</h3>
-              <p className="mt-1">{document.uploadedBy}</p>
+              <h3 className="mb-1 text-sm font-semibold text-slate-400">Uploaded by</h3>
+              <div className="flex items-center gap-2 text-slate-100">
+                <User size={15} className="text-slate-500" />
+                {document.uploadedBy}
+              </div>
+            </div>
+            <div>
+              <h3 className="mb-1 text-sm font-semibold text-slate-400">Created</h3>
+              <div className="flex items-center gap-2 text-slate-100">
+                <Calendar size={15} className="text-slate-500" />
+                {new Date(document.createdAt).toLocaleString(undefined, {
+                  dateStyle: 'medium',
+                  timeStyle: 'short',
+                })}
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="mt-8">
+        <div className="mt-8 border-t border-white/10 pt-6">
           <a
             href={buildUploadsFileHref(document.fileUrl)}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary/90"
+            className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground shadow-md transition hover:brightness-110"
           >
             <Download size={18} />
-            Download Current (v{document.currentVersion})
+            Download current (v{document.currentVersion})
           </a>
         </div>
       </div>
 
       {/* Version History */}
-      <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
-        <div className="px-6 py-4 border-b flex items-center justify-between bg-muted/30">
+      <div className="overflow-hidden rounded-xl border border-white/10 bg-card/80 shadow-lg shadow-black/25 backdrop-blur-sm">
+        <div className="flex items-center justify-between border-b border-white/10 px-6 py-4">
           <div className="flex items-center gap-2">
             <History size={20} className="text-primary" />
-            <h3 className="text-lg font-semibold">Version History</h3>
+            <h3 className="text-lg font-semibold text-slate-100">Version history</h3>
           </div>
-          <span className="text-sm text-muted-foreground">
+          <span className="rounded-full bg-white/[0.06] px-3 py-1 text-xs text-slate-400">
             {versions.length} version{versions.length !== 1 ? 's' : ''}
           </span>
         </div>
 
         {versions.length === 0 ? (
-          <div className="py-16 text-center text-muted-foreground">
-            No versions yet
+          <div className="py-16 text-center">
+            <History size={40} className="mx-auto mb-3 text-slate-600" />
+            <p className="text-slate-400">No versions yet</p>
           </div>
         ) : (
-          <div className="divide-y">
+          <div className="divide-y divide-white/[0.06]">
             {versions.map((v) => (
-              <div key={v._id} className="px-6 py-5 hover:bg-muted/50">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-1">
-                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary">
-                        v{v.versionNumber}
-                      </div>
-                      <h4 className="font-semibold">
-                        Version {v.versionNumber}
-                      </h4>
+              <div
+                key={v._id}
+                className="flex items-start justify-between gap-4 px-6 py-5 transition-colors hover:bg-white/[0.03]"
+              >
+                <div className="min-w-0 flex-1">
+                  <div className="mb-2 flex items-center gap-3">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/15 text-xs font-bold text-primary ring-1 ring-primary/30">
+                      v{v.versionNumber}
                     </div>
-
-                    {v.changeNote && (
-                      <p className="text-sm text-muted-foreground ml-11 mt-1">
-                        {v.changeNote}
-                      </p>
-                    )}
-
-                    <div className="ml-11 mt-2 flex flex-wrap gap-x-6 text-xs text-muted-foreground">
-                      <span className="flex items-center gap-1.5">
-                        <User size={13} /> {v.uploadedBy}
-                      </span>
-                      <span className="flex items-center gap-1.5">
-                        <Calendar size={13} />
-                        {new Date(v.createdAt).toLocaleString('en-US', {
-                          dateStyle: 'medium',
-                          timeStyle: 'short',
-                        })}
-                      </span>
-                    </div>
+                    <h4 className="font-semibold text-slate-100">Version {v.versionNumber}</h4>
                   </div>
 
-                  <a
-                    href={buildUploadsFileHref(v.fileUrl)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="px-4 py-2 border border-primary/30 text-primary rounded-lg hover:bg-primary/5 flex items-center gap-2 text-sm"
-                  >
-                    <Download size={14} /> Download
-                  </a>
+                  {v.changeNote && (
+                    <p className="mb-2 ml-11 text-sm text-slate-400">{v.changeNote}</p>
+                  )}
+
+                  <div className="ml-11 flex flex-wrap gap-x-5 text-xs text-slate-500">
+                    <span className="flex items-center gap-1.5">
+                      <User size={12} /> {v.uploadedBy}
+                    </span>
+                    <span className="flex items-center gap-1.5">
+                      <Calendar size={12} />
+                      {new Date(v.createdAt).toLocaleString(undefined, {
+                        dateStyle: 'medium',
+                        timeStyle: 'short',
+                      })}
+                    </span>
+                  </div>
                 </div>
+
+                <a
+                  href={buildUploadsFileHref(v.fileUrl)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex shrink-0 items-center gap-2 rounded-lg border border-primary/30 bg-primary/10 px-4 py-2 text-sm font-medium text-primary transition hover:bg-primary/20"
+                >
+                  <Download size={14} /> Download
+                </a>
               </div>
             ))}
           </div>
@@ -362,7 +407,7 @@ export default function DocumentDetailPage() {
               {/* Upload Mode Specific Fields */}
               {uploadMode === 'url' ? (
                 <div>
-                  <label className="block text-sm font-medium mb-1">New File URL *</label>
+                  <label className="mb-1 block text-sm font-medium text-slate-200">New file URL *</label>
                   <input
                     name="fileUrl"
                     required
@@ -372,7 +417,7 @@ export default function DocumentDetailPage() {
                 </div>
               ) : (
                 <div>
-                  <label className="block text-sm font-medium mb-1">File *</label>
+                  <label className="mb-1 block text-sm font-medium text-slate-200">File *</label>
                   <input
                     type="file"
                     name="file"
@@ -380,14 +425,14 @@ export default function DocumentDetailPage() {
                     accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.zip"
                     className="w-full rounded-lg border border-white/10 bg-slate-900/50 px-4 py-2 text-slate-100 placeholder:text-slate-500 focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/25"
                   />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Max size: 10MB. Supported: PDF, Word, Excel, Images, ZIP
+                  <p className="mt-1 text-xs text-slate-500">
+                    Max size: 10MB. Supported: PDF, Word, Excel, images, ZIP
                   </p>
                 </div>
               )}
 
               <div>
-                <label className="block text-sm font-medium mb-1">Uploaded By *</label>
+                <label className="mb-1 block text-sm font-medium text-slate-200">Uploaded by *</label>
                 <input
                   name="uploadedBy"
                   required
@@ -398,7 +443,7 @@ export default function DocumentDetailPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1">Change Note</label>
+                <label className="mb-1 block text-sm font-medium text-slate-200">Change note</label>
                 <textarea
                   name="changeNote"
                   className="w-full rounded-lg border border-white/10 bg-slate-900/50 px-4 py-2 text-slate-100 placeholder:text-slate-500 focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/25"
@@ -439,7 +484,7 @@ export default function DocumentDetailPage() {
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 py-3 bg-primary text-white rounded-xl font-medium hover:bg-primary/90 disabled:opacity-50"
+                  className="flex-1 rounded-xl bg-primary py-3 font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
                   disabled={versionBusy}
                 >
                   {versionBusy ? (

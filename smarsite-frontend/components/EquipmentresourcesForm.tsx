@@ -107,20 +107,20 @@ export default function EquipmentForm({
     validateField(name, value);
   };
 
-  const fieldLabelsFr: Record<string, string> = {
-    name: "Nom de l’équipement",
-    category: "Catégorie",
-    serialNumber: "Numéro de série",
-    model: "Modèle",
-    brand: "Marque",
-    location: "Localisation",
-    purchaseDate: "Date d’achat",
-    lastMaintenanceDate: "Dernière maintenance",
+  const fieldLabels: Record<string, string> = {
+    name: "Equipment name",
+    category: "Category",
+    serialNumber: "Serial number",
+    model: "Model",
+    brand: "Brand",
+    location: "Location",
+    purchaseDate: "Purchase date",
+    lastMaintenanceDate: "Last maintenance",
   };
 
   const validateField = (name: string, value: string | boolean) => {
     let error = "";
-    const lbl = fieldLabelsFr[name] ?? name;
+    const lbl = fieldLabels[name] ?? name;
     const s = String(value).trim();
 
     switch (name) {
@@ -129,18 +129,18 @@ export default function EquipmentForm({
       case "model":
       case "brand":
       case "location":
-        if (!s) error = `${lbl} : champ obligatoire`;
-        else if (s.length < 2) error = `${lbl} : au moins 2 caractères`;
-        else if (s.length > 120) error = `${lbl} : maximum 120 caractères`;
+        if (!s) error = `${lbl}: required`;
+        else if (s.length < 2) error = `${lbl}: at least 2 characters`;
+        else if (s.length > 120) error = `${lbl}: maximum 120 characters`;
         break;
       case "serialNumber":
-        if (!s) error = `${lbl} : champ obligatoire`;
-        else if (s.length < 2) error = `${lbl} : au moins 2 caractères`;
-        else if (s.length > 64) error = `${lbl} : maximum 64 caractères`;
+        if (!s) error = `${lbl}: required`;
+        else if (s.length < 2) error = `${lbl}: at least 2 characters`;
+        else if (s.length > 64) error = `${lbl}: maximum 64 characters`;
         break;
       case "purchaseDate":
       case "lastMaintenanceDate":
-        if (!value) error = `${lbl} : date obligatoire`;
+        if (!value) error = `${lbl}: date required`;
         break;
       default:
         break;
@@ -160,22 +160,22 @@ export default function EquipmentForm({
       ["name", "category", "serialNumber", "model", "brand", "location"] as const
     ).forEach((field) => {
       const s = formData[field]?.toString().trim() ?? "";
-      const lbl = fieldLabelsFr[field];
-      if (!s) setErr(field, `${lbl} : champ obligatoire`);
+      const lbl = fieldLabels[field];
+      if (!s) setErr(field, `${lbl}: required`);
       else if (field === "serialNumber") {
-        if (s.length < 2) setErr(field, `${lbl} : au moins 2 caractères`);
-        else if (s.length > 64) setErr(field, `${lbl} : maximum 64 caractères`);
+        if (s.length < 2) setErr(field, `${lbl}: at least 2 characters`);
+        else if (s.length > 64) setErr(field, `${lbl}: maximum 64 characters`);
       } else {
-        if (s.length < 2) setErr(field, `${lbl} : au moins 2 caractères`);
-        else if (s.length > 120) setErr(field, `${lbl} : maximum 120 caractères`);
+        if (s.length < 2) setErr(field, `${lbl}: at least 2 characters`);
+        else if (s.length > 120) setErr(field, `${lbl}: maximum 120 characters`);
       }
     });
 
     if (!formData.purchaseDate) {
-      setErr("purchaseDate", "Date d’achat obligatoire");
+      setErr("purchaseDate", "Purchase date is required");
     }
     if (!formData.lastMaintenanceDate) {
-      setErr("lastMaintenanceDate", "Date de dernière maintenance obligatoire");
+      setErr("lastMaintenanceDate", "Last maintenance date is required");
     }
 
     if (formData.purchaseDate && formData.lastMaintenanceDate) {
@@ -184,7 +184,7 @@ export default function EquipmentForm({
       if (!Number.isNaN(p.getTime()) && !Number.isNaN(m.getTime()) && m < p) {
         setErr(
           "lastMaintenanceDate",
-          "La maintenance ne peut pas être antérieure à la date d’achat"
+          "Maintenance cannot be earlier than purchase date"
         );
       }
     }
@@ -194,7 +194,7 @@ export default function EquipmentForm({
     if (formData.purchaseDate) {
       const p = new Date(formData.purchaseDate);
       if (!Number.isNaN(p.getTime()) && p > today) {
-        setErr("purchaseDate", "La date d’achat ne peut pas être dans le futur");
+        setErr("purchaseDate", "Purchase date cannot be in the future");
       }
     }
 
@@ -237,7 +237,7 @@ export default function EquipmentForm({
     } catch (err) {
       setErrors({
         general:
-          err instanceof Error ? err.message : "Impossible d’enregistrer l’équipement",
+          err instanceof Error ? err.message : "Could not save equipment",
       });
     } finally {
       setIsSubmitting(false);

@@ -32,6 +32,7 @@ import { postFormDataWithUploadProgress } from '@/lib/uploadWithProgress';
 import type { BackendTask, Job, Project } from '@/lib/types';
 import { useJobProgress } from '@/hooks/useJobProgress';
 import { resolveProgressPhotoUrl } from '@/lib/jobProgressApi';
+import { jobStatusLabelEn } from '@/lib/projectStatusLabel';
 
 function galleryPhotoSrc(photoUrl: string): string {
   if (!photoUrl) return '';
@@ -283,15 +284,15 @@ export default function ProgressPhotosPage() {
         </button>
       </PageHeader>
 
-      {/* Un seul projet : galerie + choix tâche → job */}
+      {/* Single project: gallery + task → job */}
       <div className="mb-8 rounded-xl border border-white/10 bg-slate-900/35 p-5 shadow-lg shadow-black/20">
         <p className="mb-4 text-xs font-medium uppercase tracking-wide text-slate-500">
-          Projet — filtre galerie & suivi job (tâche → job)
+          Project — gallery filter & job tracking (task → job)
         </p>
 
         <div className="grid gap-4 lg:grid-cols-3">
           <div className="lg:col-span-1">
-            <label className="mb-1.5 block text-sm font-medium text-slate-200">Projet</label>
+            <label className="mb-1.5 block text-sm font-medium text-slate-200">Project</label>
             <select
               value={activeProjectId}
               onChange={(e) => setActiveProjectId(e.target.value)}
@@ -299,7 +300,7 @@ export default function ProgressPhotosPage() {
               className="w-full rounded-lg border border-white/10 bg-slate-950/50 px-4 py-2.5 text-sm text-slate-100 focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/25 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {projectsList.length === 0 ? (
-                <option value="">Aucun projet</option>
+                <option value="">No project</option>
               ) : (
                 projectsList.map((p) => (
                   <option key={p._id} value={p._id}>
@@ -309,14 +310,14 @@ export default function ProgressPhotosPage() {
               )}
             </select>
             <p className="mt-1.5 text-[11px] text-slate-500">
-              La galerie ci-dessous n’affiche que les photos de ce projet.
+              The gallery below only shows photos for this project.
             </p>
           </div>
 
           <div>
             <label className="mb-1.5 flex items-center gap-2 text-sm font-medium text-slate-200">
               <ListTodo size={16} className="text-primary" />
-              Tâche
+              Task
             </label>
             <select
               value={taskId}
@@ -326,12 +327,12 @@ export default function ProgressPhotosPage() {
             >
               <option value="">
                 {!activeProjectId
-                  ? '— Choisir un projet —'
+                  ? '— Choose a project —'
                   : tasksLoading
-                    ? 'Chargement…'
+                    ? 'Loading…'
                     : tasks.length === 0
-                      ? 'Aucune tâche'
-                      : '— Tâche —'}
+                      ? 'No task'
+                      : '— Task —'}
               </option>
               {tasks.map((t) => (
                 <option key={t._id} value={t._id}>
@@ -354,14 +355,14 @@ export default function ProgressPhotosPage() {
             >
               <option value="">
                 {!taskId
-                  ? '— Choisir une tâche —'
+                  ? '— Choose a task —'
                   : jobsForTask.length === 0
-                    ? 'Aucun job'
+                    ? 'No job'
                     : '— Job —'}
               </option>
               {jobsForTask.map((j) => (
                 <option key={j._id} value={j._id}>
-                  {j.title} · {j.status}
+                  {j.title} · {jobStatusLabelEn(j.status)}
                 </option>
               ))}
             </select>
@@ -374,18 +375,18 @@ export default function ProgressPhotosPage() {
               href={`/jobs/${jobId}/progress`}
               className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-md transition-[filter] hover:brightness-110"
             >
-              Modifier les étapes / ajouter des photos
+              Edit steps / add photos
               <ExternalLink size={16} />
             </Link>
           ) : (
             <p className="text-xs text-slate-500">
-              Choisissez une tâche puis un job pour afficher le suivi photo des étapes ci-dessous.
+              Choose a task and a job to show step photo tracking below.
             </p>
           )}
         </div>
       </div>
 
-      {/* Suivi job : étapes + photos (dès que projet + tâche + job sont remplis) */}
+      {/* Job tracking: steps + photos once project + task + job are set */}
       {jobId ? (
         progressLoading ? (
           <div
@@ -393,7 +394,7 @@ export default function ProgressPhotosPage() {
             className="mb-8 flex flex-col items-center justify-center gap-4 rounded-xl border border-white/10 bg-card/60 py-14"
           >
             <div className="h-10 w-10 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-            <p className="text-sm text-slate-400">Chargement du suivi du job…</p>
+            <p className="text-sm text-slate-400">Loading job tracking…</p>
           </div>
         ) : progressError ? (
           <div className="mb-8 rounded-xl border border-destructive/30 bg-destructive/10 p-6 text-destructive">
@@ -404,19 +405,21 @@ export default function ProgressPhotosPage() {
             <div className="flex flex-col gap-6 rounded-2xl border border-white/10 bg-card/80 p-6 shadow-lg md:flex-row md:items-center md:justify-between">
               <div>
                 <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
-                  Progression du job — photos d’étapes
+                  Job progress — step photos
                 </p>
                 <h2 className="mt-1 text-xl font-semibold text-slate-100">
                   {selectedJob?.title ?? 'Job'}
                 </h2>
                 <p className="mt-1 text-sm text-slate-400">
-                  Statut :{' '}
-                  <span className="text-slate-200">{selectedJob?.status ?? '—'}</span>
+                  Status:{' '}
+                  <span className="text-slate-200">
+                    {selectedJob?.status ? jobStatusLabelEn(selectedJob.status) : '—'}
+                  </span>
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-4 md:justify-end">
                 <div className="text-right">
-                  <p className="text-xs uppercase tracking-wide text-slate-500">Avancement</p>
+                  <p className="text-xs uppercase tracking-wide text-slate-500">Progress</p>
                   <p className="text-3xl font-bold tabular-nums text-primary">{percentage}%</p>
                 </div>
                 <div className="h-3 w-full min-w-[160px] max-w-[240px] overflow-hidden rounded-full bg-white/10">
@@ -429,16 +432,16 @@ export default function ProgressPhotosPage() {
             </div>
 
             <div>
-              <h3 className="mb-4 text-lg font-semibold text-slate-200">Étapes</h3>
+              <h3 className="mb-4 text-lg font-semibold text-slate-200">Steps</h3>
               <ul className="space-y-5">
                 {steps.length === 0 ? (
                   <li className="rounded-2xl border border-white/10 bg-slate-950/30 px-4 py-10 text-center text-slate-500">
-                    Aucune étape pour ce job. Utilisez « Modifier les étapes » pour en ajouter.
+                    No steps for this job. Use Edit steps / add photos to add some.
                   </li>
                 ) : (
                   steps.map((s, idx) => {
                     const img = resolveProgressPhotoUrl(s.photoUrl);
-                    const stepTitle = s.step || `Étape ${idx + 1}`;
+                    const stepTitle = s.step || `Step ${idx + 1}`;
                     return (
                       <li
                         key={`${s.step}-${idx}`}

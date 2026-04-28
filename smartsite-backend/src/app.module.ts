@@ -20,7 +20,22 @@ if (basename(backendRoot) !== 'smartsite-backend') {
   const nested = join(backendRoot, 'smartsite-backend', '.env');
   if (existsSync(nested)) envFilePathForConfig.push(nested);
 }
+envFilePathForConfig.push(join(backendRoot, 'env.example'));
 envFilePathForConfig.push(join(backendRoot, '.env.example'));
+
+function resolveMongoUri(config: ConfigService): string | undefined {
+  const fromConfig =
+    config.get<string>('MONGODB_URI')?.trim() ||
+    config.get<string>('MONGO_URI')?.trim() ||
+    config.get<string>('SMARTSITE_MONGODB_URI')?.trim();
+  if (fromConfig) return fromConfig;
+  return (
+    process.env.MONGODB_URI?.trim() ||
+    process.env.MONGO_URI?.trim() ||
+    process.env.SMARTSITE_MONGODB_URI?.trim()
+  );
+}
+
 import { JobsModule } from './jobs/jobs.module';
 import { ProjectsModule } from './projects/projects.module';
 import { TasksModule } from './tasks/tasks.module';
@@ -55,13 +70,10 @@ import { DreamHouseModule } from './dream-house/dream-house.module';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (config: ConfigService) => {
-        const uri =
-          config.get<string>('MONGODB_URI')?.trim() ||
-          config.get<string>('MONGO_URI')?.trim() ||
-          config.get<string>('SMARTSITE_MONGODB_URI')?.trim();
+        const uri = resolveMongoUri(config);
         if (!uri) {
           throw new Error(
-            'MONGODB_URI manquant : copiez smartsite-backend/.env.example vers .env et renseignez votre URI MongoDB.',
+            'MONGODB_URI manquant : fichier smartsite-backend/.env, ou variable au run Docker (-e / --env-file), ou Secret Kubernetes — ne pas embarquer les secrets dans l’image.',
           );
         }
         return { uri };

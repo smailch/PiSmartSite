@@ -4,9 +4,9 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import MainLayout from '@/components/MainLayout';
+import { getApiBaseUrl } from '@/lib/api';
 
 const MODELS_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model';
-const API = 'http://localhost:3200';
 
 // ══════════════════════════════════════════════════════════════════
 //  FACE ID REGISTRATION POPUP
@@ -247,7 +247,7 @@ export default function ProfilePage() {
       if (!token) { router.push('/login'); return; }
       try {
         const payload = getTokenPayload();
-        const res = await axios.get(`${API}/users/${payload.sub}`, {
+        const res = await axios.get(`${getApiBaseUrl()}/users/${payload.sub}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const u = res.data;
@@ -279,7 +279,7 @@ export default function ProfilePage() {
       const payload = getTokenPayload();
       const data    = { fullName: form.fullName, phone: form.phone };
       if (avatarFile) data.profileImage = avatar;
-      await axios.put(`${API}/users/${payload.sub}`, data, {
+      await axios.put(`${getApiBaseUrl()}/users/${payload.sub}`, data, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setSuccess('Profile updated successfully!');
@@ -298,7 +298,7 @@ export default function ProfilePage() {
     try {
       const token   = localStorage.getItem('token');
       const payload = getTokenPayload();
-      await axios.put(`${API}/users/${payload.sub}`, { password: form.newPassword }, {
+      await axios.put(`${getApiBaseUrl()}/users/${payload.sub}`, { password: form.newPassword }, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setSuccess('Password changed successfully!');
@@ -312,7 +312,7 @@ export default function ProfilePage() {
     try {
       const token = localStorage.getItem('token');
       const res = await axios.post(
-        `${API}/auth/face-register`,
+        `${getApiBaseUrl()}/auth/face-register`,
         { descriptor },
         { headers: { Authorization: `Bearer ${token}` } },
       );
@@ -335,7 +335,7 @@ export default function ProfilePage() {
     try {
       const token   = localStorage.getItem('token');
       const payload = getTokenPayload();
-      await axios.put(`${API}/users/${payload.sub}`, { faceDescriptor: null }, {
+      await axios.put(`${getApiBaseUrl()}/users/${payload.sub}`, { faceDescriptor: null }, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setFaceStatus('none');

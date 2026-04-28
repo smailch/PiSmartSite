@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import axios from 'axios';
-
+import { getApiBaseUrl } from '@/lib/api';
 
 const MODELS_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model';
 
@@ -17,7 +17,7 @@ const FaceIDPopup = ({ onClose, onSuccess }) => {
   const intervalRef = useRef(null);
 
   const [status, setStatus] = useState('loading');
-  const [statusMsg, setStatusMsg] = useState('Chargement des modèles IA...');
+  const [statusMsg, setStatusMsg] = useState('Loading AI models...');
   const [progress, setProgress] = useState(0);
 
   const stopCamera = useCallback(() => {
@@ -38,11 +38,11 @@ const FaceIDPopup = ({ onClose, onSuccess }) => {
         const faceapi = window.faceapi;
         if (!faceapi) {
           setStatus('error');
-          setStatusMsg("face-api.js non chargé. Ajoutez le script CDN dans layout.tsx.");
+          setStatusMsg("face-api.js is not loaded. Add the CDN script in layout.tsx.");
           return;
         }
 
-        setStatusMsg('Chargement des modèles IA...'); setProgress(20);
+        setStatusMsg('Loading AI models...'); setProgress(20);
         await Promise.all([
           faceapi.nets.tinyFaceDetector.loadFromUri(MODELS_URL),
           faceapi.nets.faceLandmark68Net.loadFromUri(MODELS_URL),
@@ -50,7 +50,7 @@ const FaceIDPopup = ({ onClose, onSuccess }) => {
         ]);
         if (cancelled) return;
 
-        setProgress(70); setStatusMsg('Accès à la caméra...');
+        setProgress(70); setStatusMsg('Camera access...');
         const stream = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: 'user', width: 640, height: 480 },
         });
@@ -107,7 +107,7 @@ Face detected — verification (${hits}/3)`);
         setStatus('error');
         setStatusMsg(err.name === 'NotAllowedError'
           ? 'Camera access denied. Allow the camera in your browser..'
-          : 'Erreur : ' + err.message);
+          : 'Error: ' + err.message);
       }
     };
 
@@ -280,9 +280,9 @@ const Login = () => {
 
   // ── Forgot password ───────────────────────────────────────────
   const handleForgotPassword = async () => {
-    if (!/\S+@\S+\.\S+/.test(resetEmail)) { setError('Email invalide'); return; }
+    if (!/\S+@\S+\.\S+/.test(resetEmail)) { setError('Invalid email'); return; }
     try {
-      await axios.post('http://localhost:3200/users/forgot-password', { email: resetEmail });
+      await axios.post(`${getApiBaseUrl()}/users/forgot-password`, { email: resetEmail });
       setMessage(`Please check your email inbox (${resetEmail}) to change your password.`);
       setError('');
     } catch {
@@ -294,7 +294,7 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault(); setError('');
     try {
-      const res = await axios.post('http://localhost:3200/auth/login', { email, password });
+      const res = await axios.post(`${getApiBaseUrl()}/auth/login`, { email, password });
       localStorage.setItem('token', res.data.access_token);
       // ✅ Next.js : router.push remplace navigate()
       router.push('/home');
@@ -308,10 +308,7 @@ const Login = () => {
     setShowFaceID(false);
     setFaceLoading(true);
     try {
-      const res = await axios.post(
-        'http://localhost:3200/auth/face-login-auto',
-        { descriptor }
-      );
+      const res = await axios.post(`${getApiBaseUrl()}/auth/face-login-auto`, { descriptor });
       localStorage.setItem('token', res.data.access_token);
       // ✅ Next.js : router.push remplace navigate()
       router.push('/home');
@@ -453,7 +450,7 @@ const Login = () => {
                 transition: '0.2s',
               }}
             >
-              Espace Client
+              Client area
             </button>
 
           </div>

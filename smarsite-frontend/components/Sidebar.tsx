@@ -30,18 +30,18 @@ const navigationItems: {
   icon: typeof Home;
   href: string;
 }[] = [
-  { id: 'clients', label: 'Espace client', icon: Handshake, href: '/dashboard/clients' },
+  { id: 'clients', label: 'Client area', icon: Handshake, href: '/dashboard/clients' },
   { id: 'dashboard', label: 'Dashboard', icon: Home, href: '/home' },
   {
     id: 'client-dashboard',
-    label: 'Mon espace',
+    label: 'My space',
     icon: LayoutGrid,
     href: '/client-dashboard',
   },
   { id: 'projects', label: 'Projects', icon: Building2, href: '/projects' },
   {
     id: 'my-projects',
-    label: 'Mes projets',
+    label: 'My projects',
     icon: FolderKanban,
     href: '/mes-projets',
   },

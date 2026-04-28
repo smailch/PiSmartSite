@@ -89,11 +89,10 @@ export default function DataTable<T extends Record<string, any>>({
                 </div>
                 <div>
                   <p className="text-base font-semibold text-slate-100">
-                    Aucune donnée
+                    No data yet
                   </p>
                   <p className="mt-1 text-sm text-slate-400">
-                    Les entrées apparaîtront ici lorsqu&apos;elles seront
-                    disponibles.
+                    Rows will appear here when available.
                   </p>
                 </div>
               </div>

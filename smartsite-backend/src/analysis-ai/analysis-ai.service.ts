@@ -412,9 +412,18 @@ export class AnalysisAiService {
         err instanceof Error
           ? `${err.name}: ${err.message}`
           : this.redactError(err);
-      this.logger.error(
-        `Groq unexpected error attendance job=${jobId}: ${detail}`,
-      );
+      if (
+        err instanceof HttpException &&
+        err.getStatus() === HttpStatus.SERVICE_UNAVAILABLE
+      ) {
+        this.logger.warn(
+          `Groq unavailable for attendance job=${jobId} (${detail}); using fallback analysis`,
+        );
+      } else {
+        this.logger.error(
+          `Groq unexpected error attendance job=${jobId}: ${detail}`,
+        );
+      }
       return this.finalizeAttendanceBonusResponse(
         jobId,
         job.title,

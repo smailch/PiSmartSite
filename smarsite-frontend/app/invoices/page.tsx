@@ -84,9 +84,9 @@ function InvoicesPageContent() {
         title="Invoices"
         description={
           activeTab === "primes"
-            ? "Primes de pointage — suivi et traitement."
+            ? "Attendance bonuses — tracking and processing."
             : activeTab === "salaries"
-              ? "Salaires : taux journalier, déductions (absences / sans pointage), primes pointage et facturation."
+              ? "Payroll: daily rates, deductions (absences / no punch), attendance bonuses and invoicing."
               : "Manage project invoices and track payment status"
         }
       >

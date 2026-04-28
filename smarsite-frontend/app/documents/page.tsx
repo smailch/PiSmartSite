@@ -24,6 +24,7 @@ interface Document {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+  aiSummary?: string;
 }
 
 export default function DocumentsPage() {
@@ -249,6 +250,12 @@ export default function DocumentsPage() {
                   <MoreVertical size={18} />
                 </button>
               </div>
+
+              {doc.aiSummary && (
+                <p className="mb-3 line-clamp-2 border-l-2 border-primary/30 pl-2 text-xs italic text-slate-400">
+                  🤖 {doc.aiSummary}
+                </p>
+              )}
 
               <div className="mb-4 flex justify-between border-b border-white/10 pb-4">
                 <span

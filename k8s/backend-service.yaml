@@ -1,0 +1,35 @@
+# Accès interne au backend (ClusterIP) + exposition NodePort pour le navigateur (NEXT_PUBLIC_API_URL).
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend
+  labels:
+    app: pismartsite
+    component: backend
+spec:
+  type: ClusterIP
+  selector:
+    app: pismartsite
+    component: backend
+  ports:
+    - port: 3200
+      targetPort: http
+      name: http
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-nodeport
+  labels:
+    app: pismartsite
+    component: backend
+spec:
+  type: NodePort
+  selector:
+    app: pismartsite
+    component: backend
+  ports:
+    - port: 3200
+      targetPort: http
+      nodePort: 30320
+      name: http

@@ -157,7 +157,7 @@ export default function HumanForm({ mode, initialData }: HumanFormProps) {
     let error = "";
     if (name === "monthlySalaryDt") {
       const n = typeof value === "number" ? value : parseFloat(String(value).replace(",", "."));
-      if (Number.isNaN(n) || n < 0) error = "Salaire invalide (≥ 0)";
+      if (Number.isNaN(n) || n < 0) error = "Invalid salary (≥ 0)";
       setErrors((prev) => ({ ...prev, monthlySalaryDt: error }));
       return;
     }
@@ -165,35 +165,35 @@ export default function HumanForm({ mode, initialData }: HumanFormProps) {
     switch (name) {
       case "firstName":
       case "lastName":
-        if (!s) error = "Champ obligatoire";
-        else if (s.length < 2) error = "Au moins 2 caractères";
-        else if (s.length > 80) error = "Maximum 80 caractères";
+        if (!s) error = "This field is required";
+        else if (s.length < 2) error = "At least 2 characters";
+        else if (s.length > 80) error = "Maximum 80 characters";
         break;
       case "cin":
-        if (!s) error = "CIN obligatoire";
-        else if (s.length < 3) error = "Au moins 3 caractères";
-        else if (s.length > 32) error = "Maximum 32 caractères";
-        else if (!/^[a-zA-Z0-9\s\-]+$/.test(s)) error = "Caractères autorisés : lettres, chiffres, espaces, tiret";
+        if (!s) error = "National ID is required";
+        else if (s.length < 3) error = "At least 3 characters";
+        else if (s.length > 32) error = "Maximum 32 characters";
+        else if (!/^[a-zA-Z0-9\s\-]+$/.test(s)) error = "Allowed: letters, digits, spaces, hyphen";
         break;
       case "phone":
-        if (!s) error = "Téléphone obligatoire";
-        else if (!/^[\d\s+().\-]{8,24}$/.test(s)) error = "Numéro de téléphone invalide";
+        if (!s) error = "Phone is required";
+        else if (!/^[\d\s+().\-]{8,24}$/.test(s)) error = "Invalid phone number";
         break;
       case "role":
-        if (!s) error = "Rôle obligatoire";
-        else if (s.length < 2) error = "Au moins 2 caractères";
-        else if (s.length > 120) error = "Maximum 120 caractères";
+        if (!s) error = "Role is required";
+        else if (s.length < 2) error = "At least 2 characters";
+        else if (s.length > 120) error = "Maximum 120 characters";
         break;
       case "birthDate":
-        if (!value) error = "Date de naissance obligatoire";
+        if (!value) error = "Date of birth is required";
         else {
           const d = new Date(String(value));
-          if (Number.isNaN(d.getTime())) error = "Date invalide";
+          if (Number.isNaN(d.getTime())) error = "Invalid date";
           else {
             const today = new Date();
             today.setHours(23, 59, 59, 999);
-            if (d > today) error = "La date ne peut pas être dans le futur";
-            if (d.getFullYear() < 1900) error = "Date trop ancienne";
+            if (d > today) error = "Date cannot be in the future";
+            if (d.getFullYear() < 1900) error = "Date too far in the past";
           }
         }
         break;
@@ -211,39 +211,39 @@ export default function HumanForm({ mode, initialData }: HumanFormProps) {
       isValid = false;
     };
 
-    if (!formData.firstName.trim()) setE("firstName", "Prénom obligatoire");
-    else if (formData.firstName.trim().length < 2) setE("firstName", "Au moins 2 caractères");
+    if (!formData.firstName.trim()) setE("firstName", "First name is required");
+    else if (formData.firstName.trim().length < 2) setE("firstName", "At least 2 characters");
 
-    if (!formData.lastName.trim()) setE("lastName", "Nom obligatoire");
-    else if (formData.lastName.trim().length < 2) setE("lastName", "Au moins 2 caractères");
+    if (!formData.lastName.trim()) setE("lastName", "Last name is required");
+    else if (formData.lastName.trim().length < 2) setE("lastName", "At least 2 characters");
 
     const cin = formData.cin.trim();
-    if (!cin) setE("cin", "CIN obligatoire");
-    else if (cin.length < 3 || cin.length > 32) setE("cin", "Le CIN doit contenir entre 3 et 32 caractères");
-    else if (!/^[a-zA-Z0-9\s\-]+$/.test(cin)) setE("cin", "CIN invalide (lettres, chiffres, espaces, tiret)");
+    if (!cin) setE("cin", "National ID is required");
+    else if (cin.length < 3 || cin.length > 32) setE("cin", "National ID must be 3–32 characters");
+    else if (!/^[a-zA-Z0-9\s\-]+$/.test(cin)) setE("cin", "Invalid national ID (letters, digits, spaces, hyphen)");
 
     const phone = formData.phone.trim();
-    if (!phone) setE("phone", "Téléphone obligatoire");
-    else if (!/^[\d\s+().\-]{8,24}$/.test(phone)) setE("phone", "Numéro de téléphone invalide");
+    if (!phone) setE("phone", "Phone is required");
+    else if (!/^[\d\s+().\-]{8,24}$/.test(phone)) setE("phone", "Invalid phone number");
 
     const role = formData.role.trim();
-    if (!role) setE("role", "Rôle obligatoire");
-    else if (role.length < 2) setE("role", "Au moins 2 caractères");
+    if (!role) setE("role", "Role is required");
+    else if (role.length < 2) setE("role", "At least 2 characters");
 
-    if (!formData.birthDate) setE("birthDate", "Date de naissance obligatoire");
+    if (!formData.birthDate) setE("birthDate", "Date of birth is required");
     else {
       const d = new Date(formData.birthDate);
-      if (Number.isNaN(d.getTime())) setE("birthDate", "Date invalide");
+      if (Number.isNaN(d.getTime())) setE("birthDate", "Invalid date");
       else {
         const today = new Date();
         today.setHours(23, 59, 59, 999);
-        if (d > today) setE("birthDate", "La date ne peut pas être dans le futur");
-        if (d.getFullYear() < 1900) setE("birthDate", "Date trop ancienne");
+        if (d > today) setE("birthDate", "Date cannot be in the future");
+        if (d.getFullYear() < 1900) setE("birthDate", "Date too far in the past");
       }
     }
 
     if (Number.isNaN(formData.monthlySalaryDt) || formData.monthlySalaryDt < 0) {
-      setE("monthlySalaryDt", "Salaire invalide (≥ 0)");
+      setE("monthlySalaryDt", "Invalid salary (≥ 0)");
     }
 
     setErrors(newErrors);
@@ -302,7 +302,7 @@ export default function HumanForm({ mode, initialData }: HumanFormProps) {
       router.push("/humans");
     } catch (err) {
       setErrors({
-        general: err instanceof Error ? err.message : "Impossible d’enregistrer la personne",
+        general: err instanceof Error ? err.message : "Could not save person",
       });
     } finally {
       setIsSubmitting(false);
@@ -337,7 +337,7 @@ export default function HumanForm({ mode, initialData }: HumanFormProps) {
           <div className="mb-10 p-6 bg-destructive/10 border border-destructive/30 rounded-2xl flex items-start gap-4 text-destructive">
             <AlertCircle size={28} className="mt-1 flex-shrink-0" />
             <div>
-              <p className="font-semibold text-lg">Erreur à l’enregistrement</p>
+              <p className="font-semibold text-lg">Save error</p>
               <p className="mt-1">{errors.general}</p>
             </div>
           </div>

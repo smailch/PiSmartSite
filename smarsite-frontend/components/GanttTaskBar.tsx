@@ -265,10 +265,10 @@ export function GanttTaskBar(props: GanttTaskBarProps) {
             style={{ pointerEvents: "none" }}
           >
             {status === "Terminé"
-              ? "Fait"
+              ? "Done"
               : status === "En cours"
-                ? "Actif"
-                : "À faire"}
+                ? "Active"
+                : "To do"}
           </text>
         </g>
       )}

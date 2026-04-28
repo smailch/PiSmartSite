@@ -14,6 +14,7 @@ vi.mock("axios", () => ({
 
 vi.mock("../api", () => ({
   getApiBaseUrl: () => "http://localhost:3200",
+  getAuthHeaderInit: () => ({}),
 }));
 
 describe("attendanceApi", () => {
@@ -21,7 +22,11 @@ describe("attendanceApi", () => {
   const post = vi.fn();
 
   beforeEach(() => {
-    vi.mocked(axios.create).mockReturnValue({ get, post } as never);
+    vi.mocked(axios.create).mockReturnValue({
+      get,
+      post,
+      interceptors: { request: { use: vi.fn() } },
+    } as never);
   });
 
   afterEach(() => {

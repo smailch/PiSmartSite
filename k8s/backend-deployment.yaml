@@ -1,0 +1,78 @@
+# Image : construire et charger sur chaque nœud (voir k8s/README.md).
+# MONGODB_URI pointe vers le Service mongodb.
+# Remplacez BACKEND_NODE_IP et FRONTEND_NODEPORT_URL dans CORS_ORIGINS par les valeurs du labo.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  labels:
+    app: pismartsite
+    component: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pismartsite
+      component: backend
+  template:
+    metadata:
+      labels:
+        app: pismartsite
+        component: backend
+    spec:
+      securityContext:
+        fsGroup: 1000
+      containers:
+        - name: backend
+          image: pismartsite-backend:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3200
+              name: http
+          env:
+            - name: NODE_ENV
+              value: production
+            # MongoDB dans le cluster :
+            - name: MONGODB_URI
+              value: mongodb://mongodb:27017/smartsite
+            # MongoDB Atlas : supprimez la ligne value ci-dessus et utilisez plutôt un Secret, ex. :
+            # env:
+            #   - name: MONGODB_URI
+            #     valueFrom:
+            #       secretKeyRef:
+            #         name: pismartsite-secrets
+            #         key: mongodb-uri
+            # (création : kubectl create secret generic pismartsite-secrets --from-literal=mongodb-uri='mongodb+srv://...')
+            # Origines autorisées pour le navigateur (NodePort frontend). Exemple :
+            # http://192.168.56.101:30080 — adaptez à l’IP d’un nœud du cluster.
+            - name: CORS_ORIGINS
+              value: "http://127.0.0.1:3000,http://localhost:3000"
+            - name: GROQ_API_KEY
+              value: ""
+            - name: AI_ANALYSIS_URL
+              value: ""
+          volumeMounts:
+            - name: uploads
+              mountPath: /app/uploads
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 45
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: "100m"
+              memory: 256Mi
+            limits:
+              cpu: "2"
+              memory: 1Gi
+      volumes:
+        - name: uploads
+          emptyDir: {}

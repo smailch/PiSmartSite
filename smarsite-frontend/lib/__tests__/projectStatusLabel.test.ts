@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { projectStatusLabelEn } from "@/lib/projectStatusLabel";
+import { jobStatusLabelEn, projectStatusLabelEn } from "@/lib/projectStatusLabel";
 
 describe("projectStatusLabelEn", () => {
   it("Given 'En cours' When label Then returns In progress", () => {
@@ -13,5 +13,14 @@ describe("projectStatusLabelEn", () => {
   });
   it("Given value outside union When label Then default branch returns it", () => {
     expect(projectStatusLabelEn("Custom" as "En cours")).toBe("Custom");
+  });
+});
+
+describe("jobStatusLabelEn", () => {
+  it("Given 'Planifié' When label Then returns Planned", () => {
+    expect(jobStatusLabelEn("Planifié")).toBe("Planned");
+  });
+  it("Given 'Terminé' When label Then returns Completed", () => {
+    expect(jobStatusLabelEn("Terminé")).toBe("Completed");
   });
 });
