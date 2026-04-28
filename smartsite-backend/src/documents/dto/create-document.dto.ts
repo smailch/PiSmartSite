@@ -28,6 +28,10 @@ export class CreateDocumentDto {
   @IsEnum(['plan', 'report', 'contract', 'invoice', 'other'])
   @IsOptional()
   category?: string;
+
+  @IsString()
+  @IsOptional()
+  aiSummary?: string;
 }
 
 export class UpdateDocumentDto {

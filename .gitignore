@@ -8,6 +8,7 @@ coverage/
 *.tsbuildinfo
 pnpm-lock.yaml          # non utilisé si équipe npm
 # package-lock.json est versionné pour que npm ci / installs soient reproductibles
+.ci-tools/
 
 # ==================== NestJS / Backend ====================
 dist/

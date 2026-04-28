@@ -35,6 +35,12 @@ import {
 
 const statusOptions: Job["status"][] = ["Planifié", "En cours", "Terminé"];
 
+const JOB_STATUS_LABEL_EN: Record<Job["status"], string> = {
+  Planifié: "Planned",
+  "En cours": "In progress",
+  Terminé: "Completed",
+};
+
 interface JobFormProps {
   mode: "create" | "edit";
   initialData?: Job;
@@ -136,16 +142,16 @@ export default function JobForm({ mode, initialData }: JobFormProps) {
     let error = "";
     switch (name) {
       case "title":
-        if (!value.trim()) error = "Le titre est obligatoire";
-        else if (value.trim().length < 2) error = "Au moins 2 caractères";
-        else if (value.trim().length > 200) error = "Maximum 200 caractères";
+        if (!value.trim()) error = "Title is required";
+        else if (value.trim().length < 2) error = "At least 2 characters";
+        else if (value.trim().length > 200) error = "Maximum 200 characters";
         break;
       case "taskId":
-        if (!value.trim()) error = "Veuillez choisir une tâche";
+        if (!value.trim()) error = "Please select a task";
         break;
       case "startTime":
       case "endTime":
-        if (!value) error = name === "startTime" ? "Date/heure de début obligatoire" : "Date/heure de fin obligatoire";
+        if (!value) error = name === "startTime" ? "Start date/time is required" : "End date/time is required";
         break;
       default:
         break;
@@ -158,26 +164,26 @@ export default function JobForm({ mode, initialData }: JobFormProps) {
     let isValid = true;
 
     if (!formData.title.trim()) {
-      newErrors.title = "Le titre est obligatoire";
+      newErrors.title = "Title is required";
       isValid = false;
     } else if (formData.title.trim().length < 2) {
-      newErrors.title = "Au moins 2 caractères";
+      newErrors.title = "At least 2 characters";
       isValid = false;
     } else if (formData.title.trim().length > 200) {
-      newErrors.title = "Maximum 200 caractères";
+      newErrors.title = "Maximum 200 characters";
       isValid = false;
     }
 
     if (!formData.taskId) {
-      newErrors.taskId = "Veuillez choisir une tâche";
+      newErrors.taskId = "Please select a task";
       isValid = false;
     }
     if (!formData.startTime) {
-      newErrors.startTime = "Date/heure de début obligatoire";
+      newErrors.startTime = "Start date/time is required";
       isValid = false;
     }
     if (!formData.endTime) {
-      newErrors.endTime = "Date/heure de fin obligatoire";
+      newErrors.endTime = "End date/time is required";
       isValid = false;
     }
 
@@ -185,7 +191,7 @@ export default function JobForm({ mode, initialData }: JobFormProps) {
       const start = new Date(formData.startTime);
       const end = new Date(formData.endTime);
       if (end <= start) {
-        newErrors.dateRange = "La fin doit être après le début";
+        newErrors.dateRange = "End must be after start";
         isValid = false;
       }
     }
@@ -234,7 +240,7 @@ export default function JobForm({ mode, initialData }: JobFormProps) {
       router.push("/jobs");
     } catch (err) {
       setErrors({
-        general: err instanceof Error ? err.message : "Impossible d’enregistrer le job",
+        general: err instanceof Error ? err.message : "Could not save job",
       });
     } finally {
       setIsSubmitting(false);
@@ -549,7 +555,7 @@ export default function JobForm({ mode, initialData }: JobFormProps) {
               >
                 {statusOptions.map((s) => (
                   <option key={s} value={s}>
-                    {s}
+                    {JOB_STATUS_LABEL_EN[s]}
                   </option>
                 ))}
               </select>

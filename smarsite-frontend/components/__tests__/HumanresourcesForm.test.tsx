@@ -29,7 +29,7 @@ describe("HumanForm (HumanresourcesForm)", () => {
     await u.click(
       screen.getAllByRole("button", { name: /Create Person/i })[0]!,
     );
-    expect(await screen.findByText(/Prénom obligatoire/i)).toBeInTheDocument();
+    expect(await screen.findByText(/First name is required/i)).toBeInTheDocument();
     expect(api.createHuman).not.toHaveBeenCalled();
   });
 

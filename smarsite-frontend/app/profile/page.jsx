@@ -1,14 +1,12 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import MainLayout from '@/components/MainLayout';
-import { FaceApiLoader } from '@/components/FaceApiLoader';
+import { getApiBaseUrl } from '@/lib/api';
 
 const MODELS_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model';
-const API = 'http://localhost:3200';
 
 // ══════════════════════════════════════════════════════════════════
 //  FACE ID REGISTRATION POPUP
@@ -249,7 +247,7 @@ export default function ProfilePage() {
       if (!token) { router.push('/login'); return; }
       try {
         const payload = getTokenPayload();
-        const res = await axios.get(`${API}/users/${payload.sub}`, {
+        const res = await axios.get(`${getApiBaseUrl()}/users/${payload.sub}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const u = res.data;
@@ -281,7 +279,7 @@ export default function ProfilePage() {
       const payload = getTokenPayload();
       const data    = { fullName: form.fullName, phone: form.phone };
       if (avatarFile) data.profileImage = avatar;
-      await axios.put(`${API}/users/${payload.sub}`, data, {
+      await axios.put(`${getApiBaseUrl()}/users/${payload.sub}`, data, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setSuccess('Profile updated successfully!');
@@ -300,7 +298,7 @@ export default function ProfilePage() {
     try {
       const token   = localStorage.getItem('token');
       const payload = getTokenPayload();
-      await axios.put(`${API}/users/${payload.sub}`, { password: form.newPassword }, {
+      await axios.put(`${getApiBaseUrl()}/users/${payload.sub}`, { password: form.newPassword }, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setSuccess('Password changed successfully!');
@@ -314,7 +312,7 @@ export default function ProfilePage() {
     try {
       const token = localStorage.getItem('token');
       const res = await axios.post(
-        `${API}/auth/face-register`,
+        `${getApiBaseUrl()}/auth/face-register`,
         { descriptor },
         { headers: { Authorization: `Bearer ${token}` } },
       );
@@ -337,7 +335,7 @@ export default function ProfilePage() {
     try {
       const token   = localStorage.getItem('token');
       const payload = getTokenPayload();
-      await axios.put(`${API}/users/${payload.sub}`, { faceDescriptor: null }, {
+      await axios.put(`${getApiBaseUrl()}/users/${payload.sub}`, { faceDescriptor: null }, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setFaceStatus('none');
@@ -361,7 +359,6 @@ export default function ProfilePage() {
 
   return (
     <MainLayout>
-      <FaceApiLoader />
       <style>{`
         @keyframes slideIn { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
         .tab-btn:hover  { background-color: #f0f4ff !important; }
@@ -378,18 +375,7 @@ export default function ProfilePage() {
         <div style={s.avatarCard}>
           <div className="avatar-wrap" style={s.avatarWrap} onClick={() => fileRef.current.click()}>
             {avatar
-              ? (
-                typeof avatar === 'string' && avatar.startsWith('data:')
-                  ? (
-                    <>
-                      {/* TODO: optimiser avec next/image */}
-                      <img src={avatar} alt="avatar" style={s.avatarImg} />
-                    </>
-                  )
-                  : (
-                    <Image src={avatar} alt="avatar" fill sizes="100px" style={{ objectFit: 'cover' }} />
-                  )
-              )
+              ? <img src={avatar} alt="avatar" style={s.avatarImg} />
               : <div style={s.avatarInitials}>{initials}</div>
             }
             <div className="avatar-overlay" style={s.avatarOverlay}>📷</div>

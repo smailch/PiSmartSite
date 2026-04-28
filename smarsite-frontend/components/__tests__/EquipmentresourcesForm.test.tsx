@@ -29,9 +29,9 @@ describe("EquipmentForm (EquipmentresourcesForm)", () => {
     await u.click(
       screen.getAllByRole("button", { name: /Create Equipment/i })[0]!,
     );
-    const errLines = await screen.findAllByText(/champ obligatoire/i);
+    const errLines = await screen.findAllByText(/required/i);
     expect(
-      errLines.some((e) => (e.textContent ?? "").includes("équipement")),
+      errLines.some((e) => (e.textContent ?? "").includes("Equipment name")),
     ).toBe(true);
     expect(api.createEquipment).not.toHaveBeenCalled();
   });

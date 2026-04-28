@@ -95,34 +95,34 @@ async function fetchPollinationsThroughBackendWithRetries(
   }
   throw lastErr instanceof Error
     ? lastErr
-    : new Error("Impossible de récupérer l’image via le serveur.");
+    : new Error("Could not fetch the image through the server.");
 }
 
-const IMAGE_VIEW_LABELS = ["Façade", "Perspective", "Contexte"] as const;
+const IMAGE_VIEW_LABELS = ["Front", "Perspective", "Context"] as const;
 
 const ARCHITECTURE_STYLES = [
-  { value: "_none", label: "Style libre (aucun preset)", fragment: "" },
+  { value: "_none", label: "Free style (no preset)", fragment: "" },
   {
     value: "contemporary",
-    label: "Contemporain",
+    label: "Contemporary",
     fragment:
       "Contemporary single-family home, clean lines, sharp geometry, modern exterior materials.",
   },
   {
     value: "mediterranean",
-    label: "Méditerranéen",
+    label: "Mediterranean",
     fragment:
       "Mediterranean villa style, warm stucco, terracotta roof hints, arched openings where fitting.",
   },
   {
     value: "scandinavian",
-    label: "Scandinave / bois",
+    label: "Scandinavian / wood",
     fragment:
       "Scandinavian residential style, natural wood cladding accents, simple gable roof, minimal warm palette.",
   },
   {
     value: "traditional",
-    label: "Traditionnel",
+    label: "Traditional",
     fragment:
       "Traditional suburban house, pitched roof, symmetric facade windows, classic proportions.",
   },
@@ -131,27 +131,27 @@ const ARCHITECTURE_STYLES = [
 const DETAIL_TAGS = [
   {
     id: "large_windows",
-    label: "Grandes baies",
+    label: "Large glazing",
     fragment: "Large glazed openings and sliding glass doors along the main facade.",
   },
   {
     id: "flat_roof",
-    label: "Toit plat",
+    label: "Flat roof",
     fragment: "Mostly flat roof with subtle parapet or concealed gutter line.",
   },
   {
     id: "wood_facade",
-    label: "Bardage bois",
+    label: "Wood cladding",
     fragment: "Visible wood siding or horizontal timber accent strips on parts of the facade.",
   },
   {
     id: "terrace",
-    label: "Terrasse",
+    label: "Terrace",
     fragment: "Outdoor terrace or deck visible from the street level.",
   },
   {
     id: "landscaping",
-    label: "Paysager",
+    label: "Landscaping",
     fragment: "Thoughtful front yard landscaping, paths, trees, and planting beds.",
   },
 ] as const;
@@ -159,26 +159,26 @@ const DETAIL_TAGS = [
 const COLOR_PRESETS: { label: string; hex: string }[] = [
   { label: "Orange", hex: "#ea580c" },
   { label: "Terracotta", hex: "#c2410c" },
-  { label: "Bleu ardoise", hex: "#334155" },
-  { label: "Vert sauge", hex: "#4d7c0f" },
-  { label: "Blanc cassé", hex: "#e2e8f0" },
-  { label: "Noir charbon", hex: "#1e293b" },
+  { label: "Slate blue", hex: "#334155" },
+  { label: "Sage green", hex: "#4d7c0f" },
+  { label: "Off-white", hex: "#e2e8f0" },
+  { label: "Charcoal", hex: "#1e293b" },
 ];
 
-function tripStatusLabelFr(status: string): string {
+function tripStatusLabelEn(status: string): string {
   switch (status) {
     case "queued":
-      return "En file d’attente chez Tripo…";
+      return "Queued at Tripo…";
     case "running":
-      return "Génération du maillage en cours…";
+      return "Generating mesh…";
     case "processing":
-      return "Traitement du modèle…";
+      return "Processing model…";
     case "success":
-      return "Finalisation du fichier 3D…";
+      return "Finalizing 3D file…";
     case "unknown":
-      return "Tâche en cours (détails limités)…";
+      return "Task in progress (limited detail)…";
     default:
-      return "Connexion à Tripo…";
+      return "Connecting to Tripo…";
   }
 }
 
@@ -217,11 +217,11 @@ const optionalTerrainM2 = z.preprocess((val) => {
 const formSchema = z.object({
   description: z
     .string()
-    .min(1, "La description est obligatoire.")
-    .max(8000, "Maximum 8000 caractères."),
+    .min(1, "Description is required.")
+    .max(8000, "Maximum 8000 characters."),
   accentColor: z
     .string()
-    .regex(HEX_COLOR, "Couleur au format #RRGGBB (ex. #ea580c)."),
+    .regex(HEX_COLOR, "Use color format #RRGGBB (e.g. #ea580c)."),
   budgetEur: optionalPositiveBudget,
   terrainM2: optionalTerrainM2,
 });
@@ -388,7 +388,7 @@ export function DreamHouseClient() {
             ? e.message
             : e instanceof Error
               ? e.message
-              : "Impossible de récupérer le fichier 3D via le serveur.";
+              : "Could not fetch the 3D file through the server.";
         setGlbLoadError(msg);
       }
     })();
@@ -428,7 +428,7 @@ export function DreamHouseClient() {
       if (cancelled) return;
       if (Date.now() - startedAt > TRIPO_CLIENT_MAX_MS) {
         setTripoError(
-          "La génération 3D dépasse le délai de suivi côté navigateur (90 min). Vous pouvez fermer et relancer une nouvelle génération.",
+          "3D generation exceeded the browser tracking limit (90 min). You can close and start again.",
         );
         return;
       }
@@ -446,7 +446,7 @@ export function DreamHouseClient() {
           s.status === "canceled" ||
           s.status === "error"
         ) {
-          setTripoError(s.message ?? "Génération 3D échouée.");
+          setTripoError(s.message ?? "3D generation failed.");
           return;
         }
         timeoutId = setTimeout(() => void pollOnce(), TRIPO_CLIENT_POLL_MS);
@@ -457,7 +457,7 @@ export function DreamHouseClient() {
             ? e.message
             : e instanceof Error
               ? e.message
-              : "Erreur lors du suivi de la tâche Tripo.";
+              : "Error while polling Tripo.";
         setTripoError(msg);
       }
     };
@@ -519,7 +519,7 @@ export function DreamHouseClient() {
         setTripoLive({ status: "queued" });
       } catch (e) {
         const msg =
-          e instanceof ApiError ? e.message : "Une erreur inattendue s’est produite.";
+          e instanceof ApiError ? e.message : "An unexpected error occurred.";
         setSubmitError(msg);
       }
     },
@@ -539,38 +539,38 @@ export function DreamHouseClient() {
         <Button variant="ghost" size="sm" asChild className="text-slate-300 hover:text-white">
           <Link href="/dashboard/clients" className="gap-1.5">
             <ArrowLeft className="size-4" aria-hidden />
-            Espace client
+            Client area
           </Link>
         </Button>
       </div>
 
       <header className="mb-10 max-w-2xl">
         <p className="text-xs font-semibold uppercase tracking-[0.22em] text-orange-400">
-          Visualisation
+          Visualization
         </p>
         <h1 className="mt-2 text-balance text-3xl font-semibold tracking-tight text-slate-50 sm:text-4xl">
           Dream House
         </h1>
         <p className="mt-3 text-pretty text-sm leading-relaxed text-slate-400 sm:text-base">
-          Guidez le style avec des presets, affinez avec des tags, puis lancez la génération :{" "}
-          <strong className="font-medium text-slate-300">plusieurs images</strong> (angles
-          différents) s’affichent tout de suite ; le{" "}
-          <strong className="font-medium text-slate-300">modèle 3D</strong> est généré par Tripo à
-          partir de la <strong className="font-medium text-slate-300">première image</strong> (vue
-          « Façade ») lorsque l’API le permet ; sinon repli sur le texte seul.
+          Use presets for style, refine with tags, then run generation:{" "}
+          <strong className="font-medium text-slate-300">several images</strong> (different angles)
+          appear first; the{" "}
+          <strong className="font-medium text-slate-300">3D model</strong> is generated by Tripo from
+          the <strong className="font-medium text-slate-300">first image</strong> (Front view) when the
+          API allows it; otherwise it falls back to text only.
         </p>
       </header>
 
       <div className="flex flex-col gap-12">
         <section className="max-w-2xl rounded-2xl border border-white/10 bg-slate-900/40 p-6 shadow-lg shadow-black/20 backdrop-blur-sm sm:p-8">
-          <h2 className="text-lg font-semibold text-slate-100">Projet</h2>
+          <h2 className="text-lg font-semibold text-slate-100">Project</h2>
           <Form {...form}>
             <form
               onSubmit={form.handleSubmit(onSubmit)}
               className="mt-6 flex flex-col gap-5"
             >
               <div className="space-y-2">
-                <Label className="text-slate-200">Style architectural</Label>
+                <Label className="text-slate-200">Architectural style</Label>
                 <Select
                   value={architectureStyle}
                   onValueChange={setArchitectureStyle}
@@ -580,7 +580,7 @@ export function DreamHouseClient() {
                     size="default"
                     className="h-11 w-full max-w-md border-white/15 bg-slate-950/80 text-slate-100"
                   >
-                    <SelectValue placeholder="Choisir un style" />
+                    <SelectValue placeholder="Choose a style" />
                   </SelectTrigger>
                   <SelectContent className="border-white/10 bg-slate-900 text-slate-100">
                     {ARCHITECTURE_STYLES.map((s) => (
@@ -591,12 +591,12 @@ export function DreamHouseClient() {
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-slate-500">
-                  Ajouté automatiquement au texte envoyé aux modèles (image + 3D).
+                  Added automatically to the text sent to the models (image + 3D).
                 </p>
               </div>
 
               <div className="space-y-2">
-                <Label className="text-slate-200">Détails fréquents</Label>
+                <Label className="text-slate-200">Common details</Label>
                 <div className="flex flex-wrap gap-2">
                   {DETAIL_TAGS.map((tag) => {
                     const active = selectedTags.includes(tag.id);
@@ -623,26 +623,26 @@ export function DreamHouseClient() {
                 render={({ field }) => (
                   <FormItem>
                     <div className="flex flex-wrap items-baseline justify-between gap-2">
-                      <FormLabel>Votre description</FormLabel>
+                      <FormLabel>Your description</FormLabel>
                       <span
                         className={cn(
                           "text-xs tabular-nums",
                           mergedTooLong ? "text-amber-400" : "text-slate-500",
                         )}
                       >
-                        Texte fusionné : {mergedLength} car.
+                        Merged text: {mergedLength} chars.
                         {mergedTooLong
-                          ? " — risque de tronçature sur l’aperçu image ; raccourcissez ou retirez des tags."
+                          ? " — image preview may truncate; shorten or remove tags."
                           : ""}
                       </span>
                     </div>
                     <p className="text-xs text-slate-500">
-                      Zone libre : style et tags ci-dessus sont concaténés à ce texte à l’envoi
-                      (vous voyez ici uniquement votre rédaction).
+                      Free text: style and tags above are appended to this when sending (you only edit
+                      this box).
                     </p>
                     <FormControl>
                       <Textarea
-                        placeholder="Ex. Maison sur terrain en pente, garage double côté rue, jardin clos au sud…"
+                        placeholder="e.g. House on a slope, double garage facing the street, enclosed south garden…"
                         className="min-h-[120px] resize-y bg-slate-950/50"
                         disabled={formDisabled}
                         maxLength={8000}
@@ -662,7 +662,7 @@ export function DreamHouseClient() {
                     <FormItem>
                       <FormLabel className="text-slate-200">Budget (€)</FormLabel>
                       <p className="text-xs text-slate-500">
-                        Indicatif — utilisé par Groq pour formuler le prompt Tripo (niveau de finition).
+                        Indicative — used by Groq to shape the Tripo prompt (finish level).
                       </p>
                       <FormControl>
                         <Input
@@ -698,9 +698,9 @@ export function DreamHouseClient() {
                   name="terrainM2"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-slate-200">Terrain (m²)</FormLabel>
+                      <FormLabel className="text-slate-200">Plot (m²)</FormLabel>
                       <p className="text-xs text-slate-500">
-                        Surface du terrain — masse bâtie vs espace vert dans les visuels.
+                        Plot area — built mass vs green space in the visuals.
                       </p>
                       <FormControl>
                         <Input
@@ -738,9 +738,9 @@ export function DreamHouseClient() {
                 name="accentColor"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Couleur d’accent (façade / menuiseries)</FormLabel>
+                    <FormLabel>Accent color (facade / joinery)</FormLabel>
                     <p className="text-xs text-slate-500">
-                      Utilisée dans les images et le modèle 3D (peinture, volets, porte, etc.).
+                      Used in images and the 3D model (paint, shutters, door, etc.).
                     </p>
                     <div className="mt-2 flex flex-wrap gap-2">
                       {COLOR_PRESETS.map((p) => (
@@ -771,7 +771,7 @@ export function DreamHouseClient() {
                       <div className="mt-3 flex flex-wrap items-center gap-3">
                         <input
                           type="color"
-                          aria-label="Sélecteur de couleur"
+                          aria-label="Color picker"
                           className="h-11 w-14 cursor-pointer rounded-lg border border-white/15 bg-slate-950/80 p-1 shadow-inner disabled:opacity-50"
                           disabled={formDisabled}
                           value={HEX_COLOR.test(field.value) ? field.value : "#ea580c"}
@@ -819,22 +819,22 @@ export function DreamHouseClient() {
                 {starting ? (
                   <>
                     <Loader2 className="size-4 animate-spin" aria-hidden />
-                    Préparation…
+                    Preparing…
                   </>
                 ) : tripoPollActive || glbProxyPending ? (
                   <>
                     <Loader2 className="size-4 animate-spin" aria-hidden />
-                    {glbProxyPending ? "Chargement du fichier 3D…" : "Modèle 3D en cours…"}
+                    {glbProxyPending ? "Loading 3D file…" : "3D model in progress…"}
                   </>
                 ) : (
-                  "Générer images & modèle 3D"
+                  "Generate images & 3D model"
                 )}
               </Button>
               {tripoPollActive || glbProxyPending ? (
                 <p className="text-xs leading-relaxed text-slate-500">
                   {glbProxyPending
-                    ? "Récupération du GLB via votre backend (évite le blocage CORS du CDN Tripo)."
-                    : "Les images sont déjà affichées. La génération Tripo peut prendre plusieurs minutes ; cette page interroge le statut automatiquement."}
+                    ? "Fetching the GLB through your backend (avoids Tripo CDN CORS issues)."
+                    : "Images are shown. Tripo generation can take several minutes; this page polls status automatically."}
                 </p>
               ) : null}
             </form>
@@ -843,20 +843,20 @@ export function DreamHouseClient() {
 
         {!showResults ? (
           <div className="flex min-h-[160px] items-center justify-center rounded-2xl border border-dashed border-white/15 bg-slate-900/25 px-6 py-12 text-center text-sm text-slate-500">
-            Remplissez le formulaire puis lancez la génération : jusqu’à trois vues image
-            apparaissent en premier ; le modèle 3D se charge à droite lorsqu’il est prêt.
+            Fill in the form and run generation: up to three image views appear first; the 3D model
+            loads on the right when ready.
           </div>
         ) : (
           <section className="grid gap-10 lg:grid-cols-2 lg:gap-8">
             <div className="min-w-0">
               <h3 className="mb-1 text-sm font-semibold uppercase tracking-wide text-slate-400">
-                Aperçus image
+                Image previews
               </h3>
               <p className="mb-3 text-xs leading-relaxed text-slate-500">
-                Illustrations générées (Pollinations) — inspiration visuelle, pas un plan
-                contractuel. Chaque vue est récupérée via votre backend, environ{" "}
-                {Math.round(POLLINATIONS_PROXY_GAP_MS / 1000)} s après la précédente, pour limiter
-                les refus Pollinations (429 / concurrence).
+                Generated illustrations (Pollinations) — visual inspiration, not a contract drawing.
+                Each view is fetched through your backend, about{" "}
+                {Math.round(POLLINATIONS_PROXY_GAP_MS / 1000)} s after the previous one, to reduce
+                Pollinations throttling (429 / concurrency).
               </p>
               <div className="relative">
                 {imageUrls.length > 1 ? (
@@ -866,7 +866,7 @@ export function DreamHouseClient() {
                       variant="secondary"
                       size="icon"
                       className="absolute left-2 top-1/2 z-20 size-9 -translate-y-1/2 rounded-full border border-white/10 bg-slate-950/85 shadow-md"
-                      aria-label="Image précédente"
+                      aria-label="Previous image"
                       onClick={() => emblaApi?.scrollPrev()}
                     >
                       <ChevronLeft className="size-5" />
@@ -876,7 +876,7 @@ export function DreamHouseClient() {
                       variant="secondary"
                       size="icon"
                       className="absolute right-2 top-1/2 z-20 size-9 -translate-y-1/2 rounded-full border border-white/10 bg-slate-950/85 shadow-md"
-                      aria-label="Image suivante"
+                      aria-label="Next image"
                       onClick={() => emblaApi?.scrollNext()}
                     >
                       <ChevronRight className="size-5" />
@@ -896,7 +896,7 @@ export function DreamHouseClient() {
                         <div className="relative aspect-video w-full">
                           {slideErrors[i] ? (
                             <div className="flex h-full min-h-[200px] flex-col items-center justify-center gap-2 bg-slate-950/60 p-6 text-center text-sm text-slate-400">
-                              <p>Impossible de charger cette image (via le serveur).</p>
+                              <p>Could not load this image (via the server).</p>
                               <a
                                 href={url}
                                 target="_blank"
@@ -904,16 +904,16 @@ export function DreamHouseClient() {
                                 className="inline-flex items-center gap-1 text-orange-400 underline-offset-2 hover:underline"
                               >
                                 <ExternalLink className="size-3.5" aria-hidden />
-                                Ouvrir l’URL Pollinations
+                                Open Pollinations URL
                               </a>
                             </div>
                           ) : !proxiedImageUrls[i] ? (
                             <div className="flex h-full min-h-[200px] flex-col items-center justify-center gap-2 bg-slate-950/50 p-6 text-center text-sm text-slate-500">
                               <Loader2 className="size-8 animate-spin text-orange-400/80" aria-hidden />
                               <p>
-                                Téléchargement via le backend
+                                Downloading via backend
                                 {i > 0
-                                  ? ` (file d’attente ~${Math.round(POLLINATIONS_PROXY_GAP_MS / 1000)} s entre chaque vue)…`
+                                  ? ` (queue ~${Math.round(POLLINATIONS_PROXY_GAP_MS / 1000)} s between views)…`
                                   : "…"}
                               </p>
                             </div>
@@ -922,7 +922,7 @@ export function DreamHouseClient() {
                             // eslint-disable-next-line @next/next/no-img-element -- blob: local après proxy
                             <img
                               src={proxiedImageUrls[i]}
-                              alt={`Visualisation Dream House — ${IMAGE_VIEW_LABELS[i] ?? `vue ${i + 1}`}`}
+                              alt={`Dream House visualization — ${IMAGE_VIEW_LABELS[i] ?? `view ${i + 1}`}`}
                               className="absolute inset-0 h-full w-full object-cover"
                               loading={i === 0 ? "eager" : "lazy"}
                               decoding="async"
@@ -976,13 +976,13 @@ export function DreamHouseClient() {
                   <Button variant="outline" size="sm" className="border-white/15" asChild>
                     <a href={activeProxiedUrl} target="_blank" rel="noopener noreferrer">
                       <ExternalLink className="size-3.5" aria-hidden />
-                      Aperçu plein écran
+                      Full-screen preview
                     </a>
                   </Button>
                   {activeOriginalUrl ? (
                     <Button variant="ghost" size="sm" className="text-slate-400" asChild>
                       <a href={activeOriginalUrl} target="_blank" rel="noopener noreferrer">
-                        Lien Pollinations
+                        Pollinations link
                       </a>
                     </Button>
                   ) : null}
@@ -992,12 +992,11 @@ export function DreamHouseClient() {
 
             <div className="min-w-0">
               <h3 className="mb-1 text-sm font-semibold uppercase tracking-wide text-slate-400">
-                Maquette 3D (.glb)
+                3D model (.glb)
               </h3>
               <p className="mb-3 text-xs leading-relaxed text-slate-500">
-                Génération Tripo (image de la 1re vue → volume, ou texte en repli) : la maquette
-                suit surtout la façade principale ; les autres vues restent indicatives. Astuces
-                serveur :{" "}
+                Tripo generation (first image → volume, or text fallback): the model mainly follows the
+                main facade; other views are indicative. Server hints:{" "}
                 <code className="rounded bg-slate-800 px-1 py-0.5 text-[11px]">
                   TRIPO_FACE_LIMIT
                 </code>
@@ -1027,20 +1026,20 @@ export function DreamHouseClient() {
                   <div className="max-w-md space-y-2">
                     <p className="text-sm font-medium text-slate-200">
                       {tripoLive
-                        ? tripStatusLabelFr(tripoLive.status)
-                        : "Préparation de la tâche Tripo…"}
+                        ? tripStatusLabelEn(tripoLive.status)
+                        : "Preparing Tripo task…"}
                     </p>
                     {tripoStartedAt ? (
                       <p className="text-xs text-slate-500">
-                        Temps écoulé :{" "}
-                        {Math.floor((Date.now() - tripoStartedAt) / 60_000)} min — la durée
-                        dépend surtout de la charge des serveurs Tripo (souvent 5 à 20+ min).
+                        Elapsed:{" "}
+                        {Math.floor((Date.now() - tripoStartedAt) / 60_000)} min — duration depends
+                        mainly on Tripo server load (often 5 to 20+ min).
                       </p>
                     ) : null}
                     {typeof tripoLive?.progress === "number" ? (
                       <div className="pt-1">
                         <div className="mb-1 flex justify-between text-xs text-slate-500">
-                          <span>Progression</span>
+                          <span>Progress</span>
                           <span>{tripoLive.progress}%</span>
                         </div>
                         <div className="h-2 overflow-hidden rounded-full bg-slate-800">
@@ -1057,16 +1056,15 @@ export function DreamHouseClient() {
                 <div className="flex min-h-[min(56vh,520px)] flex-col items-center justify-center gap-4 rounded-2xl border border-white/10 bg-slate-900/60 px-6 py-12 text-center">
                   <Loader2 className="size-10 animate-spin text-orange-400" aria-hidden />
                   <p className="max-w-md text-sm text-slate-300">
-                    Téléchargement du modèle via le serveur (contournement des restrictions
-                    navigateur sur le fichier Tripo)…
+                    Downloading the model through the server (workaround for browser restrictions on
+                    the Tripo file)…
                   </p>
                 </div>
               ) : (
                 <>
                   <GlbStage key={localGlbUrl} url={localGlbUrl} />
                   <p className="mt-2 text-xs text-slate-500">
-                    Faites tourner la maquette avec la souris (clic + glisser). Bouton «
-                    Réinitialiser la vue » sous le cadre 3D.
+                    Rotate the model with the mouse (click + drag). Use Reset view below the 3D frame.
                   </p>
                 </>
               )}

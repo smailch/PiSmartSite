@@ -1,0 +1,50 @@
+# L’image doit être construite avec NEXT_PUBLIC_API_URL pointant vers un nœud accessible
+# depuis le navigateur, ex. http://192.168.56.10:30320 (voir k8s/README.md).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  labels:
+    app: pismartsite
+    component: frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pismartsite
+      component: frontend
+  template:
+    metadata:
+      labels:
+        app: pismartsite
+        component: frontend
+    spec:
+      containers:
+        - name: frontend
+          image: pismartsite-frontend:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3000
+              name: http
+          env:
+            - name: NODE_ENV
+              value: production
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: "100m"
+              memory: 256Mi
+            limits:
+              cpu: "2"
+              memory: 1Gi

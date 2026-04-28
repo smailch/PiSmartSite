@@ -47,7 +47,7 @@ describe("JobForm", () => {
   it("Given empty form When submit Then shows title error and does not call createJob", async () => {
     render(<JobForm mode="create" />);
     await u.click(screen.getAllByRole("button", { name: /Create Job/i })[0]!);
-    expect(await screen.findByText(/Le titre est obligatoire/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Title is required/i)).toBeInTheDocument();
     expect(api.createJob).not.toHaveBeenCalled();
   });
 

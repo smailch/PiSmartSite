@@ -1,0 +1,21 @@
+# Volume persistant local (ReadWriteOnce). Le pod MongoDB doit s’exécuter sur le nœud
+# où ce chemin existe. Créez /data/mongo sur un worker (ex. worker-node-1) ou ajustez
+# nodeAffinity dans db-deployment.yaml.
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pismartsite-mongo-pv
+  labels:
+    app: pismartsite
+    component: mongodb
+spec:
+  capacity:
+    storage: 5Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: manual
+  hostPath:
+    path: /data/pismartsite/mongo
+    type: DirectoryOrCreate

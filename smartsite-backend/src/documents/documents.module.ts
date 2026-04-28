@@ -7,6 +7,7 @@ import {
   DocumentVersion,
   DocumentVersionSchema,
 } from './document-versions.schema';
+import { AiSummarizationService } from './ai-summarization.service';
 
 @Module({
   imports: [
@@ -16,6 +17,6 @@ import {
     ]),
   ],
   controllers: [DocumentsController],
-  providers: [DocumentsService],
+  providers: [DocumentsService, AiSummarizationService],
 })
 export class DocumentsModule {}

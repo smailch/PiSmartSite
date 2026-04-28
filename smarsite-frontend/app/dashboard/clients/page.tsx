@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-/** Assets locaux absents du dépôt — URLs stables (remplacez par /public/... si vous ajoutez vos fichiers). */
+/** Remote hero/partnership images — swap for /public/... if you add local assets. */
 const HERO_IMAGE_URL =
   "https://images.unsplash.com/photo-1541888946425-d81bb19240f5?auto=format&fit=crop&w=1920&q=80";
 const PARTNERSHIP_IMAGE_URL =
@@ -23,37 +23,48 @@ const TELEGRAM_QR_IMAGE_URL = `https://api.qrserver.com/v1/create-qr-code/?size=
 const BRAND_ORANGE = "#f97316";
 
 const STATS = [
-  { n: "15+", l: "Années d’expérience terrain" },
-  { n: "100%", l: "Focus sur la sûreté & la conformité" },
-  { n: "24/7", l: "Réactivité et proximité équipe" },
+  { n: "15+", l: "Years of field experience" },
+  { n: "100%", l: "Focus on safety & compliance" },
+  { n: "24/7", l: "Responsive, close-knit team" },
 ] as const;
 
 const ENGAGEMENT_CARDS = [
   {
     icon: HardHat,
-    title: "Votre chantier, notre priorité",
-    body: "Coordination terrain, sécurité et rigueur d’exécution — le socle d’un suivi serein de bout en bout.",
+    title: "Your site, our priority",
+    body: "Field coordination, safety, and disciplined execution — the foundation for end-to-end visibility.",
     variant: "glass" as const,
   },
   {
     icon: Shield,
-    title: "Transparence & confiance",
-    body: "Des échanges réguliers et une méthode éprouvée pour garder le cap sur la qualité et les délais convenus.",
+    title: "Transparency & trust",
+    body: "Regular communication and a proven approach to quality and agreed timelines.",
     variant: "teal" as const,
   },
   {
     icon: Hammer,
-    title: "Excellence opérationnelle",
-    body: "Outils modernes et équipes engagées pour une livraison qui tient ses promesses.",
+    title: "Operational excellence",
+    body: "Modern tools and committed teams for delivery that keeps its promises.",
     variant: "glass" as const,
   },
 ] as const;
 
 const PARTNERSHIP_POINTS = [
-  "Interlocuteurs dédiés et suivi personnalisé",
-  "Méthodes alignées sur les standards du secteur",
-  "Vision long terme pour vos ouvrages",
+  "Dedicated contacts and tailored follow-up",
+  "Methods aligned with industry standards",
+  "Long-term vision for your projects",
 ] as const;
+
+const primaryBtnBase =
+  "group relative inline-flex items-center justify-center gap-2 overflow-hidden rounded-2xl px-7 py-3.5 text-[15px] font-semibold text-white";
+const primaryBtnVisual =
+  "border border-orange-400/30 bg-gradient-to-b from-orange-500 to-orange-600 shadow-[0_1px_0_0_rgba(255,255,255,0.2)_inset,0_10px_28px_-6px_rgba(249,115,22,0.55)]";
+const primaryBtnHover =
+  "transition-all duration-200 hover:border-orange-300/50 hover:from-orange-500 hover:to-orange-600 hover:shadow-[0_1px_0_0_rgba(255,255,255,0.25)_inset,0_14px_36px_-6px_rgba(249,115,22,0.6)]";
+const primaryBtnActive =
+  "active:scale-[0.99] motion-reduce:transform-none motion-reduce:hover:scale-100";
+const primaryBtnFocus =
+  "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-300";
 
 function PrimaryCta({
   href,
@@ -68,16 +79,21 @@ function PrimaryCta({
     <a
       href={href}
       className={cn(
-        "inline-flex items-center justify-center gap-2 rounded-2xl bg-orange-500 px-7 py-3.5 text-[15px] font-semibold text-white",
-        "shadow-sm transition-all duration-200",
-        "hover:bg-orange-600 hover:scale-[1.01]",
-        "active:scale-100",
-        "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-300",
-        "motion-reduce:transform-none motion-reduce:hover:scale-100",
+        primaryBtnBase,
+        primaryBtnVisual,
+        primaryBtnHover,
+        primaryBtnActive,
+        primaryBtnFocus,
         className,
       )}
     >
-      {children}
+      <span
+        className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+        aria-hidden
+      >
+        <span className="absolute -left-1/3 top-0 h-full w-1/2 -skew-x-12 bg-white/20 blur-2xl" />
+      </span>
+      <span className="relative flex items-center gap-2">{children}</span>
     </a>
   );
 }
@@ -95,9 +111,10 @@ function GhostCta({
     <a
       href={href}
       className={cn(
-        "inline-flex items-center justify-center gap-2 rounded-2xl border border-white/25 bg-white/[0.06] px-7 py-3.5 text-[15px] font-semibold text-white backdrop-blur-sm",
-        "transition-all duration-200 hover:border-white/50 hover:bg-white/15 hover:text-orange-200",
-        "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/40",
+        "inline-flex items-center justify-center gap-2 rounded-2xl border border-white/[0.22] bg-white/[0.07] px-7 py-3.5 text-[15px] font-semibold text-white shadow-[inset_0_1px_0_0_rgba(255,255,255,0.08)] backdrop-blur-md",
+        "transition-all duration-200 hover:border-white/45 hover:bg-white/[0.13] hover:text-white hover:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.14)]",
+        "active:scale-[0.99] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/45",
+        "motion-reduce:transform-none",
         className,
       )}
     >
@@ -108,7 +125,7 @@ function GhostCta({
 
 export default function ClientsMarketingPage() {
   return (
-    <main id="contenu-principal">
+    <main id="main-content">
       {/* Hero */}
       <section
         className="relative isolate min-h-[min(92vh,56rem)] overflow-hidden"
@@ -116,7 +133,7 @@ export default function ClientsMarketingPage() {
       >
         <Image
           src={HERO_IMAGE_URL}
-          alt="Professionnelle du BTP sur chantier, tablette en main"
+          alt="Construction professional on site with a tablet"
           fill
           priority
           quality={92}
@@ -137,42 +154,42 @@ export default function ClientsMarketingPage() {
         />
         <div className="pointer-events-none absolute inset-0 ring-1 ring-inset ring-white/10" aria-hidden />
 
-        <div className="relative mx-auto flex min-h-[min(92vh,56rem)] max-w-6xl flex-col justify-center px-4 pb-20 pt-10 sm:px-6 lg:pb-28">
+        <div className="relative mx-auto flex min-h-[min(92vh,56rem)] max-w-6xl flex-col justify-center px-4 pb-20 pt-8 sm:px-6 lg:pb-28">
           <p
-            className="mb-5 inline-flex w-fit items-center gap-2 rounded-full border border-white/15 bg-white/[0.07] px-4 py-1.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-white/95 backdrop-blur-md sm:text-xs"
-            style={{ borderColor: `${BRAND_ORANGE}33` }}
+            className="mb-6 inline-flex w-fit items-center gap-2.5 rounded-full border bg-white/[0.08] px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-white/95 shadow-lg shadow-black/20 backdrop-blur-xl sm:text-xs"
+            style={{ borderColor: `${BRAND_ORANGE}44` }}
           >
             <span
               className="size-1.5 rounded-full"
               style={{ backgroundColor: BRAND_ORANGE }}
               aria-hidden
             />
-            Qualité &amp; précision sur vos chantiers
+            Quality &amp; precision on your sites
           </p>
           <h1
             id="hero-title"
             className="max-w-3xl text-balance text-4xl font-bold leading-[1.12] tracking-tight text-white sm:text-5xl md:text-6xl lg:text-[3.35rem]"
           >
-            Conçu pour la force,{" "}
-            <span className="text-orange-300 drop-shadow-sm">livré avec rigueur</span>
+            Built for strength,{" "}
+            <span className="text-orange-300 drop-shadow-sm">delivered with discipline</span>
           </h1>
           <p className="mt-6 max-w-xl text-pretty text-base leading-relaxed text-white/[0.92] sm:text-lg sm:leading-relaxed">
-            SmartSite vous accompagne avec une approche claire, des équipes alignées
-            et un suivi professionnel — tout ce qu&apos;il faut pour avancer sereinement,
-            sans friction.
+            SmartSite brings a clear approach, aligned teams, and professional tracking —
+            everything you need to move forward smoothly.
           </p>
-          <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
+          <div className="mt-10 flex w-full max-w-xl flex-col gap-3 sm:max-w-none sm:flex-row sm:flex-wrap sm:items-stretch sm:gap-3">
             <PrimaryCta href="#contact">
-              Demander une proposition
+              Request a proposal
               <ArrowUpRight className="size-[1.125rem]" strokeWidth={2.25} aria-hidden />
             </PrimaryCta>
-            <GhostCta href="#offre">Découvrir l&apos;offre</GhostCta>
+            <GhostCta href="#offre">Explore the offer</GhostCta>
             <Link
               href="/dream-house"
               className={cn(
-                "inline-flex items-center justify-center gap-2 rounded-2xl border border-orange-400/35 bg-orange-500/10 px-7 py-3.5 text-[15px] font-semibold text-orange-100 backdrop-blur-sm",
-                "transition-all duration-200 hover:border-orange-400/55 hover:bg-orange-500/20 hover:text-white",
-                "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-300",
+                "inline-flex min-h-[3.125rem] items-center justify-center gap-2 rounded-2xl border border-orange-400/40 bg-orange-500/[0.12] px-7 py-3.5 text-[15px] font-semibold text-orange-50 backdrop-blur-md",
+                "shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1)] transition-all duration-200 hover:border-orange-400/65 hover:bg-orange-500/25 hover:text-white hover:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.14),0_8px_24px_-6px_rgba(249,115,22,0.35)]",
+                "active:scale-[0.99] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-300",
+                "motion-reduce:transform-none",
               )}
             >
               Dream House — visualisation 3D
@@ -184,19 +201,19 @@ export default function ClientsMarketingPage() {
               <span className="mt-0.5 font-mono text-xs font-bold tabular-nums text-orange-300">
                 01
               </span>
-              <span className="leading-snug">Construction &amp; exécution maîtrisées</span>
+              <span className="leading-snug">Controlled construction &amp; delivery</span>
             </li>
             <li className="flex items-start gap-3">
               <span className="mt-0.5 font-mono text-xs font-bold tabular-nums text-orange-300">
                 02
               </span>
-              <span className="leading-snug">Partenariat transparent avec nos clients</span>
+              <span className="leading-snug">Transparent partnership with our clients</span>
             </li>
           </ul>
         </div>
       </section>
 
-      {/* Chiffres clés */}
+      {/* Key figures */}
       <section
         id="offre"
         className="relative border-y border-white/10 bg-slate-900/40 py-16 sm:py-20"
@@ -208,7 +225,7 @@ export default function ClientsMarketingPage() {
         />
         <div className="relative mx-auto grid max-w-6xl gap-6 px-4 sm:grid-cols-3 sm:gap-8 sm:px-6">
           <h2 id="stats-heading" className="sr-only">
-            Indicateurs clés
+            Key indicators
           </h2>
           {STATS.map((item, i) => (
             <div
@@ -237,19 +254,18 @@ export default function ClientsMarketingPage() {
       >
         <div className="mb-14 max-w-2xl">
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-orange-400">
-            Valeurs
+            Values
           </p>
           <h2
             id="engagements-heading"
             className="mt-3 text-balance text-3xl font-semibold tracking-tight text-slate-100 sm:text-4xl"
           >
-            Une expérience client{" "}
-            <span className="text-orange-400">simple et premium</span>
+            A client experience that is{" "}
+            <span className="text-orange-400">simple and premium</span>
           </h2>
           <p className="mt-4 text-pretty text-base leading-relaxed text-slate-400">
-            Pas de tableaux techniques ici : nous mettons l&apos;accent sur la clarté,
-            la confiance et la visibilité sur l&apos;essentiel, comme dans les meilleures
-            vitrines du secteur BTP.
+            No dense spreadsheets here — we focus on clarity, trust, and visibility into what
+            matters, like the best firms in the industry.
           </p>
         </div>
         <div className="grid gap-5 md:grid-cols-3 md:gap-6">
@@ -298,7 +314,7 @@ export default function ClientsMarketingPage() {
         </div>
       </section>
 
-      {/* Partenariat */}
+      {/* Partnership */}
       <section
         className="border-t border-white/10 bg-slate-950 py-16 sm:py-24"
         aria-labelledby="partnership-heading"
@@ -312,7 +328,7 @@ export default function ClientsMarketingPage() {
               />
               <Image
                 src={PARTNERSHIP_IMAGE_URL}
-                alt="Partenariat professionnel sur chantier"
+                alt="Professional partnership on a construction site"
                 fill
                 className="object-cover transition duration-700 hover:scale-[1.02] motion-reduce:transition-none motion-reduce:hover:scale-100"
                 sizes="(max-width: 1024px) 100vw, 50vw"
@@ -321,19 +337,18 @@ export default function ClientsMarketingPage() {
           </div>
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-orange-400">
-              Partenariat
+              Partnership
             </p>
             <h2
               id="partnership-heading"
               className="mt-3 text-balance text-3xl font-semibold tracking-tight text-slate-100 sm:text-4xl"
             >
-              La réussite se construit{" "}
-              <span className="text-blue-400">mains dans la main</span>
+              Success is built{" "}
+              <span className="text-blue-400">hand in hand</span>
             </h2>
             <p className="mt-5 text-pretty text-base leading-relaxed text-slate-400">
-              Comme sur vos chantiers, nous croyons à la proximité : écoute,
-              engagement mutuel et objectifs partagés. Cette page est votre espace
-              d&apos;accueil — clair, professionnel, tourné vers l&apos;action.
+              Like on your sites, we believe in proximity: listening, mutual commitment, and
+              shared goals. This page is your welcome space — clear, professional, action-oriented.
             </p>
             <ul className="mt-9 space-y-4">
               {PARTNERSHIP_POINTS.map((t) => (
@@ -348,8 +363,8 @@ export default function ClientsMarketingPage() {
               ))}
             </ul>
             <div className="mt-10">
-              <PrimaryCta href="#contact" className="px-6 py-3 text-sm">
-                Échanger avec nous
+              <PrimaryCta href="#contact" className="px-6 py-3 text-sm leading-none">
+                Talk to us
                 <ArrowUpRight className="size-4" strokeWidth={2.25} aria-hidden />
               </PrimaryCta>
             </div>
@@ -357,7 +372,7 @@ export default function ClientsMarketingPage() {
         </div>
       </section>
 
-      {/* Bot Telegram — QR */}
+      {/* Telegram bot — QR */}
       <section
         id="telegram"
         className="relative border-t border-white/10 bg-slate-900/35 py-16 sm:py-24"
@@ -376,18 +391,17 @@ export default function ClientsMarketingPage() {
               id="telegram-heading"
               className="mt-3 text-balance text-2xl font-semibold tracking-tight text-slate-100 sm:text-3xl"
             >
-              Suivez votre chantier sur{" "}
+              Follow your site on{" "}
               <span className="text-blue-400">Telegram</span>
             </h2>
             <p className="mt-4 text-pretty text-sm leading-relaxed text-slate-400 sm:text-base">
-              Scannez le code ci-dessous avec l&apos;appareil photo de votre téléphone pour ouvrir
-              notre bot et échanger avec nous en direct.
+              Scan the code below with your phone camera to open our bot and chat with us live.
             </p>
             <div className="mt-10 flex justify-center">
               <div className="rounded-3xl border border-white/10 bg-card/80 p-6 shadow-lg shadow-black/25 backdrop-blur-xl sm:p-8">
                 <Image
                   src={TELEGRAM_QR_IMAGE_URL}
-                  alt="Code QR pour ouvrir le bot Telegram SmartSite — texte SCAN ME sous le code"
+                  alt="QR code to open the SmartSite Telegram bot — SCAN ME text under the code"
                   width={280}
                   height={280}
                   className="h-auto w-full max-w-[280px] object-contain"
@@ -423,41 +437,48 @@ export default function ClientsMarketingPage() {
             id="contact-heading"
             className="text-balance text-3xl font-semibold tracking-tight text-slate-100 sm:text-4xl"
           >
-            Prêt à avancer sur votre prochain ouvrage ?
+            Ready to move forward on your next project?
           </h2>
           <p className="mx-auto mt-4 max-w-lg text-pretty text-base leading-relaxed text-slate-400">
-            Une question, un besoin ou une visite de site : nos équipes vous répondent
-            dans les meilleurs délais.
+            A question, a need, or a site visit — our teams respond as soon as possible.
           </p>
           <div className="mt-11 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center sm:gap-4">
             <a
               href="mailto:contact@smartsite.example"
               className={cn(
-                "inline-flex min-h-[3.25rem] min-w-[12.5rem] items-center justify-center gap-2 rounded-2xl bg-orange-500 px-8 py-3.5 text-base font-semibold text-white",
-                "shadow-sm transition-all duration-200 hover:bg-orange-600 hover:scale-[1.02]",
-                "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-300",
-                "motion-reduce:hover:scale-100",
+                primaryBtnBase,
+                primaryBtnVisual,
+                primaryBtnHover,
+                primaryBtnActive,
+                primaryBtnFocus,
+                "min-h-[3.25rem] min-w-[min(100%,12.5rem)] px-8 py-3.5 text-base",
               )}
             >
-              Nous contacter
-              <ArrowUpRight className="size-5" strokeWidth={2.25} aria-hidden />
+              <span className="pointer-events-none absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100" aria-hidden>
+                <span className="absolute -left-1/3 top-0 h-full w-1/2 -skew-x-12 bg-white/20 blur-2xl" />
+              </span>
+              <span className="relative flex items-center gap-2">
+                Contact us
+                <ArrowUpRight className="size-5" strokeWidth={2.25} aria-hidden />
+              </span>
             </a>
             <Link
               href="/home"
               className={cn(
-                "inline-flex min-h-[3.25rem] min-w-[12.5rem] items-center justify-center rounded-2xl border border-white/10 bg-white/[0.06] px-8 py-3.5 text-base font-semibold text-slate-200 shadow-lg shadow-black/20 backdrop-blur-md",
-                "transition-all duration-200 hover:border-blue-500/30 hover:bg-blue-500/15 hover:text-blue-300",
-                "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-400/50",
+                "inline-flex min-h-[3.25rem] min-w-[min(100%,12.5rem)] items-center justify-center rounded-2xl border border-white/[0.14] bg-white/[0.06] px-8 py-3.5 text-base font-semibold text-slate-100 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)] backdrop-blur-md",
+                "transition-all duration-200 hover:border-blue-400/35 hover:bg-blue-500/12 hover:text-blue-200 hover:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1),0_8px_28px_-8px_rgba(59,130,246,0.25)]",
+                "active:scale-[0.99] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-400/45",
+                "motion-reduce:transform-none",
               )}
             >
-              Accès espace équipe
+              Team portal
             </Link>
           </div>
         </div>
       </section>
 
-      <footer className="border-t border-white/10 bg-slate-950 py-10 text-center">
-        <p className="text-xs font-medium text-slate-500">
+      <footer className="border-t border-white/[0.08] bg-slate-950 py-12 text-center">
+        <p className="text-xs font-medium tracking-wide text-slate-500">
           © {new Date().getFullYear()} SmartSite — Espace client
         </p>
       </footer>

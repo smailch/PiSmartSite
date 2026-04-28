@@ -24,8 +24,8 @@ export default function PrimePayoutsPanel() {
       const pendingSms = !row.smsNotifiedAt;
       toast.success(
         pendingSms
-          ? "SMS envoyé · ligne traitée"
-          : "Ligne marquée comme traitée"
+          ? "SMS sent · row processed"
+          : "Row marked as processed"
       );
       await mutate();
     } catch (e) {
@@ -57,8 +57,7 @@ export default function PrimePayoutsPanel() {
         </div>
       ) : rows.length === 0 ? (
         <p className="text-sm text-muted-foreground">
-          Aucune prime en attente. Depuis la page Pointage du chantier : analyse IA, puis « Envoyer vers la facturation » (top
-          3).
+          No bonuses pending. From the job Attendance page: run AI analysis, then use Send to invoice (top 3).
         </p>
       ) : (
         <div className="overflow-x-auto rounded-2xl border border-border bg-card shadow-sm">
@@ -70,7 +69,7 @@ export default function PrimePayoutsPanel() {
                 <th className="px-4 py-3 font-semibold">Job</th>
                 <th className="px-4 py-3 font-semibold">Amount</th>
                 <th className="px-4 py-3 font-semibold">Points</th>
-                <th className="px-4 py-3 font-semibold">Statut</th>
+                <th className="px-4 py-3 font-semibold">Status</th>
                 <th className="px-4 py-3 font-semibold">SMS</th>
                 <th className="px-4 py-3 font-semibold text-right">Action</th>
               </tr>
@@ -95,14 +94,14 @@ export default function PrimePayoutsPanel() {
                           : "inline-flex rounded-full border border-emerald-500/35 bg-emerald-500/15 px-2.5 py-0.5 text-xs font-semibold text-emerald-200"
                       }
                     >
-                      {r.status === "PENDING" ? "En attente" : "Traitée"}
+                      {r.status === "PENDING" ? "Pending" : "Processed"}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-xs text-muted-foreground">
                     {r.smsNotifiedAt
-                      ? "Envoyé"
+                      ? "Sent"
                       : r.status === "PENDING"
-                        ? "À l’envoi au traitement"
+                        ? "When finance processes"
                         : "—"}
                   </td>
                   <td className="px-4 py-3 text-right">
@@ -113,7 +112,7 @@ export default function PrimePayoutsPanel() {
                         className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-muted/30 px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-muted/50"
                       >
                         <CheckCircle2 className="h-3.5 w-3.5" />
-                        Traiter
+                        Process
                       </button>
                     ) : (
                       <span className="text-xs text-muted-foreground">—</span>

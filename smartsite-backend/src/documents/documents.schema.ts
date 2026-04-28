@@ -35,6 +35,10 @@ export class ProjectDocument {
 
   @Prop({ default: true })
   isActive: boolean;
+
+  /** Résumé généré par IA (upload fichier local uniquement si clé Groq configurée). */
+  @Prop({ type: String, default: null })
+  aiSummary?: string | null;
 }
 
 export const ProjectDocumentSchema =

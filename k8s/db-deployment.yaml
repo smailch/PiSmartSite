@@ -1,0 +1,69 @@
+# MongoDB + Service cluster interne (DNS : mongodb:27017).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mongodb
+  labels:
+    app: pismartsite
+    component: mongodb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pismartsite
+      component: mongodb
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: pismartsite
+        component: mongodb
+    spec:
+      # Le PV hostPath doit exister sur ce nœud : kubectl label node <nom-worker> pismartsite-mongo=true
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: pismartsite-mongo
+                    operator: In
+                    values:
+                      - "true"
+      containers:
+        - name: mongodb
+          image: mongo:7
+          ports:
+            - containerPort: 27017
+              name: mongo
+          volumeMounts:
+            - name: data
+              mountPath: /data/db
+          resources:
+            requests:
+              cpu: "100m"
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 1Gi
+      volumes:
+        - name: data
+          persistentVolumeClaim:
+            claimName: mongo-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mongodb
+  labels:
+    app: pismartsite
+    component: mongodb
+spec:
+  type: ClusterIP
+  selector:
+    app: pismartsite
+    component: mongodb
+  ports:
+    - port: 27017
+      targetPort: mongo
+      name: mongo

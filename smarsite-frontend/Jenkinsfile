@@ -1,7 +1,7 @@
 /**
  * PiSmartSite — CI Frontend (Next.js)
  * Job Jenkins : Script Path = smarsite-frontend/Jenkinsfile
- * Prérequis : NodeJS « nodejs-22 » + agent Linux.
+ * Prérequis : Linux (curl, tar). Node auto-installé dans .ci-tools/node si absent.
  * Définir la variable de job NEXT_PUBLIC_API_URL (ou laisser le défaut ci-dessous).
  */
 pipeline {
@@ -10,10 +10,6 @@ pipeline {
   options {
     timestamps()
     buildDiscarder(logRotator(numToKeepStr: '20'))
-  }
-
-  tools {
-    nodejs 'nodejs-22'
   }
 
   environment {
@@ -28,6 +24,37 @@ pipeline {
     stage('Checkout') {
       steps {
         checkout scm
+      }
+    }
+
+    stage('Bootstrap Node') {
+      steps {
+        sh '''
+          set -e
+          if command -v node >/dev/null 2>&1; then exit 0; fi
+          NODE_VER=22.12.0
+          ARCH=x64
+          case "$(uname -m)" in aarch64|arm64) ARCH=arm64 ;; esac
+          DEST="${WORKSPACE}/.ci-tools/node"
+          mkdir -p "${WORKSPACE}/.ci-tools"
+          if [ -x "${DEST}/bin/node" ]; then exit 0; fi
+          TMP="/tmp/node-ci-$$.tar.gz"
+          curl -fsSL "https://nodejs.org/dist/v${NODE_VER}/node-v${NODE_VER}-linux-${ARCH}.tar.gz" -o "${TMP}"
+          rm -rf "${DEST}" && mkdir -p "${DEST}"
+          tar -xzf "${TMP}" -C "${DEST}" --strip-components=1
+          rm -f "${TMP}"
+        '''
+        script {
+          if (fileExists('.ci-tools/node/bin/node')) {
+            env.PATH = "${env.WORKSPACE}/.ci-tools/node/bin:${env.PATH}"
+          }
+        }
+      }
+    }
+
+    stage('Toolchain') {
+      steps {
+        sh 'node -v && npm -v'
       }
     }
 

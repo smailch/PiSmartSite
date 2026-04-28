@@ -31,9 +31,10 @@ function todayISODate() {
   return `${y}-${m}-${day}`;
 }
 
-function currentYearMonthLocal() {
+/** Période prime / agrégation : mois civil UTC (identique au backend sur `date` stockée en UTC). */
+function currentYearMonthUtc() {
   const d = new Date();
-  return { year: d.getFullYear(), month: d.getMonth() + 1 };
+  return { year: d.getUTCFullYear(), month: d.getUTCMonth() + 1 };
 }
 
 function resourceLabel(resourceId: AttendanceRecord["resourceId"]): string {
@@ -94,8 +95,8 @@ export default function JobAttendancePage() {
   const [aiLoading, setAiLoading] = useState(false);
   const [aiResult, setAiResult] = useState<AttendanceAiAnalysisResponse | null>(null);
   const [aiError, setAiError] = useState<string | null>(null);
-  const [primeYear, setPrimeYear] = useState(() => currentYearMonthLocal().year);
-  const [primeMonth, setPrimeMonth] = useState(() => currentYearMonthLocal().month);
+  const [primeYear, setPrimeYear] = useState(() => currentYearMonthUtc().year);
+  const [primeMonth, setPrimeMonth] = useState(() => currentYearMonthUtc().month);
   const [invoiceQueueLoading, setInvoiceQueueLoading] = useState(false);
   const [invoiceQueueResult, setInvoiceQueueResult] = useState<PrimeInvoiceQueueTop3Response | null>(null);
   const [invoiceQueueError, setInvoiceQueueError] = useState<string | null>(null);
@@ -130,13 +131,13 @@ export default function JobAttendancePage() {
         const fin = data.financeEntriesRecorded ?? 0;
         toast.success(
           fin > 0
-            ? `${fin} ligne(s) envoyée(s) vers la facturation · les SMS partiront au traitement`
-            : "Envoyé vers la facturation"
+            ? `${fin} row(s) sent to invoicing · SMS will go out when finance processes them`
+            : "Sent to invoicing"
         );
         await globalMutate(PRIME_PAYOUTS_SWR_KEY);
       } else {
         const firstDetail = data.results.find((r) => r.status === "skipped")?.detail;
-        toast.error(firstDetail ?? "Aucune ligne créée.");
+        toast.error(firstDetail ?? "No rows created.");
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Error";
@@ -158,7 +159,7 @@ export default function JobAttendancePage() {
       await createAttendance({
         jobId,
         resourceId: form.resourceId,
-        date: new Date(form.date).toISOString(),
+        date: `${form.date}T00:00:00.000Z`,
         checkIn: form.status === "present" ? form.checkIn : undefined,
         checkOut: form.status === "present" ? form.checkOut : undefined,
         status: form.status,
@@ -166,7 +167,7 @@ export default function JobAttendancePage() {
       toast.success("Attendance saved");
       await mutate();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Erreur");
+      toast.error(err instanceof Error ? err.message : "Error");
     } finally {
       setSaving(false);
     }
@@ -296,7 +297,8 @@ export default function JobAttendancePage() {
                 Monthly bonuses (points & DT)
               </h2>
               <p className="mt-1 text-xs text-muted-foreground">
-                Monthly scale: working days, points out of 30, bonus per SmartSite rules.
+                Monthly scale: working days, points out of 30, bonus per SmartSite rules. Period (year/month) follows UTC,
+                same as stored attendance dates.
               </p>
             </div>
             <div className="flex flex-wrap items-end gap-3">
@@ -357,10 +359,10 @@ export default function JobAttendancePage() {
             </div>
           </div>
           <p className="mb-4 text-sm text-muted-foreground">
-            Après <strong className="font-medium text-foreground">Analyze</strong>, le bouton{" "}
-            <strong className="font-medium text-foreground">Send to invoice</strong> envoie les 3 meilleures primes vers l’écran
-            Facturation. Le financier clique sur <strong className="font-medium text-foreground">Traiter</strong> : l’SMS est
-            envoyé à ce moment-là.
+            After <strong className="font-medium text-foreground">Analyze</strong>,{" "}
+            <strong className="font-medium text-foreground">Send to invoice</strong> sends the top 3 bonuses to the Invoices
+            screen. Finance clicks <strong className="font-medium text-foreground">Process</strong> — the SMS goes out at
+            that moment.
           </p>
           {attendance.length === 0 && !attLoading && (
             <p className="text-sm text-muted-foreground">Save at least one attendance record to run analysis.</p>
@@ -373,11 +375,11 @@ export default function JobAttendancePage() {
           {invoiceQueueResult && (
             <div className="mb-4 space-y-2 rounded-xl border border-sky-500/25 bg-sky-500/5 p-4 text-sm">
               <p className="font-medium text-foreground">
-                Facturation — {invoiceQueueResult.mois}/{invoiceQueueResult.annee} · {invoiceQueueResult.jobTitle}
+                Invoicing — {invoiceQueueResult.mois}/{invoiceQueueResult.annee} · {invoiceQueueResult.jobTitle}
               </p>
               {(invoiceQueueResult.financeEntriesRecorded ?? 0) > 0 ? (
                 <p className="text-xs text-muted-foreground">
-                  {invoiceQueueResult.financeEntriesRecorded} ligne(s) en attente de traitement (SMS au clic Traiter).
+                  {invoiceQueueResult.financeEntriesRecorded} row(s) pending (SMS on Process).
                 </p>
               ) : null}
               <ul className="space-y-1">

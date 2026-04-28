@@ -19,10 +19,14 @@ import {
   UpdateDocumentDto,
   AddVersionDto,
 } from './dto/create-document.dto';
+import { AiSummarizationService } from './ai-summarization.service';
 
 @Controller('documents')
 export class DocumentsController {
-  constructor(private readonly documentsService: DocumentsService) {}
+  constructor(
+    private readonly documentsService: DocumentsService,
+    private readonly aiSummarizationService: AiSummarizationService,
+  ) {}
 
   // NOUVELLE ROUTE : Upload avec fichier local
   @Post('upload')
@@ -44,20 +48,32 @@ export class DocumentsController {
   )
   async uploadDocument(
     @UploadedFile() file: Express.Multer.File,
-    @Body() body: any,
+    @Body() body: Record<string, string>,
   ) {
-    // Construire l'URL du fichier uploadé
     const fileUrl = `/uploads/${file.filename}`;
+    const title = body.title || file.originalname;
+    const category = body.category || 'other';
 
-    // Créer le document dans la base de données
+    let aiSummary: string | null = null;
+    try {
+      aiSummary = await this.aiSummarizationService.summarizeDocument(
+        fileUrl,
+        title,
+        category,
+      );
+    } catch (err) {
+      console.error('AI summarization failed, continuing without summary:', err);
+    }
+
     return this.documentsService.create({
-      title: body.title,
+      title,
       description: body.description,
       projectId: body.projectId,
       uploadedBy: body.uploadedBy,
-      fileUrl: fileUrl,
-      fileType: extname(file.originalname).substring(1), // "pdf", "docx", etc.
-      category: body.category || 'other',
+      fileUrl,
+      fileType: extname(file.originalname).substring(1),
+      category,
+      aiSummary: aiSummary ?? undefined,
     });
   }
 
