@@ -28,6 +28,12 @@ const STATS = [
   { n: "24/7", l: "Responsive, close-knit team" },
 ] as const;
 
+const HERO_HIGHLIGHTS = [
+  "Controlled construction & delivery",
+  "Transparent partnership with our clients",
+  "Digital follow-up for faster decisions",
+] as const;
+
 const ENGAGEMENT_CARDS = [
   {
     icon: HardHat,
@@ -197,18 +203,14 @@ export default function ClientsMarketingPage() {
             </Link>
           </div>
           <ul className="mt-16 flex flex-col gap-4 border-t border-white/15 pt-9 text-sm text-white/[0.88] sm:flex-row sm:flex-wrap sm:gap-x-12 sm:gap-y-3">
-            <li className="flex items-start gap-3">
-              <span className="mt-0.5 font-mono text-xs font-bold tabular-nums text-orange-300">
-                01
-              </span>
-              <span className="leading-snug">Controlled construction &amp; delivery</span>
-            </li>
-            <li className="flex items-start gap-3">
-              <span className="mt-0.5 font-mono text-xs font-bold tabular-nums text-orange-300">
-                02
-              </span>
-              <span className="leading-snug">Transparent partnership with our clients</span>
-            </li>
+            {HERO_HIGHLIGHTS.map((item, index) => (
+              <li key={item} className="flex items-start gap-3">
+                <span className="mt-0.5 font-mono text-xs font-bold tabular-nums text-orange-300">
+                  {(index + 1).toString().padStart(2, "0")}
+                </span>
+                <span className="leading-snug">{item}</span>
+              </li>
+            ))}
           </ul>
         </div>
       </section>
