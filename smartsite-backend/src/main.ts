@@ -191,13 +191,14 @@ async function bootstrap() {
 
   app.enableShutdownHooks();
 
-  /** Railway injecte `PORT` : ne pas forcer 3200 (le proxy ne joindrait pas le process). */
-  const rawPort = process.env.PORT;
-  const parsed = rawPort ? Number.parseInt(rawPort, 10) : NaN;
-  const port =
-    Number.isFinite(parsed) && parsed > 0 ? parsed : 3000;
+  /**
+   * Railway définit `PORT` au runtime (ne pas ajouter de variable PORT fixe dans Railway → Variables).
+   * Toujours écouter sur 0.0.0.0 pour que le proxy interne joigne le process.
+   */
+  const port = process.env.PORT || 3000;
   logger.log(`Bootstrap: app.listen(0.0.0.0, ${port}) — en attente du bind TCP…`);
   await app.listen(port, '0.0.0.0');
+  console.log(`Server running on port ${port}`);
   logger.log(
     `Bootstrap: serveur HTTP à l’écoute sur 0.0.0.0:${port} — prêt pour le proxy Railway`,
   );
