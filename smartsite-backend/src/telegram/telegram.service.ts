@@ -118,6 +118,18 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
       return;
     }
 
+    const pollingOff = ['1', 'true', 'yes', 'on'].includes(
+      String(this.config.get<string>('TELEGRAM_DISABLE_POLLING') ?? '')
+        .trim()
+        .toLowerCase(),
+    );
+    if (pollingOff) {
+      this.logger.warn(
+        'TELEGRAM_DISABLE_POLLING — polling désactivé (évite le 409 si une autre instance utilise le même token).',
+      );
+      return;
+    }
+
     const bot = new Bot(token);
     this.bot = bot;
 

@@ -30,50 +30,82 @@ async function bootstrap() {
     logger: isProd ? ['error', 'warn', 'log'] : undefined,
   });
 
-  app.use('/payments/webhook', bodyParser.raw({ type: 'application/json' }));
-
-  app.useStaticAssets(uploadsRoot, { prefix: '/uploads/' });
-
   const devOrigins = [
     'http://localhost:3000',
     'http://localhost:3001',
     'http://127.0.0.1:3000',
     'http://127.0.0.1:3001',
   ];
-  const corsEnv = process.env.CORS_ORIGINS;
-  const fromEnv = corsEnv
-    ? corsEnv
-        .split(',')
-        .map((s) => s.trim())
-        .filter(Boolean)
-    : [];
-  /** `*` seul ne peut pas aller dans un tableau : le navigateur envoie une origine réelle, pas la chaîne "*". Avec `credentials: true`, il faut refléter l’origine (`true`) ou lister les URLs exactes. */
-  const corsWildcard =
+  const normalizeOrigin = (o: string) => o.trim().replace(/\/$/, '');
+  const fromEnv = (process.env.CORS_ORIGINS ?? '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const allowAllWildcard =
     fromEnv.length === 1 && (fromEnv[0] === '*' || fromEnv[0] === '**');
-  const explicitOrigins = fromEnv.filter((o) => o !== '*' && o !== '**');
-  const origin = isProd
-    ? corsWildcard
-      ? true
-      : explicitOrigins.length
-        ? [...new Set(explicitOrigins)]
-        : false
-    : [...new Set([...devOrigins, ...explicitOrigins])];
+  const explicitAllowed = [
+    ...new Set(
+      fromEnv.filter((o) => o !== '*' && o !== '**').map(normalizeOrigin),
+    ),
+  ];
+  const devAllowed = new Set(devOrigins.map(normalizeOrigin));
 
-  if (isProd && corsWildcard) {
+  if (isProd && allowAllWildcard) {
     logger.warn(
-      'CORS_ORIGINS=* : toutes les origines sont acceptées (réflexion). Préférez une liste d’URLs en production.',
+      'CORS_ORIGINS=* : toutes les origines navigateur sont acceptées. Préférez une liste d’URLs en production.',
     );
   }
   if (isProd && !fromEnv.length) {
     logger.warn(
-      'CORS_ORIGINS is empty in production — browser clients will be blocked until you set comma-separated frontend URLs.',
+      'CORS_ORIGINS vide en production — les clients navigateur seront refusés tant qu’aucune origine n’est définie.',
+    );
+  }
+  if (isProd) {
+    logger.log(
+      `CORS (prod) : ${allowAllWildcard ? 'wildcard (*)' : `${explicitAllowed.length} origine(s)`}`,
     );
   }
 
+  /**
+   * Callback `origin` : compatible `credentials: true` (réflexion de l’origine autorisée).
+   * Ne pas ajouter un 2e middleware qui force `Access-Control-Allow-Origin: *` : interdit avec credentials.
+   */
   app.enableCors({
-    origin,
+    origin: (origin, callback) => {
+      if (!origin) {
+        return callback(null, true);
+      }
+      const n = normalizeOrigin(origin);
+      if (allowAllWildcard) {
+        return callback(null, true);
+      }
+      if (!isProd) {
+        if (devAllowed.has(n) || explicitAllowed.includes(n)) {
+          return callback(null, true);
+        }
+        return callback(null, false);
+      }
+      if (explicitAllowed.includes(n)) {
+        return callback(null, true);
+      }
+      return callback(null, false);
+    },
     credentials: true,
+    methods: ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'Accept',
+      'Origin',
+      'X-Requested-With',
+    ],
+    exposedHeaders: ['Content-Disposition'],
+    maxAge: 86400,
   });
+
+  app.use('/payments/webhook', bodyParser.raw({ type: 'application/json' }));
+
+  app.useStaticAssets(uploadsRoot, { prefix: '/uploads/' });
 
   app.useGlobalPipes(
     new ValidationPipe({
