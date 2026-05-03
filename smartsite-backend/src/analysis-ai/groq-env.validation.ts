@@ -35,7 +35,9 @@ export function validateGroqEnv(
   const parsed = envSchema.safeParse(config);
   if (!parsed.success) {
     const flat = parsed.error.flatten().fieldErrors;
-    throw new Error(`Invalid environment: ${JSON.stringify(flat)}`);
+    throw new Error(
+      `Invalid environment (validateGroqEnv / GROQ_* ou champs schéma): ${JSON.stringify(flat)}`,
+    );
   }
   return { ...config, ...parsed.data };
 }

@@ -39,17 +39,32 @@ if (basename(backendRoot) !== 'smartsite-backend') {
   if (existsSync(nested)) envFilePathForConfig.push(nested);
 }
 
+/** Railway MongoDB template expose `MONGO_URL` ; éviter DATABASE_URL non-Mongo (ex. Postgres). */
+function mongoLikeUri(v: string | undefined): string | undefined {
+  const t = v?.trim();
+  if (!t) return undefined;
+  if (t.startsWith('mongodb://') || t.startsWith('mongodb+srv://')) return t;
+  return undefined;
+}
+
 function resolveMongoUri(config: ConfigService): string | undefined {
-  const fromConfig =
-    config.get<string>('MONGODB_URI')?.trim() ||
-    config.get<string>('MONGO_URI')?.trim() ||
-    config.get<string>('SMARTSITE_MONGODB_URI')?.trim();
-  if (fromConfig) return fromConfig;
-  return (
-    process.env.MONGODB_URI?.trim() ||
-    process.env.MONGO_URI?.trim() ||
-    process.env.SMARTSITE_MONGODB_URI?.trim()
-  );
+  const candidates = [
+    config.get<string>('MONGODB_URI'),
+    config.get<string>('MONGO_URI'),
+    config.get<string>('SMARTSITE_MONGODB_URI'),
+    config.get<string>('MONGO_URL'),
+    mongoLikeUri(config.get<string>('DATABASE_URL')),
+    process.env.MONGODB_URI,
+    process.env.MONGO_URI,
+    process.env.SMARTSITE_MONGODB_URI,
+    process.env.MONGO_URL,
+    mongoLikeUri(process.env.DATABASE_URL),
+  ];
+  for (const c of candidates) {
+    const t = c?.trim();
+    if (t) return t;
+  }
+  return undefined;
 }
 
 @Module({
@@ -67,7 +82,7 @@ function resolveMongoUri(config: ConfigService): string | undefined {
         const uri = resolveMongoUri(config);
         if (!uri) {
           throw new Error(
-            'MongoDB connection string is missing. Set MONGO_URI (or MONGODB_URI) in the environment.',
+            'MongoDB connection string is missing. Set one of: MONGO_URL (Railway Mongo), MONGO_URI, MONGODB_URI, SMARTSITE_MONGODB_URI, or DATABASE_URL (mongodb:// / mongodb+srv:// only).',
           );
         }
         return { uri };

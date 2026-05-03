@@ -1,15 +1,42 @@
 import { Logger, ValidationPipe } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
+import { getConnectionToken } from '@nestjs/mongoose';
 import * as bodyParser from 'body-parser';
 import { existsSync, mkdirSync } from 'fs';
 import { join } from 'path';
+import type { Connection } from 'mongoose';
 import { AppModule } from './app.module';
 import { HUMAN_UPLOAD_DIR } from './human-resources/multer-human.config';
 import { PROGRESS_UPLOAD_DIR } from './jobs/multer-progress.config';
 
+/** Aide diagnostic Railway : quelle clé d’environnement porte l’URI Mongo (valeur jamais loggée). */
+function mongoEnvKeyHint(): string {
+  const keys = [
+    'MONGO_URL',
+    'MONGO_URI',
+    'MONGODB_URI',
+    'SMARTSITE_MONGODB_URI',
+  ] as const;
+  for (const k of keys) {
+    if (process.env[k]?.trim()) return k;
+  }
+  const d = process.env.DATABASE_URL?.trim();
+  if (
+    d?.startsWith('mongodb://') ||
+    d?.startsWith('mongodb+srv://')
+  ) {
+    return 'DATABASE_URL';
+  }
+  return '(aucune URI Mongo détectée dans process.env)';
+}
+
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
+  logger.log(
+    `Bootstrap: démarrage — cwd=${process.cwd()} NODE_ENV=${process.env.NODE_ENV ?? 'unset'} PORT=${process.env.PORT ?? 'unset'} mongo_env=${mongoEnvKeyHint()}`,
+  );
   const uploadsRoot = join(process.cwd(), 'uploads');
   if (!existsSync(uploadsRoot)) {
     mkdirSync(uploadsRoot, { recursive: true });
@@ -26,9 +53,52 @@ async function bootstrap() {
   }
 
   const isProd = process.env.NODE_ENV === 'production';
+  logger.log(
+    'Bootstrap: NestFactory.create(AppModule) — étape critique (ConfigModule / validateGroqEnv / MongooseModule)',
+  );
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     logger: isProd ? ['error', 'warn', 'log'] : undefined,
   });
+  logger.log(
+    'Bootstrap: contexte Nest chargé (modules initialisés, y compris ConfigModule)',
+  );
+
+  try {
+    const cfg = app.get(ConfigService);
+    logger.log(
+      `Bootstrap: ConfigService OK — ignoreEnvFile(prod)=${isProd} GROQ_MODEL=${cfg.get<string>('GROQ_MODEL') ?? 'unset'}`,
+    );
+  } catch (e) {
+    logger.warn(
+      `Bootstrap: ConfigService non lisible (inattendu): ${e instanceof Error ? e.message : String(e)}`,
+    );
+  }
+
+  try {
+    const conn = app.get<Connection>(getConnectionToken());
+    const state = conn.readyState;
+    const stateLabel =
+      state === 1
+        ? 'connected'
+        : state === 2
+          ? 'connecting'
+          : state === 0
+            ? 'disconnected'
+            : String(state);
+    logger.log(`MongoDB: readyState=${state} (${stateLabel})`);
+    if (state !== 1) {
+      conn.once('connected', () =>
+        logger.log('MongoDB: événement connected — pool prêt'),
+      );
+    }
+    conn.on('error', (err: Error) => {
+      logger.error(`MongoDB: erreur driver — ${err.message}`, err.stack);
+    });
+  } catch (e) {
+    logger.warn(
+      `Bootstrap: suivi connexion Mongo indisponible: ${e instanceof Error ? e.message : String(e)}`,
+    );
+  }
 
   const devOrigins = [
     'http://localhost:3000',
@@ -118,8 +188,25 @@ async function bootstrap() {
   app.enableShutdownHooks();
 
   /** Railway injecte `PORT` : ne pas forcer 3200 (le proxy ne joindrait pas le process). */
-  const port = Number(process.env.PORT) || 3000;
+  const rawPort = process.env.PORT;
+  const parsed = rawPort ? Number.parseInt(rawPort, 10) : NaN;
+  const port =
+    Number.isFinite(parsed) && parsed > 0 ? parsed : 3000;
+  logger.log(`Bootstrap: app.listen(0.0.0.0, ${port}) — en attente du bind TCP…`);
   await app.listen(port, '0.0.0.0');
-  logger.log(`Server running on port ${port}`);
+  logger.log(
+    `Bootstrap: serveur HTTP à l’écoute sur 0.0.0.0:${port} — prêt pour le proxy Railway`,
+  );
 }
-bootstrap();
+bootstrap().catch((err: unknown) => {
+  const bootLogger = new Logger('Bootstrap');
+  const msg = err instanceof Error ? err.message : String(err);
+  const stack = err instanceof Error ? err.stack : undefined;
+  bootLogger.error(
+    `Bootstrap: échec avant ou pendant app.listen — le proxy Railway renverra 502 / connection refused. Cause: ${msg}`,
+    stack,
+  );
+  console.error('Bootstrap fatal:', msg);
+  if (stack) console.error(stack);
+  process.exit(1);
+});
