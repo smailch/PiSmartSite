@@ -4,6 +4,8 @@
   "description": "Racine du dépôt : dépendances partagées pour que Turbopack résolve @import 'tailwindcss' (évite de remonter au package.json du profil utilisateur Windows).",
   "scripts": {
     "postinstall": "echo Racine OK — utiliser smarsite-frontend et smartsite-backend pour dev.",
+    "build": "npm ci --prefix smartsite-backend && npm run build --prefix smartsite-backend",
+    "start": "npm run start:prod --prefix smartsite-backend",
     "test:cov:all": "npm run test:cov:ci --prefix smartsite-backend && npm run test:cov:ci --prefix smarsite-frontend",
     "sonar:prep:lcov": "node scripts/sonar-prep-lcov.mjs",
     "sonar:prep": "npm run test:cov:all && npm run sonar:prep:lcov",
