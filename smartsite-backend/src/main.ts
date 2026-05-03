@@ -11,6 +11,10 @@ import { AppModule } from './app.module';
 import { HUMAN_UPLOAD_DIR } from './human-resources/multer-human.config';
 import { PROGRESS_UPLOAD_DIR } from './jobs/multer-progress.config';
 
+/** Diagnostics Railway : rejets / exceptions hors try/catch visibles dans les logs. */
+process.on('uncaughtException', console.error);
+process.on('unhandledRejection', console.error);
+
 /** Aide diagnostic Railway : quelle clé d’environnement porte l’URI Mongo (valeur jamais loggée). */
 function mongoEnvKeyHint(): string {
   const keys = [
