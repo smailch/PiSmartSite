@@ -117,10 +117,9 @@ async function bootstrap() {
 
   app.enableShutdownHooks();
 
-  const port = Number(process.env.PORT);
-  const listenPort = Number.isFinite(port) && port > 0 ? port : 3200;
-  const host = process.env.LISTEN_HOST ?? '0.0.0.0';
-  await app.listen(listenPort, host);
-  logger.log(`Listening on ${host}:${listenPort}`);
+  /** Railway injecte `PORT` : ne pas forcer 3200 (le proxy ne joindrait pas le process). */
+  const port = Number(process.env.PORT) || 3000;
+  await app.listen(port, '0.0.0.0');
+  logger.log(`Server running on port ${port}`);
 }
 bootstrap();
