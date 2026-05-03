@@ -159,7 +159,7 @@ async function runMigration(): Promise<void> {
       updated += result.modifiedCount;
     }
 
-    console.log(
+    console.info(
       `[Task Migration] Completed. scanned=${scanned}, modified=${updated}, timestamp=${new Date().toISOString()}`,
     );
   } finally {

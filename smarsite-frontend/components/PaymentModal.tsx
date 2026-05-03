@@ -4,6 +4,7 @@ import { useState } from "react";
 import { CreditCard, Banknote, X, DollarSign, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getApiBaseUrl } from "@/lib/api";
 
 const METHODS = [
   { id: "Cash", label: "Cash", icon: Banknote },
@@ -38,7 +39,7 @@ export default function PaymentModal({
 
     try {
       if (method === "Credit Card") {
-        const res = await fetch("http://localhost:3200/payments/stripe-session", {
+        const res = await fetch(`${getApiBaseUrl()}/payments/stripe-session`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -59,7 +60,7 @@ export default function PaymentModal({
         return;
       }
 
-      await fetch("http://localhost:3200/payments", {
+      await fetch(`${getApiBaseUrl()}/payments`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

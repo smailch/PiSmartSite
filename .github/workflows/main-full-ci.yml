@@ -1,0 +1,48 @@
+name: Main branch — full build
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: main-full-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CI: "true"
+  HUSKY: "0"
+  NEXT_TELEMETRY_DISABLED: "1"
+  NEXT_PUBLIC_API_URL: ${{ vars.NEXT_PUBLIC_API_URL != '' && vars.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:3200' }}
+
+jobs:
+  backend:
+    name: Backend build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: smartsite-backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: smartsite-backend/package-lock.json
+      - run: npm ci
+      - run: npm run build
+
+  frontend:
+    name: Frontend build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: smarsite-frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: smarsite-frontend/package-lock.json
+      - run: npm ci
+      - run: npm run build

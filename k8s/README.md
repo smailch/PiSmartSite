@@ -153,7 +153,7 @@ export API_PUBLIC=http://192.168.56.11:30320
 cd smartsite-backend
 docker build -t pismartsite-backend:latest .
 
-cd ../smarsite-frontend
+cd ../smartsite-frontend
 docker build --build-arg NEXT_PUBLIC_API_URL="$API_PUBLIC" -t pismartsite-frontend:latest .
 ```
 

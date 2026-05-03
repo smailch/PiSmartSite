@@ -3,8 +3,7 @@
 import React, { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import axios from 'axios';
-
-const API = 'http://localhost:3200';
+import { getApiBaseUrl } from '@/lib/api';
 
 const ResetPassword = () => {
   // ✅ Next.js : useParams remplace useParams de react-router
@@ -51,7 +50,7 @@ const ResetPassword = () => {
 
     setLoading(true);
     try {
-      await axios.post(`${API}/users/reset-password`, { token, password });
+      await axios.post(`${getApiBaseUrl()}/users/reset-password`, { token, password });
       setSuccess('Mot de passe mis à jour avec succès !');
       // ✅ Next.js : router.push remplace navigate
       setTimeout(() => router.push('/login?successMessage=Mot de passe réinitialisé. Connectez-vous !'), 2000);

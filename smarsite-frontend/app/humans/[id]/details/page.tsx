@@ -19,19 +19,13 @@ import {
   ExternalLink,
 } from "lucide-react";
 import type { Human } from "@/lib/types";
-import { fetcher, getHumanKey } from "@/lib/api";
+import { buildUploadsFileHref, fetcher, getHumanKey } from "@/lib/api";
 import MainLayout from "@/components/MainLayout";
 import PageHeader from "@/components/PageHeader";
 
-const API_BASE =
-  typeof process.env.NEXT_PUBLIC_API_URL === "string"
-    ? process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, "")
-    : "http://localhost:3200";
-
 function resolveAssetUrl(path: string) {
   if (!path) return "";
-  if (path.startsWith("http")) return path;
-  return `${API_BASE}${path.startsWith("/") ? "" : "/"}${path}`;
+  return buildUploadsFileHref(path);
 }
 
 export default function HumanDetailsPage({

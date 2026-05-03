@@ -4,18 +4,12 @@ import { useState } from "react";
 import Link from "next/link";
 import { mutate } from "swr";
 import type { Human } from "@/lib/types"; // Assure-toi de créer un type Human
-import { deleteHuman, getHumansKey } from "@/lib/api";
+import { buildUploadsFileHref, deleteHuman, getHumansKey } from "@/lib/api";
 import { Pencil, Trash2, Eye, Users, FileText, ExternalLink } from "lucide-react";
-
-const API_BASE =
-  typeof process.env.NEXT_PUBLIC_API_URL === "string"
-    ? process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, "")
-    : "http://localhost:3200";
 
 function cvHref(cvUrl: string) {
   if (!cvUrl) return "";
-  if (cvUrl.startsWith("http")) return cvUrl;
-  return `${API_BASE}${cvUrl.startsWith("/") ? "" : "/"}${cvUrl}`;
+  return buildUploadsFileHref(cvUrl);
 }
 
 interface HumanResourcesTableProps {

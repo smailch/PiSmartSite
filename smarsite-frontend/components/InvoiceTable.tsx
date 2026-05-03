@@ -24,6 +24,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { getApiBaseUrl, getAuthHeaderInit } from "@/lib/api";
 import {
   Dialog,
   DialogContent,
@@ -131,8 +132,11 @@ export default function InvoiceTable({ invoices = [], onRefresh }: any) {
 
     try {
       const res = await fetch(
-        `http://localhost:3200/invoices/${deleteTarget._id}`,
-        { method: "DELETE" }
+        `${getApiBaseUrl()}/invoices/${deleteTarget._id}`,
+        {
+          method: "DELETE",
+          headers: { ...getAuthHeaderInit() },
+        }
       );
 
       if (!res.ok) throw new Error("Delete failed");

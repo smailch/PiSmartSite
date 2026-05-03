@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { getApiBaseUrl, getAuthHeaderInit } from "@/lib/api";
 
 export default function EditInvoiceModal({ invoice, onClose, onSuccess }) {
   const [form, setForm] = useState({
@@ -39,11 +40,12 @@ export default function EditInvoiceModal({ invoice, onClose, onSuccess }) {
 
     try {
       const res = await fetch(
-        `http://localhost:3200/invoices/${invoice._id}`, // ✅ CORRECT URL
+        `${getApiBaseUrl()}/invoices/${invoice._id}`,
         {
           method: "PUT", // or PATCH depending backend
           headers: {
             "Content-Type": "application/json",
+            ...getAuthHeaderInit(),
           },
           body: JSON.stringify({
             vendorName: form.vendorName,

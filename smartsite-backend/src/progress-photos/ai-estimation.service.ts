@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -9,20 +9,22 @@ const DEFAULT_GROQ_PROGRESS_PHOTO_MODEL =
 
 @Injectable()
 export class AiEstimationService {
+  private readonly logger = new Logger(AiEstimationService.name);
+
   constructor(private readonly config: ConfigService) {}
 
   async estimateProgress(photoUrl: string): Promise<number> {
     try {
       const apiKey = this.config.get<string>('GROQ_API_KEY')?.trim();
       if (!apiKey) {
-        console.error('GROQ_API_KEY manquante — estimation photo désactivée');
+        this.logger.warn('GROQ_API_KEY manquante — estimation photo désactivée');
         return 0;
       }
       const relative = photoUrl.replace(/^\/+/, '');
       const filePath = path.join(process.cwd(), relative);
 
       if (!fs.existsSync(filePath)) {
-        console.error('File not found on disk:', filePath);
+        this.logger.warn(`File not found on disk: ${filePath}`);
         return 0;
       }
 
@@ -88,16 +90,15 @@ Respond with ONLY a number between 0 and 100. No explanation.`;
 
       if (!response.ok) {
         const errorBody = await response.text();
-        console.error(`Groq API error ${response.status}:`, errorBody);
+        this.logger.warn(`Groq API error ${response.status}: ${errorBody.slice(0, 200)}`);
         return 0;
       }
 
       const data = await response.json();
       const content = data.choices?.[0]?.message?.content?.trim();
-      console.log('Groq raw response:', content);
 
       if (!content) {
-        console.warn('Empty response from Groq');
+        this.logger.warn('Empty response from Groq');
         return 0;
       }
 
@@ -105,13 +106,13 @@ Respond with ONLY a number between 0 and 100. No explanation.`;
       const percentage = match ? parseInt(match[0]) : NaN;
 
       if (isNaN(percentage) || percentage < 0 || percentage > 100) {
-        console.warn('Invalid Groq response:', content);
+        this.logger.warn(`Invalid Groq response: ${content.slice(0, 80)}`);
         return 0;
       }
 
       return percentage;
     } catch (error) {
-      console.error('Groq Estimation error:', error);
+      this.logger.error('Groq Estimation error', error as Error);
       return 0;
     }
   }

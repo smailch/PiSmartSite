@@ -36,7 +36,7 @@ import {
 import { projectStatusLabelEn } from "@/lib/projectStatusLabel";
 import { fetcher, getProjectsKey, getTasksKey } from "@/lib/api";
 import { formatDh } from "@/lib/formatMoney";
-import type { BackendTask, Project } from "@/lib/types";
+import { ApiError, type BackendTask, type Project } from "@/lib/types";
 import { computeTasksDoneCount } from "@/lib/projectOverviewKpi";
 import { cn } from "@/lib/utils";
 
@@ -56,6 +56,36 @@ const DashboardChartsBlock = dynamic(
     ),
   },
 );
+
+/** Le backend répond mais SWR a échoué : ne pas afficher uniquement le message « lancez Nest ». */
+function dashboardLoadErrorCopy(err: unknown): {
+  title: string;
+  detail?: string;
+  showLoginLink?: boolean;
+} {
+  if (err instanceof ApiError) {
+    if (err.status === 401) {
+      return {
+        title:
+          "Non authentifié ou session expirée : l’API projets exige un jeton JWT (connexion).",
+        detail: "Le backend peut tourner correctement ; sans token valide, la liste des projets est refusée.",
+        showLoginLink: true,
+      };
+    }
+    if (err.status === 0) {
+      return {
+        title: err.message,
+        detail:
+          "Vérifiez que Nest écoute sur le port 3200. En dev, sans NEXT_PUBLIC_API_URL, les appels passent par le proxy /api-backend (voir next.config.mjs).",
+      };
+    }
+    return { title: err.message || `Erreur API (${err.status})` };
+  }
+  if (err instanceof Error) {
+    return { title: err.message };
+  }
+  return { title: "Impossible de charger les données." };
+}
 
 function statusPillClass(status: Project["status"]): string {
   switch (status) {
@@ -93,6 +123,11 @@ export default function Dashboard() {
 
   const loading = projectsLoading || tasksLoading;
   const error = projectsError || tasksError;
+
+  const errorAlert = useMemo(
+    () => (error ? dashboardLoadErrorCopy(error) : null),
+    [error],
+  );
 
   const now = useMemo(() => new Date(), []);
 
@@ -186,16 +221,25 @@ export default function Dashboard() {
           </Link>
         </PageHeader>
 
-        {error ? (
+        {errorAlert ? (
           <div
             className="mb-10 rounded-2xl border border-red-500/30 bg-red-500/10 px-5 py-4 text-sm text-red-300 shadow-lg shadow-black/20 backdrop-blur-md"
             role="alert"
           >
-            Impossible de charger les données. Démarrez le backend Nest (port 3200), puis rechargez.
-            Si vous utilisez <code className="rounded bg-muted px-1">NEXT_PUBLIC_API_URL</code>, vérifiez
-            qu’elle pointe vers le bon hôte (ex.{" "}
-            <code className="rounded bg-muted px-1">http://127.0.0.1:3200</code>
-            ). En dev, supprimez-la pour utiliser le proxy <code className="rounded bg-muted px-1">/api-backend</code>.
+            <p className="font-medium text-red-200">{errorAlert.title}</p>
+            {errorAlert.detail ? (
+              <p className="mt-2 text-red-300/90">{errorAlert.detail}</p>
+            ) : null}
+            {errorAlert.showLoginLink ? (
+              <p className="mt-3">
+                <Link
+                  href="/login"
+                  className="font-semibold text-primary underline underline-offset-2 hover:text-primary/90"
+                >
+                  Aller à la page de connexion
+                </Link>
+              </p>
+            ) : null}
           </div>
         ) : null}
 

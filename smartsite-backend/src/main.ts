@@ -1,15 +1,15 @@
+import { Logger, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
-import { ValidationPipe } from '@nestjs/common';
-import * as bodyParser from 'body-parser';
-
 import { NestExpressApplication } from '@nestjs/platform-express';
-import { join } from 'path';
+import * as bodyParser from 'body-parser';
 import { existsSync, mkdirSync } from 'fs';
-import { PROGRESS_UPLOAD_DIR } from './jobs/multer-progress.config';
+import { join } from 'path';
+import { AppModule } from './app.module';
 import { HUMAN_UPLOAD_DIR } from './human-resources/multer-human.config';
+import { PROGRESS_UPLOAD_DIR } from './jobs/multer-progress.config';
 
 async function bootstrap() {
+  const logger = new Logger('Bootstrap');
   const uploadsRoot = join(process.cwd(), 'uploads');
   if (!existsSync(uploadsRoot)) {
     mkdirSync(uploadsRoot, { recursive: true });
@@ -25,8 +25,10 @@ async function bootstrap() {
     mkdirSync(progressPhotosDir, { recursive: true });
   }
 
-  // ✅ Active CORS
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  const isProd = process.env.NODE_ENV === 'production';
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    logger: isProd ? ['error', 'warn', 'log'] : undefined,
+  });
 
   app.use('/payments/webhook', bodyParser.raw({ type: 'application/json' }));
 
@@ -39,14 +41,37 @@ async function bootstrap() {
     'http://127.0.0.1:3001',
   ];
   const corsEnv = process.env.CORS_ORIGINS;
-  const extra = corsEnv
+  const fromEnv = corsEnv
     ? corsEnv
         .split(',')
         .map((s) => s.trim())
         .filter(Boolean)
     : [];
+  /** `*` seul ne peut pas aller dans un tableau : le navigateur envoie une origine réelle, pas la chaîne "*". Avec `credentials: true`, il faut refléter l’origine (`true`) ou lister les URLs exactes. */
+  const corsWildcard =
+    fromEnv.length === 1 && (fromEnv[0] === '*' || fromEnv[0] === '**');
+  const explicitOrigins = fromEnv.filter((o) => o !== '*' && o !== '**');
+  const origin = isProd
+    ? corsWildcard
+      ? true
+      : explicitOrigins.length
+        ? [...new Set(explicitOrigins)]
+        : false
+    : [...new Set([...devOrigins, ...explicitOrigins])];
+
+  if (isProd && corsWildcard) {
+    logger.warn(
+      'CORS_ORIGINS=* : toutes les origines sont acceptées (réflexion). Préférez une liste d’URLs en production.',
+    );
+  }
+  if (isProd && !fromEnv.length) {
+    logger.warn(
+      'CORS_ORIGINS is empty in production — browser clients will be blocked until you set comma-separated frontend URLs.',
+    );
+  }
+
   app.enableCors({
-    origin: [...new Set([...devOrigins, ...extra])],
+    origin,
     credentials: true,
   });
 
@@ -58,6 +83,12 @@ async function bootstrap() {
     }),
   );
 
-  await app.listen(3200);
+  app.enableShutdownHooks();
+
+  const port = Number(process.env.PORT);
+  const listenPort = Number.isFinite(port) && port > 0 ? port : 3200;
+  const host = process.env.LISTEN_HOST ?? '0.0.0.0';
+  await app.listen(listenPort, host);
+  logger.log(`Listening on ${host}:${listenPort}`);
 }
 bootstrap();

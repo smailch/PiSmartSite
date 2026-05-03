@@ -1,7 +1,16 @@
+import fs from "node:fs";
 import path from "path";
 import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+/** Même racine que `outputFileTracingRoot` injecté par Vercel sur monorepo (`/vercel/path0`). */
+const parentDir = path.join(__dirname, "..");
+const packRoot =
+  fs.existsSync(path.join(parentDir, "package.json")) ||
+  fs.existsSync(path.join(parentDir, "smartsite-backend"))
+    ? parentDir
+    : __dirname;
 
 /** Cible du proxy dev : NestJS (défaut port 3200). Surcharge : BACKEND_PROXY_TARGET */
 const backendProxyTarget =
@@ -12,6 +21,9 @@ const backendProxyTarget =
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  experimental: {
+    outputFileTracingRoot: packRoot,
+  },
   typescript: {
     ignoreBuildErrors: true,
   },
@@ -57,7 +69,7 @@ const nextConfig = {
     ];
   },
   turbopack: {
-    root: __dirname,
+    root: packRoot,
     /** Évite la résolution depuis un package.json parent (ex. profil utilisateur) pour @import 'tailwindcss'. */
     resolveAlias: {
       tailwindcss: path.join(__dirname, "node_modules/tailwindcss"),

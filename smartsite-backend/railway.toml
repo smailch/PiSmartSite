@@ -1,0 +1,4 @@
+# Nixpacks / Node deploy: use production entrypoint (Railway sets PORT).
+[deploy]
+startCommand = "npm run start:prod"
+restartPolicyType = "ON_FAILURE"

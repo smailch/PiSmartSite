@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { getApiBaseUrl } from "@/lib/api";
 
 export default function SuccessPage() {
   const router = useRouter();
@@ -16,7 +17,7 @@ export default function SuccessPage() {
 
     const confirm = async () => {
       try {
-        await fetch("http://localhost:3200/payments/confirm", {
+        await fetch(`${getApiBaseUrl()}/payments/confirm`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

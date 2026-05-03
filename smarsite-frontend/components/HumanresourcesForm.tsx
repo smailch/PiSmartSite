@@ -4,7 +4,12 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { mutate } from "swr";
 import Link from "next/link";
-import { createHuman, updateHuman, getHumansKey } from "@/lib/api";
+import {
+  buildUploadsFileHref,
+  createHuman,
+  getHumansKey,
+  updateHuman,
+} from "@/lib/api";
 import {
   Loader2,
   ArrowLeft,
@@ -22,11 +27,6 @@ import {
   Upload,
   Banknote,
 } from "lucide-react";
-
-const API_ORIGIN =
-  typeof process.env.NEXT_PUBLIC_API_URL === "string"
-    ? process.env.NEXT_PUBLIC_API_URL.replace(/\/$/, "")
-    : "";
 
 interface HumanModel {
   _id?: string;
@@ -114,11 +114,7 @@ export default function HumanForm({ mode, initialData }: HumanFormProps) {
       return () => URL.revokeObjectURL(url);
     }
     if (mode === "edit" && formData.imageUrl) {
-      const path = formData.imageUrl.startsWith("http")
-        ? formData.imageUrl
-        : API_ORIGIN
-          ? `${API_ORIGIN}${formData.imageUrl}`
-          : formData.imageUrl;
+      const path = buildUploadsFileHref(formData.imageUrl);
       setImagePreview(path);
       return;
     }

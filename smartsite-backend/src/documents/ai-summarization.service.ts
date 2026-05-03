@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -15,6 +15,8 @@ const ALL_SUPPORTED = [
 
 @Injectable()
 export class AiSummarizationService {
+  private readonly logger = new Logger(AiSummarizationService.name);
+
   constructor(private readonly config: ConfigService) {}
 
   async summarizeDocument(
@@ -25,7 +27,7 @@ export class AiSummarizationService {
     try {
       const apiKey = this.config.get<string>('GROQ_API_KEY')?.trim();
       if (!apiKey) {
-        console.error('GROQ_API_KEY missing — document summarization disabled');
+        this.logger.warn('GROQ_API_KEY missing — document summarization disabled');
         return null;
       }
 
@@ -34,12 +36,12 @@ export class AiSummarizationService {
       const ext = path.extname(fileUrl).toLowerCase();
 
       if (!ALL_SUPPORTED.includes(ext)) {
-        console.log(`Summarization skipped — unsupported file type: ${ext}`);
+        this.logger.debug(`Summarization skipped — unsupported file type: ${ext}`);
         return null;
       }
 
       if (!fs.existsSync(filePath)) {
-        console.error('File not found on disk:', filePath);
+        this.logger.warn(`File not found on disk: ${filePath}`);
         return null;
       }
 
@@ -64,7 +66,7 @@ export class AiSummarizationService {
 
       return await this.callGroqText(textContent, title, category, apiKey);
     } catch (error) {
-      console.error('Summarization error:', error);
+      this.logger.error('Summarization error', error as Error);
       return this.getMetadataFallback(title, category);
     }
   }
@@ -82,20 +84,20 @@ export class AiSummarizationService {
       const extractedText = pdfData.text?.trim();
 
       if (!extractedText) {
-        console.log(`No text could be extracted from PDF: ${title}`);
+        this.logger.debug(`No text could be extracted from PDF: ${title}`);
         return this.getMetadataFallback(title, category);
       }
 
       const textContent = extractedText.slice(0, 15000);
 
-      console.log(
-        `PDF text extracted successfully for "${title}" (${textContent.length} chars)`,
+      this.logger.debug(
+        `PDF text extracted for "${title}" (${textContent.length} chars)`,
       );
 
       return await this.callGroqText(textContent, title, category, apiKey);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
-      console.error('PDF text extraction failed:', message);
+      this.logger.warn(`PDF text extraction failed: ${message}`);
       return this.getMetadataFallback(title, category);
     }
   }
@@ -150,7 +152,8 @@ Respond with the summary only.`;
       );
 
       if (!response.ok) {
-        console.error('Groq text error:', await response.text());
+        const errText = await response.text();
+        this.logger.warn(`Groq text error: ${errText.slice(0, 200)}`);
         return this.getMetadataFallback(title, category);
       }
 
@@ -161,7 +164,7 @@ Respond with the summary only.`;
 
       return summary || this.getMetadataFallback(title, category);
     } catch (err) {
-      console.error('Groq API call failed:', err);
+      this.logger.warn('Groq API call failed', err as Error);
       return this.getMetadataFallback(title, category);
     }
   }

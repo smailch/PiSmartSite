@@ -5,6 +5,7 @@ import {
   Delete,
   ForbiddenException,
   Get,
+  Logger,
   Param,
   Patch,
   Post,
@@ -30,6 +31,8 @@ type JwtUser = { sub?: string; roleName?: string };
 @Controller('progress-photos')
 @UseGuards(JwtAuthGuard)
 export class ProgressPhotosController {
+  private readonly logger = new Logger(ProgressPhotosController.name);
+
   constructor(
     private readonly progressPhotosService: ProgressPhotosService,
     private readonly aiEstimationService: AiEstimationService,
@@ -81,9 +84,10 @@ export class ProgressPhotosController {
     try {
       estimatedProgress =
         await this.aiEstimationService.estimateProgress(photoUrl);
-      console.log(`AI estimated progress: ${estimatedProgress}%`);
+      this.logger.debug(`AI estimated progress: ${estimatedProgress}%`);
     } catch (error) {
-      console.error('AI estimation failed, using 0%', error);
+      const msg = error instanceof Error ? error.message : String(error);
+      this.logger.warn(`AI estimation failed, using 0%: ${msg}`);
     }
 
     const taskId =

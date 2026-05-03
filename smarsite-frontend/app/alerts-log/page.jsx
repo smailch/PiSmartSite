@@ -5,8 +5,7 @@ import { useRouter } from 'next/navigation';
 import axios from 'axios';
 import MainLayout from '@/components/MainLayout';
 import { ShieldAlert, Brain, CheckCheck, RefreshCw } from 'lucide-react';
-
-const API = 'http://localhost:3200';
+import { getApiBaseUrl } from '@/lib/api';
 
 const ACTION_CONFIG = {
     LOGIN_SUCCESS: { label: 'Login Success', bg: '#d1fae5', color: '#065f46', border: '#a7f3d0' },
@@ -47,9 +46,10 @@ export default function AlertsPage() {
     const fetchLogs = useCallback(async () => {
         try {
             const token = getToken();
+            const base = getApiBaseUrl();
             const url = filter === 'suspicious'
-                ? `${API}/audit-logs?suspicious=true`
-                : `${API}/audit-logs`;
+                ? `${base}/audit-logs?suspicious=true`
+                : `${base}/audit-logs`;
             const res = await axios.get(url, { headers: { Authorization: `Bearer ${token}` } });
             setLogs(Array.isArray(res.data) ? res.data : []);
         } catch { setError('Failed to load audit logs.'); }
@@ -60,7 +60,7 @@ export default function AlertsPage() {
         setAiLoading(true);
         try {
             const token = getToken();
-            const res = await axios.get(`${API}/audit-logs/ai-summary`, {
+            const res = await axios.get(`${getApiBaseUrl()}/audit-logs/ai-summary`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             setAiSummary(typeof res.data === 'string' ? res.data : res.data.summary || '');
@@ -71,7 +71,7 @@ export default function AlertsPage() {
     const fetchUnreadCount = useCallback(async () => {
         try {
             const token = getToken();
-            const res = await axios.get(`${API}/audit-logs/unread-count`, {
+            const res = await axios.get(`${getApiBaseUrl()}/audit-logs/unread-count`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             setUnreadCount(typeof res.data === 'number' ? res.data : 0);
@@ -85,7 +85,7 @@ export default function AlertsPage() {
         setMarking(true);
         try {
             const token = getToken();
-            await axios.patch(`${API}/audit-logs/mark-all-read`, {}, {
+            await axios.patch(`${getApiBaseUrl()}/audit-logs/mark-all-read`, {}, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             setUnreadCount(0);
@@ -97,7 +97,7 @@ export default function AlertsPage() {
     const handleMarkOneRead = async (id) => {
         try {
             const token = getToken();
-            await axios.patch(`${API}/audit-logs/${id}/read`, {}, {
+            await axios.patch(`${getApiBaseUrl()}/audit-logs/${id}/read`, {}, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             setLogs(prev => prev.map(l => l._id === id ? { ...l, read: true } : l));

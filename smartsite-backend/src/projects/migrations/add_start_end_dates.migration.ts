@@ -1,10 +1,12 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Project, ProjectDocument } from '../schemas/project.schema';
 
 @Injectable()
 export class AddStartEndDatesMigration {
+  private readonly logger = new Logger(AddStartEndDatesMigration.name);
+
   constructor(
     @InjectModel(Project.name) private projectModel: Model<ProjectDocument>,
   ) {}
@@ -20,7 +22,7 @@ export class AddStartEndDatesMigration {
       }
       await project.save();
     }
-    console.log(
+    this.logger.log(
       'Migration completed: start_date and end_date added to all projects.',
     );
   }

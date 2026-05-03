@@ -6,8 +6,7 @@ import axios from 'axios';
 import MainLayout from '@/components/MainLayout';
 import { Trash2, Pencil, Plus, X, Eye, EyeOff, Users } from 'lucide-react';
 import Image from 'next/image';
-
-const API = 'http://localhost:3200';
+import { getApiBaseUrl } from '@/lib/api';
 
 // ══════════════════════════════════════════════════════════════════
 //  FIELD COMPONENT
@@ -60,9 +59,9 @@ const UserModal = ({ user, roles, onClose, onSave }) => {
       const data  = { fullName: form.fullName, email: form.email, phone: form.phone, roleId: form.roleId };
       if (form.password) data.password = form.password;
       if (isEdit) {
-        await axios.put(`${API}/users/${user._id}`, data, { headers: { Authorization: `Bearer ${token}` } });
+        await axios.put(`${getApiBaseUrl()}/users/${user._id}`, data, { headers: { Authorization: `Bearer ${token}` } });
       } else {
-        await axios.post(`${API}/users/register`, data);
+        await axios.post(`${getApiBaseUrl()}/users/register`, data);
       }
       onSave();
     } catch (err) {
@@ -171,7 +170,7 @@ export default function UsersPage() {
   const fetchUsers = async () => {
     try {
       const token = getToken();
-      const res = await axios.get(`${API}/users`, { headers: { Authorization: `Bearer ${token}` } });
+      const res = await axios.get(`${getApiBaseUrl()}/users`, { headers: { Authorization: `Bearer ${token}` } });
       setUsers(Array.isArray(res.data) ? res.data : []);
     } catch { setError('Failed to load users.'); }
     finally  { setLoading(false); }
@@ -179,7 +178,7 @@ export default function UsersPage() {
 
   const fetchRoles = async () => {
     try {
-      const res = await axios.get(`${API}/roles`);
+      const res = await axios.get(`${getApiBaseUrl()}/roles`);
       setRoles(res.data);
     } catch {}
   };
@@ -189,7 +188,7 @@ export default function UsersPage() {
   const handleDelete = async (id) => {
     try {
       const token = getToken();
-      await axios.delete(`${API}/users/${id}`, { headers: { Authorization: `Bearer ${token}` } });
+      await axios.delete(`${getApiBaseUrl()}/users/${id}`, { headers: { Authorization: `Bearer ${token}` } });
       setUsers(prev => prev.filter(u => u._id !== id));
       setDeleteId(null);
     } catch { setError('Failed to delete user.'); }

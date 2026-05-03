@@ -13,21 +13,9 @@ export const metadata: Metadata = {
   description: 'Professional construction management platform for project oversight and team coordination',
   generator: 'v0.app',
   icons: {
-    icon: [
-      {
-        url: '/icon-light-32x32.png',
-        media: '(prefers-color-scheme: light)',
-      },
-      {
-        url: '/icon-dark-32x32.png',
-        media: '(prefers-color-scheme: dark)',
-      },
-      {
-        url: '/icon.svg',
-        type: 'image/svg+xml',
-      },
-    ],
-    apple: '/apple-icon.png',
+    /** `favicon.svg` = marque carrée (onglet) ; logo complet pour « Ajouter à l’écran d’accueil ». */
+    icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
+    apple: "/logo-smartsite-clients.svg",
   },
 }
 
