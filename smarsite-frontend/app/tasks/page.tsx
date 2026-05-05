@@ -62,6 +62,7 @@ import { useRadioGroupKeyboard } from '@/hooks/useRadioGroupKeyboard';
 type StatusFilter = 'All' | TaskStatus;
 type PriorityFilter = 'All' | TaskPriority;
 type ProgressSort = 'none' | 'asc' | 'desc';
+type ProjectFilter = 'all' | string;
 
 interface UiTask {
   id: string;
@@ -233,6 +234,8 @@ function TasksPageContent() {
   const [savingBoardTaskId, setSavingBoardTaskId] = useState<string | null>(null);
   /** Filtre board par projet (ignoré si URL ?project= définit un périmètre). */
   const [boardProjectFilterId, setBoardProjectFilterId] = useState<'all' | string>('all');
+  /** Filtre table par projet (ignoré si URL ?project= définit un périmètre). */
+  const [tableProjectFilterId, setTableProjectFilterId] = useState<ProjectFilter>('all');
   const [taskJobsPanelId, setTaskJobsPanelId] = useState<string | null>(null);
 
   const {
@@ -318,6 +321,10 @@ function TasksPageContent() {
     if (scopedProjectId) setBoardProjectFilterId('all');
   }, [scopedProjectId]);
 
+  useEffect(() => {
+    if (scopedProjectId) setTableProjectFilterId('all');
+  }, [scopedProjectId]);
+
   const uiTasks: UiTask[] = useMemo(
     () =>
       tasks.map((task) => ({
@@ -354,19 +361,40 @@ function TasksPageContent() {
 
   const filteredTasks = useMemo(() => {
     let list = uiTasksForScope;
+    if (!scopedProjectId && tableProjectFilterId !== 'all') {
+      list = list.filter((t) => t.projectId === tableProjectFilterId);
+    }
     if (statusFilter !== 'All') {
       list = list.filter((t) => t.status === statusFilter);
     }
     if (priorityFilter !== 'All') {
       list = list.filter((t) => t.priority === priorityFilter);
     }
+
+    const cmpProjectThenTitle = (a: UiTask, b: UiTask) => {
+      const byProj = a.project.localeCompare(b.project, 'fr', { sensitivity: 'base' });
+      if (byProj !== 0) return byProj;
+      return a.title.localeCompare(b.title, 'fr', { sensitivity: 'base' });
+    };
+
     if (progressSort === 'asc') {
-      list = [...list].sort((a, b) => a.progress - b.progress);
+      list = [...list].sort((a, b) => {
+        const d = a.progress - b.progress;
+        if (d !== 0) return d;
+        return cmpProjectThenTitle(a, b);
+      });
     } else if (progressSort === 'desc') {
-      list = [...list].sort((a, b) => b.progress - a.progress);
+      list = [...list].sort((a, b) => {
+        const d = b.progress - a.progress;
+        if (d !== 0) return d;
+        return cmpProjectThenTitle(a, b);
+      });
+    } else {
+      // Tri lisible en soutenance: projet (A→Z) puis titre (A→Z)
+      list = [...list].sort(cmpProjectThenTitle);
     }
     return list;
-  }, [uiTasksForScope, statusFilter, priorityFilter, progressSort]);
+  }, [uiTasksForScope, scopedProjectId, tableProjectFilterId, statusFilter, priorityFilter, progressSort]);
 
   /** Tasks for Kanban: filtre projet (hors scope URL), priorité, tri progression puis projet / titre. */
   const boardTasks = useMemo(() => {
@@ -767,6 +795,32 @@ function TasksPageContent() {
             <option value="desc">Descending</option>
           </select>
         </div>
+        {viewMode === 'table' && !scopedProjectId ? (
+          <div className="flex items-center gap-2 flex-wrap">
+            <Briefcase size={18} className="text-muted-foreground shrink-0" aria-hidden />
+            <label htmlFor="table-project-filter" className="text-sm font-medium text-muted-foreground">
+              Table: project
+            </label>
+            <select
+              id="table-project-filter"
+              value={tableProjectFilterId}
+              onChange={(e) =>
+                setTableProjectFilterId(e.target.value === 'all' ? 'all' : e.target.value)
+              }
+              className={`rounded-lg border border-border bg-input px-3 py-1.5 text-sm text-foreground min-w-[12rem] ${RADIO_FOCUS}`}
+            >
+              <option value="all">All projects</option>
+              {projectsSortedByName.map((p) => (
+                <option key={p._id} value={p._id}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+            <span className="text-xs text-muted-foreground">
+              Table rows are sorted by project name, then task title (or by progress if selected above).
+            </span>
+          </div>
+        ) : null}
         {viewMode === 'board' && !scopedProjectId ? (
           <div className="flex items-center gap-2 flex-wrap">
             <Briefcase size={18} className="text-muted-foreground shrink-0" aria-hidden />
